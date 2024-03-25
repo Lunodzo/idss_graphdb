@@ -48,3 +48,301 @@
 
 2024/03/25 17:52:58 Querying data using EQL
 2024/03/25 17:52:58 Listening on port 8080
+2024/03/25 18:17:31 Connecting to server...
+2024/03/25 18:17:31 Connected to server
+2024/03/25 18:17:31 Connection Accepted:  127.0.0.1:49350
+2024/03/25 18:17:31 Received the sum from server
+2024/03/25 18:17:38 Connecting to server...
+2024/03/25 18:17:38 Connection Accepted:  127.0.0.1:49360
+2024/03/25 18:17:38 Connected to server
+2024/03/25 18:17:38 Received the sum from server
+2024/03/25 18:17:46 Connecting to server...
+2024/03/25 18:17:46 Connection Accepted:  127.0.0.1:38870
+2024/03/25 18:17:46 Connected to server
+2024/03/25 18:17:46 Received the sum from server
+2024/03/25 18:17:49 Connecting to server...
+2024/03/25 18:17:49 Connected to server
+2024/03/25 18:17:49 Connection Accepted:  127.0.0.1:38878
+2024/03/25 18:17:49 Received the sum from server
+2024/03/25 18:18:21 Connection Accepted:  127.0.0.1:40166
+2024/03/25 18:18:21 Connecting to server...
+2024/03/25 18:18:21 Connected to server
+2024/03/25 18:18:21 Received the sum from server
+2024/03/25 18:18:27 Connecting to server...
+2024/03/25 18:18:27 Connection Accepted:  127.0.0.1:40176
+2024/03/25 18:18:27 Connected to server
+2024/03/25 18:18:27 Received the sum from server
+2024/03/25 18:18:31 Connecting to server...
+2024/03/25 18:18:31 Connected to server
+2024/03/25 18:18:31 Connection Accepted:  127.0.0.1:45188
+2024/03/25 18:18:31 Received the sum from server
+2024/03/25 18:20:08 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 18:20:08 Querying data using EQL
+2024/03/25 18:20:08 Listening on port 8080
+2024/03/25 20:39:58 Connecting to server...
+2024/03/25 20:39:58 Connected to server
+2024/03/25 20:39:58 Received the sum from server
+2024/03/25 20:40:01 Connecting to server...
+2024/03/25 20:40:01 Connected to server
+2024/03/25 20:40:01 Received the sum from server
+2024/03/25 20:40:03 Connecting to server...
+2024/03/25 20:40:03 Connected to server
+2024/03/25 20:40:03 Received the sum from server
+2024/03/25 20:52:55 Connecting to server...
+2024/03/25 20:52:55 Connected to server
+2024/03/25 20:52:55 Received the sum from server
+2024/03/25 20:52:59 Connecting to server...
+2024/03/25 20:52:59 Connected to server
+2024/03/25 20:52:59 Received the sum from server
+2024/03/25 20:57:23 Connecting to server...
+2024/03/25 20:57:23 Connected to server
+2024/03/25 20:57:23 Received the sum from server
+2024/03/25 21:00:14 Connecting to server...
+2024/03/25 21:00:14 Connected to server
+2024/03/25 21:00:14 Received the sum from server
+2024/03/25 21:05:33 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 21:05:33 Querying data using EQL (First Query)
+2024/03/25 21:05:33 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+123, Node1, The first stored node
+
+2024/03/25 21:05:33 Querying data using EQL (Second Query)
+2024/03/25 21:05:33 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+456, Node2, <not set>
+
+2024/03/25 21:05:33 Listening on port 8080
+2024/03/25 21:06:30 Connecting to server...
+2024/03/25 21:06:30 Connection Accepted:  127.0.0.1:49400
+2024/03/25 21:06:30 Connected to server
+2024/03/25 21:06:30 Received the sum from server
+2024/03/25 21:14:27 Listening on port 8080
+2024/03/25 21:14:28 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 21:14:28 Querying data using EQL (First Query)
+2024/03/25 21:14:28 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+123, Node1, The first stored node
+
+2024/03/25 21:14:28 Querying data using EQL (Second Query)
+2024/03/25 21:14:28 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+456, Node2, <not set>
+
+2024/03/25 21:15:10 Listening on port 8080
+2024/03/25 21:15:11 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 21:15:11 Querying data using EQL (First Query)
+2024/03/25 21:15:11 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+123, Node1, The first stored node
+
+2024/03/25 21:15:11 Querying data using EQL (Second Query)
+2024/03/25 21:15:11 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+456, Node2, <not set>
+
+2024/03/25 21:15:35 Listening on port 8080
+2024/03/25 21:15:36 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 21:15:36 Querying data using EQL (First Query)
+2024/03/25 21:15:36 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+123, Node1, The first stored node
+
+2024/03/25 21:15:36 Querying data using EQL (Second Query)
+2024/03/25 21:15:36 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+456, Node2, <not set>
+
+2024/03/25 21:30:43 Listening on port 8080
+2024/03/25 21:30:44 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 21:30:44 Querying data using EQL (First Query)
+2024/03/25 21:30:44 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+123, Node1, The first stored node
+
+2024/03/25 21:30:44 Querying data using EQL (Second Query)
+2024/03/25 21:30:44 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+456, Node2, <not set>
+
+2024/03/25 22:07:23 Listening on port 8080
+2024/03/25 22:07:24 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 22:07:24 Querying data using EQL (First Query)
+2024/03/25 22:07:24 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+123, Node1, The first stored node
+
+2024/03/25 22:07:24 Querying data using EQL (Second Query)
+2024/03/25 22:07:24 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+456, Node2, <not set>
+
+2024/03/25 22:07:33 Connecting to server...
+2024/03/25 22:07:33 Connection Accepted:  127.0.0.1:36080
+2024/03/25 22:07:33 Connected to server
+2024/03/25 22:07:33 Received the sum from server
+2024/03/25 22:07:37 Connection Accepted:  127.0.0.1:60476
+2024/03/25 22:07:37 Connecting to server...
+2024/03/25 22:07:37 Connected to server
+2024/03/25 22:07:37 Received the sum from server
+2024/03/25 22:07:42 Connecting to server...
+2024/03/25 22:07:42 Connection Accepted:  127.0.0.1:60488
+2024/03/25 22:07:42 Connected to server
+2024/03/25 22:07:42 Received the sum from server
+2024/03/25 22:07:50 Connection Accepted:  127.0.0.1:57958
+2024/03/25 22:07:50 Connecting to server...
+2024/03/25 22:07:50 Connected to server
+2024/03/25 22:07:50 Received the sum from server
+2024/03/26 00:10:59 Listening on port 8080
+2024/03/26 00:10:59 GraphError: Invalid data (Edge kind client-consumption is not alphanumeric - can only contain [a-zA-Z0-9_])
+2024/03/26 00:12:01 Listening on port 8080
+2024/03/26 00:12:03 GraphError: Invalid data (Edge is missing a cascading value for end1)
+2024/03/26 00:12:46 Listening on port 8080
+2024/03/26 00:12:49 GraphError: Invalid data (Edge is missing a cascading value for end1)
+2024/03/26 00:20:08 Listening on port 8080
+2024/03/26 00:20:10 GraphError: Invalid data (Edge is missing a cascading value for end1)
+2024/03/26 00:24:47 Listening on port 8080
+2024/03/26 00:24:49 GraphError: Invalid data (Edge is missing a cascading value for end1)
+2024/03/26 00:28:00 Listening on port 8080
+2024/03/26 00:28:02 GraphError: Invalid data (Edge is missing a cascading value for end1)
+2024/03/26 00:31:50 Listening on port 8080
+2024/03/26 00:31:50 Stored node 1
+2024/03/26 00:31:50 Stored node 2
+2024/03/26 00:31:50 Stored node 3
+2024/03/26 00:31:50 Stored node 4
+2024/03/26 00:31:50 Stored node 5
+2024/03/26 00:31:50 Stored node 6
+2024/03/26 00:31:52 Committed transaction
+2024/03/26 00:31:52 GraphError: Invalid data (Edge is missing a cascading value for end1)
+2024/03/26 00:33:37 Listening on port 8080
+2024/03/26 00:33:37 Stored node 1
+2024/03/26 00:33:37 Stored node 2
+2024/03/26 00:33:37 Stored node 3
+2024/03/26 00:33:37 Stored node 4
+2024/03/26 00:33:37 Stored node 5
+2024/03/26 00:33:37 Stored node 6
+2024/03/26 00:33:39 Committed transaction
+2024/03/26 00:33:39 Testing edge 1
+2024/03/26 00:33:39 GraphError: Invalid data (Edge is missing a cascading value for end1)
+2024/03/26 00:35:59 Listening on port 8080
+2024/03/26 00:35:59 Stored node 1
+2024/03/26 00:35:59 Stored node 2
+2024/03/26 00:35:59 Stored node 3
+2024/03/26 00:35:59 Stored node 4
+2024/03/26 00:35:59 Stored node 5
+2024/03/26 00:35:59 Stored node 6
+2024/03/26 00:36:01 Committed transaction
+2024/03/26 00:36:01 Testing edge 1
+2024/03/26 00:36:01 Created edge 1
+2024/03/26 00:36:01 Querying data using EQL (First Query)
+2024/03/26 00:36:01 Labels: Client Key, Client, Contract, Location, Client Name, Phone, Power, Time, Value
+Format: auto, auto, auto, auto, auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:client, 1:n:contract, 1:n:location, 1:n:name, 1:n:phone, 1:n:power, 1:n:time, 1:n:value
+123, <not set>, 244, Nairobi, Client1, 0712345678, 3432, <not set>, <not set>
+
+2024/03/26 00:36:01 Querying data using EQL (Second Query)
+2024/03/26 00:36:01 Labels: Client Key, Client, Contract, Location, Client Name, Phone, Power, Time, Value
+Format: auto, auto, auto, auto, auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:client, 1:n:contract, 1:n:location, 1:n:name, 1:n:phone, 1:n:power, 1:n:time, 1:n:value
+456, <not set>, 245, Mombasa, Client2, 0712345679, 3433, <not set>, <not set>
+
+2024/03/26 00:37:08 Listening on port 8080
+2024/03/26 00:37:08 Stored node 1
+2024/03/26 00:37:08 Stored node 2
+2024/03/26 00:37:08 Stored node 3
+2024/03/26 00:37:08 Stored node 4
+2024/03/26 00:37:08 Stored node 5
+2024/03/26 00:37:08 Stored node 6
+2024/03/26 00:37:09 Committed transaction
+2024/03/26 00:37:09 Testing edge 1
+2024/03/26 00:37:09 Created edge 1
+2024/03/26 00:37:09 Querying data using EQL (First Query)
+2024/03/26 00:37:09 Labels: Client Key, Client, Contract, Location, Client Name, Phone, Power, Time, Value
+Format: auto, auto, auto, auto, auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:client, 1:n:contract, 1:n:location, 1:n:name, 1:n:phone, 1:n:power, 1:n:time, 1:n:value
+123, <not set>, 244, Nairobi, Client1, 0712345678, 3432, <not set>, <not set>
+
+2024/03/26 00:37:09 Querying data using EQL (Second Query)
+2024/03/26 00:37:09 Labels: Client Key, Client, Contract, Location, Client Name, Phone, Power, Time, Value
+Format: auto, auto, auto, auto, auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:client, 1:n:contract, 1:n:location, 1:n:name, 1:n:phone, 1:n:power, 1:n:time, 1:n:value
+456, <not set>, 245, Mombasa, Client2, 0712345679, 3433, <not set>, <not set>
+
+2024/03/26 00:39:26 Listening on port 8080
+2024/03/26 00:39:26 Stored node 1
+2024/03/26 00:39:26 Stored node 2
+2024/03/26 00:39:26 Stored node 3
+2024/03/26 00:39:26 Stored node 4
+2024/03/26 00:39:26 Stored node 5
+2024/03/26 00:39:26 Stored node 6
+2024/03/26 00:39:27 Committed transaction
+2024/03/26 00:39:27 Testing edge 1
+2024/03/26 00:39:27 GraphError: Invalid data (Edge is missing a cascading value for end1)
+2024/03/26 00:44:07 Listening on port 8080
+2024/03/26 00:44:07 Stored node 1
+2024/03/26 00:44:07 Stored node 2
+2024/03/26 00:44:07 Stored node 3
+2024/03/26 00:44:07 Stored node 4
+2024/03/26 00:44:07 Stored node 5
+2024/03/26 00:44:07 Stored node 6
+2024/03/26 00:44:09 Committed transaction
+2024/03/26 00:44:09 Testing edge 1
+2024/03/26 00:44:09 Created edge 1
+2024/03/26 00:44:09 Querying data using EQL (First Query)
+2024/03/26 00:44:09 Labels: Client Key, Client, Contract, Location, Client Name, Phone, Power, Time, Value
+Format: auto, auto, auto, auto, auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:client, 1:n:contract, 1:n:location, 1:n:name, 1:n:phone, 1:n:power, 1:n:time, 1:n:value
+123, <not set>, 244, Nairobi, Client1, 0712345678, 3432, <not set>, <not set>
+
+2024/03/26 00:44:09 Querying data using EQL (Second Query)
+2024/03/26 00:44:09 Labels: Client Key, Client, Contract, Location, Client Name, Phone, Power, Time, Value
+Format: auto, auto, auto, auto, auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:client, 1:n:contract, 1:n:location, 1:n:name, 1:n:phone, 1:n:power, 1:n:time, 1:n:value
+456, <not set>, 245, Mombasa, Client2, 0712345679, 3433, <not set>, <not set>
+

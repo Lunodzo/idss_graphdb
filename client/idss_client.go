@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"os"
-
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 

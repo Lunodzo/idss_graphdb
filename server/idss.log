@@ -1,0 +1,100 @@
+2024/03/25 20:39:46 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 20:39:46 Querying data using EQL
+2024/03/25 20:39:46 Listening on port 8080
+2024/03/25 20:39:58 Connection Accepted:  127.0.0.1:39364
+2024/03/25 20:40:01 Connection Accepted:  127.0.0.1:39372
+2024/03/25 20:40:03 Connection Accepted:  127.0.0.1:39374
+2024/03/25 20:52:55 Connection Accepted:  127.0.0.1:48904
+2024/03/25 20:52:59 Connection Accepted:  127.0.0.1:47010
+2024/03/25 20:56:39 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 20:56:39 Querying data using EQL (First Query)
+2024/03/25 20:56:39 Querying data using EQL (Second Query)
+2024/03/25 20:56:39 Listening on port 8080
+2024/03/25 20:57:23 Connection Accepted:  127.0.0.1:54358
+2024/03/25 20:58:31 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 20:58:31 Querying data using EQL (First Query)
+2024/03/25 20:58:31 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+123, Node1, The first stored node
+
+2024/03/25 20:58:31 Querying data using EQL (Second Query)
+2024/03/25 20:58:31 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+456, Node2, <not set>
+
+2024/03/25 20:58:31 Listening on port 8080
+2024/03/25 20:59:27 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 20:59:27 Querying data using EQL (First Query)
+2024/03/25 20:59:27 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+123, Node1, The first stored node
+
+2024/03/25 20:59:27 Querying data using EQL (Second Query)
+2024/03/25 20:59:27 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+456, Node2, <not set>
+
+2024/03/25 20:59:27 Listening on port 8080
+2024/03/25 21:00:00 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 21:00:00 Querying data using EQL (First Query)
+2024/03/25 21:00:00 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+123, Node1, The first stored node
+
+2024/03/25 21:00:00 Querying data using EQL (Second Query)
+2024/03/25 21:00:00 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+456, Node2, <not set>
+
+2024/03/25 21:00:00 Listening on port 8080
+2024/03/25 21:00:14 Connection Accepted:  127.0.0.1:39514
+2024/03/25 21:01:39 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 21:01:39 Querying data using EQL (First Query)
+2024/03/25 21:01:39 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+123, Node1, The first stored node
+
+2024/03/25 21:01:39 Querying data using EQL (Second Query)
+2024/03/25 21:01:39 Labels: Mynode Key, Mynode Name, Text
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:text
+456, Node2, <not set>
+
+2024/03/25 21:01:39 Listening on port 8080
