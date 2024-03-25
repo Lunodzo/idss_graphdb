@@ -40,3 +40,11 @@
 2024/03/25 13:39:35 Connection Accepted:  127.0.0.1:51216
 2024/03/25 13:39:35 Connected to server
 2024/03/25 13:39:35 Received the sum from server
+2024/03/25 17:52:58 Node fetched:  GraphNode:
+     key : 123
+    kind : mynode
+    name : Node1
+    text : The first stored node
+
+2024/03/25 17:52:58 Querying data using EQL
+2024/03/25 17:52:58 Listening on port 8080

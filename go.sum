@@ -1,2 +1,9 @@
+github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/krotik/common v1.4.4/go.mod h1:Ti5yTPm8lyOwgllpNNc0bFutiZ3nRu49QbSQCbjEaB0=
+github.com/krotik/common v1.5.1 h1:WkX2ewJjm4gma1wg34tDvaR4PM9FhIgfD1mvoHGoK4M=
+github.com/krotik/common v1.5.1/go.mod h1:Ti5yTPm8lyOwgllpNNc0bFutiZ3nRu49QbSQCbjEaB0=
+github.com/krotik/ecal v1.6.3/go.mod h1:ULSgiGqiCxGtJKicRQKW8Unt6CeeCSYQ4i7fDdRFf3Q=
+github.com/krotik/eliasdb v1.4.0 h1:H5+Q7r2csyrHbG4h2PmXyePatRLIbuICEvrJPjPx86o=
+github.com/krotik/eliasdb v1.4.0/go.mod h1:VDjCW2KBl4WWo6IKa3HmQWa16lWj2+pnEC2FvAuZcXw=
 gopkg.in/natefinch/lumberjack.v2 v2.2.1 h1:bBRl1b0OH9s/DuPhuXpNl+VtCaJXFZ5/uEFST95x9zc=
 gopkg.in/natefinch/lumberjack.v2 v2.2.1/go.mod h1:YD8tP3GAjkrDg1eZH7EGmyESg/lsYskCTPBJVb9jqSc=
