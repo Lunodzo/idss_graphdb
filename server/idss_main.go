@@ -1,16 +1,21 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"strconv"
 	"strings"
+	"time"
+
 	"github.com/krotik/eliasdb/eql"
 	"github.com/krotik/eliasdb/graph"
 	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -18,107 +23,177 @@ const DB_PATH = "idss_graph_db"
 
 
 func Database_init() {
+	log.Println("Entering Database Initialization function...")
+	gob.Register(&timestamppb.Timestamp{})
 	GRAPH_DB, err := graphstorage.NewDiskGraphStorage(DB_PATH, false)
 	if err != nil {
 		log.Fatal("Error starting graph database: ", err)
 	}
 	defer GRAPH_DB.Close()
-	//TODO: Add node and edge definitions here
-	// Database Usage Example
-	//TODO: Implement the graph DB here reflecting InnoCyPES use case
-	//TODO: Remember to use Transaction for multiple operations to implement the all the required nodes and edges
+	log.Println("Graph database started initiated")
+
+	// Create a new graph manager
 	GRAPH_MANAGER := graph.NewGraphManager(GRAPH_DB)
+
+	// Creating instances from the proto file and marshalling the data
+	//TODO: Parse actual data from the client
+	log.Println("Creating instances from the proto schema and marshalling the data...")
+	query_mng := &QueryManager{
+		IdQuery:         12,
+		Uqid:            123,
+		Query:           "get client where name = 'Client1'",
+		Ttl:             100,
+		ArrivedAt:       timestamppb.New(time.Now()),
+		SenderId:        "123",
+		LocalExecution:  232,
+		Completed:       timestamppb.New(time.Now()),
+		SentBack:        false,
+		Failed:          false,
+	}
+	query_data, err := proto.Marshal(query_mng)
+	if err != nil {
+		log.Fatal("Error marshalling data: ", err)
+	}
+	// Print the marshalled data
+	log.Println("Marshalled query manager data: ", query_data)
+
+	client1 := &Client{
+		ClientId:    	123,
+		ClientName: 	"Lunodzo",
+		ContractNumber: 244,
+		Power: 			343,
+	}
+
+	data1, err := proto.Marshal(client1)
+	if err != nil {
+		log.Fatal("Error marshalling data: ", err)
+	}
+	// Print the marshalled data
+	log.Println("Marshalled client 1 data: ", data1)
+
+	client2 := &Client{
+		ClientId:    456,
+		ClientName: "Juma",
+		ContractNumber: 245,
+		Power: 344,
+	}
+	data2, err := proto.Marshal(client2)
+	if err != nil {
+		log.Fatal("Error marshalling data: ", err)
+	}
+	// Print the marshalled data
+	log.Println("Marshalled client 2 data: ", data2)
+
+	client3 := &Client{
+		ClientId:    789,
+		ClientName: "Mwana",
+		ContractNumber: 246,
+		Power: 345,
+	}
+	data3, err := proto.Marshal(client3)
+	if err != nil {
+		log.Fatal("Error marshalling data: ", err)
+	}
+	// Print the marshalled data
+	log.Println("Marshalled client 3 data: ", data3)
+
+	consumption1 := &Consumption{
+		Timestamp:    timestamppb.New(time.Now()),
+		Measurement: 100,
+		Client: &Client{ClientId: 123},
+	}
+
+	consumption_data1, err := proto.Marshal(consumption1)
+	if err != nil {
+		log.Fatal("Error marshalling data: ", err)
+	}
+	// Print the marshalled data
+	log.Println("Marshalled consumption 1 data: ", consumption_data1)
+
+	consumption2 := &Consumption{
+		Timestamp:    timestamppb.New(time.Now()),
+		Measurement: 200,
+		Client: &Client{ClientId: 456},
+	}
+
+	consumption_data2, err := proto.Marshal(consumption2)
+	if err != nil {
+		log.Fatal("Error marshalling data: ", err)
+	}
+	// Print the marshalled data
+	log.Println("Marshalled  consumption 2 data: ", consumption_data2)
+
+
+	log.Println("Creating nodes and edges in the graph database based on marshalled data...")
 	// Create transaction
 	trans := graph.NewGraphTrans(GRAPH_MANAGER)
 
-	// Store node 1
-	node1 := data.NewGraphNode()
-	node1.SetAttr("key", "123")
-	node1.SetAttr("kind", "client")
-	node1.SetAttr("name", "Client1")
-	node1.SetAttr("contract", "244")
-	node1.SetAttr("location", "Nairobi")
-	node1.SetAttr("phone", "0712345678")
-	node1.SetAttr("power", "3432")
+	// Create all nodes
+	queriesNode := data.NewGraphNode()
 
-	if err := trans.StoreNode("main", node1); err != nil {
+	client1Node := data.NewGraphNode()
+	client2Node := data.NewGraphNode()
+	client3Node := data.NewGraphNode()
+
+	consumption1Node := data.NewGraphNode()
+	consumption2Node := data.NewGraphNode()
+
+	// Create the node kinds
+	queriesNode.SetAttr("kind", "query")
+	queriesNode.SetAttr("data", query_data)
+	queriesNode.SetAttr("key", "123")
+
+	client1Node.SetAttr("key", "124")
+	client1Node.SetAttr("kind", "client")
+	client1Node.SetAttr("data", data1)
+
+	client2Node.SetAttr("key", "125")
+	client2Node.SetAttr("kind", "client")
+	client2Node.SetAttr("data", data2)
+
+	client3Node.SetAttr("key", "126")
+	client3Node.SetAttr("kind", "client")
+	client3Node.SetAttr("data", data3)
+
+	consumption1Node.SetAttr("key", "127")
+	consumption1Node.SetAttr("kind", "consumption")
+	consumption1Node.SetAttr("data", consumption_data1)
+
+	consumption2Node.SetAttr("key", "128")
+	consumption2Node.SetAttr("kind", "consumption")
+	consumption2Node.SetAttr("data", consumption_data2)
+
+
+	// Insert nodes
+	if err := trans.StoreNode("main", queriesNode); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Stored node 1")
 
-	// Store node 2
-	node2 := data.NewGraphNode()
-	node2.SetAttr("key", "456")
-	node2.SetAttr("kind", "client")
-	node2.SetAttr("name", "Client2")
-	node2.SetAttr("contract", "245")
-	node2.SetAttr("location", "Mombasa")
-	node2.SetAttr("phone", "0712345679")
-	node2.SetAttr("power", "3433")
-
-	if err := trans.StoreNode("main", node2); err != nil {
+	if err := trans.StoreNode("main", client1Node); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Stored node 2")
 
-	// Store node 3
-	node3 := data.NewGraphNode()
-	node3.SetAttr("key", "789")
-	node3.SetAttr("kind", "client")
-	node3.SetAttr("name", "Client3")
-	node3.SetAttr("contract", "246")
-	node3.SetAttr("location", "Kisumu")
-	node3.SetAttr("phone", "0712345680")
-	node3.SetAttr("power", "3434")
-
-	if err := trans.StoreNode("main", node3); err != nil {
+	if err := trans.StoreNode("main", client2Node); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Stored node 3")
 
-	// Store node 4
-	node4 := data.NewGraphNode()
-	node4.SetAttr("key", "101")
-	node4.SetAttr("kind", "consumption")
-	node4.SetAttr("time", "2021-09-01T00:00:00Z")
-	node4.SetAttr("value", "100")
-	node4.SetAttr("client", "123")
-
-	if err := trans.StoreNode("main", node4); err != nil {
+	if err := trans.StoreNode("main", client3Node); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Stored node 4")
 
-	// Store node 5
-	node5 := data.NewGraphNode()
-	node5.SetAttr("key", "102")
-	node5.SetAttr("kind", "consumption")
-	node5.SetAttr("time", "2021-09-01T00:00:00Z")
-	node5.SetAttr("value", "200")
-	node5.SetAttr("client", "456")
-
-	if err := trans.StoreNode("main", node5); err != nil {
+	if err := trans.StoreNode("main", consumption1Node); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Stored node 5")
 
-	// Store node 6
-	node6 := data.NewGraphNode()
-	node6.SetAttr("key", "103")
-	node6.SetAttr("kind", "consumption")
-	node6.SetAttr("time", "2021-09-01T00:00:00Z")
-	node6.SetAttr("value", "300")
-	node6.SetAttr("client", "789")
-
-	if err := trans.StoreNode("main", node6); err != nil {
+	if err := trans.StoreNode("main", consumption2Node); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Stored node 6")
 
+	// Commit the transaction
 	if err := trans.Commit(); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Committed transaction")
+	log.Println("Committed Node store transaction")
 
 	trans = graph.NewGraphTrans(GRAPH_MANAGER)
 	
@@ -127,71 +202,88 @@ func Database_init() {
 	edge.SetAttr(data.NodeKey, "client1consumption1")
 	edge.SetAttr(data.NodeKind, "clientconsumption")
 
-	edge.SetAttr(data.EdgeEnd1Key, node1.Key())
-	edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
-	edge.SetAttr(data.EdgeEnd1Role, "client")
+	edge.SetAttr(data.EdgeEnd1Key, client1Node.Key())
+	edge.SetAttr(data.EdgeEnd1Kind, client1Node.Kind())
+	edge.SetAttr(data.EdgeEnd1Role, "client1")
 	edge.SetAttr(data.EdgeEnd1Cascading, true)
 
-	edge.SetAttr(data.EdgeEnd2Key, node4.Key())
-	edge.SetAttr(data.EdgeEnd2Kind, node4.Kind())
+	edge.SetAttr(data.EdgeEnd2Key, consumption1Node.Key())
+	edge.SetAttr(data.EdgeEnd2Kind, consumption1Node.Kind())
 	edge.SetAttr(data.EdgeEnd2Role, "consumption")
 	edge.SetAttr(data.EdgeEnd2Cascading, false)
 
-	log.Println("Testing edge 1")
 	edge.SetAttr(data.NodeName, "Client1Consumption1")
+
+	log.Println("Testing edge 1")
 	if err := GRAPH_MANAGER.StoreEdge("main", edge); err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Created edge 1")
 
+	// Edge 2
+	edge2 := data.NewGraphEdge()
+	edge2.SetAttr(data.NodeKey, "client2consumption2")
+	edge2.SetAttr(data.NodeKind, "clientconsumption")
+
+	edge2.SetAttr(data.EdgeEnd1Key, client2Node.Key())
+	edge2.SetAttr(data.EdgeEnd1Kind, client2Node.Kind())
+	edge2.SetAttr(data.EdgeEnd1Role, "client2")
+	edge2.SetAttr(data.EdgeEnd1Cascading, true)
+
+	edge2.SetAttr(data.EdgeEnd2Key, consumption2Node.Key())
+	edge2.SetAttr(data.EdgeEnd2Kind, consumption2Node.Kind())
+	edge2.SetAttr(data.EdgeEnd2Role, "consumption")
+	edge2.SetAttr(data.EdgeEnd2Cascading, false)
+
+	edge2.SetAttr(data.NodeName, "Client2Consumption2")
+
+	log.Println("Testing edge 2")
+	if err := GRAPH_MANAGER.StoreEdge("main", edge2); err != nil {
+		log.Fatal(err)
+	}
+
 	// Commit the transaction
 	if err := trans.Commit(); err != nil {
 		log.Fatal(err)
 	}
-	// node1 := data.NewGraphNode()
-	// node1.SetAttr("key", "123")
-	// node1.SetAttr("kind", "mynode")
-	// node1.SetAttr("name", "Node1")
-	// node1.SetAttr("text", "The first stored node")
-	// GRAPH_MANAGER.StoreNode("main", node1)
+	log.Println("Committed transaction")
 
-	// node2 := data.NewGraphNode()
-	// node2.SetAttr(data.NodeKey, "456")
-	// node2.SetAttr(data.NodeKind, "mynode")
-	// node2.SetAttr(data.NodeName, "Node2")
-	// GRAPH_MANAGER.StoreNode("main", node2)
 
-	// // Link the nodes
-	// edge := data.NewGraphEdge()
-	// edge.SetAttr(data.NodeKey, "abc")
-	// edge.SetAttr(data.NodeKind, "myedge")
+	// Query the data using EQL
+	log.Println("Querying data using EQL")
+	var SELECT_QUERY = "get client where kind = 'client'"
+	var SELECT_QUERY2 = "get consumption where kind = 'consumption'"
+	result, err := eql.RunQuery("myQuery", "main", SELECT_QUERY, GRAPH_MANAGER)
+	if err != nil {
+		log.Println("Error querying data: ", err)
+	}
+	log.Println(result)
 
-	// edge.SetAttr(data.EdgeEnd1Key, node1.Key())
-	// edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
-	// edge.SetAttr(data.EdgeEnd1Role, "node1")
-	// edge.SetAttr(data.EdgeEnd1Cascading, "true")
+	result2, err := eql.RunQuery("myQuery", "main", SELECT_QUERY2, GRAPH_MANAGER)
+	if err != nil {
+		log.Println("Error querying data: ", err)
+	}
+	log.Println(result2)
 
-	// edge.SetAttr(data.EdgeEnd2Key, node2.Key())
-	// edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
-	// edge.SetAttr(data.EdgeEnd2Role, "node2")
-	// edge.SetAttr(data.EdgeEnd2Cascading, "true")
 
-	// edge.SetAttr(data.NodeName, "Edge1")
-	// GRAPH_MANAGER.StoreEdge("main", edge)
-
-	// // Traverse the nodes
-	// GRAPH_MANAGER.Traverse("main", node1.Key(), node1.Kind(), "Father:Family:Child:Person", true)
 }
 
 func Database_query() {
-	//TODO: Add query logic here
-	// Query the data using lookup
-	var SELECT_QUERY = "get client where name = 'Client1'"
-	var SELECT_QUERY2 = "get client where name = 'Client2'"
+	log.Println("Entering Database Query function...")
+
 	GRAPH_DB, err := graphstorage.NewDiskGraphStorage(DB_PATH, false)
 	CheckError(err)
 	defer GRAPH_DB.Close()
 	GRAPH_MANAGER := graph.NewGraphManager(GRAPH_DB)
+
+
+	//TODO: To be read from the client
+	//TODO: Modify variables to be read from the client using conn.Read()
+	// Query the data using EQL
+
+	var SELECT_QUERY = "get client where kind = 'client'"
+	var SELECT_QUERY2 = "get client where kind = 'consumption'"
+
 
 	log.Println("Querying data using EQL (First Query)")
 	result, err := eql.RunQuery("myQuery", "main", SELECT_QUERY, GRAPH_MANAGER)
@@ -199,6 +291,25 @@ func Database_query() {
 		log.Println("Error querying data: ", err)
 	}
 	log.Println(result)
+
+	// Iterate over the nodes in the result
+	/* for _, row := range result.Rows() {
+		// Get the marshalled data
+		node, ok := row.(*data.Node)
+		if !ok {
+			log.Println("Row is not a node")
+			continue
+		}
+
+		// Unmarshal the data
+		client := &Client{}
+		err := proto.Unmarshal(data, client)
+		if err != nil {
+			log.Println("Error unmarshalling data: ", err)
+			continue
+		}
+		log.Println(client) */
+	//}
 
 	log.Println("Querying data using EQL (Second Query)")
 	result2, err := eql.RunQuery("myQuery", "main", SELECT_QUERY2, GRAPH_MANAGER)
@@ -222,7 +333,7 @@ func main() {
 		Filename: "idss.log",
 		MaxSize: 10, // megabytes
 		MaxBackups: 3,
-		MaxAge: 1, //days
+		MaxAge: 30, //days
 	})
 
 	// Listen for incoming connections
@@ -236,7 +347,8 @@ func main() {
 	Database_init()
 
 	// Running sample queries
-	Database_query()
+	//TODO: FIXME
+	//Database_query()
 
 	// Accept incoming connections
 	for {

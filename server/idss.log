@@ -98,3 +98,226 @@ Data: 1:n:key, 1:n:name, 1:n:text
 456, Node2, <not set>
 
 2024/03/25 21:01:39 Listening on port 8080
+2024/03/27 17:09:11 Listening on port 8080
+2024/03/27 17:09:11 Graph database started initiated
+2024/03/27 17:09:11 Marshalled data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 167 137 145 176 6 16 251 203 148 170 3 50 3 49 50 51 56 232 1 66 12 8 167 137 145 176 6 16 167 206 148 170 3]
+2024/03/27 17:09:11 Marshalled data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/27 17:09:11 Marshalled data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/27 17:09:11 Marshalled data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/27 17:09:11 Marshalled data:  [10 12 8 167 137 145 176 6 16 223 237 162 170 3 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/27 17:09:11 Marshalled data:  [10 12 8 167 137 145 176 6 16 139 159 164 170 3 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/27 17:09:11 GraphError: Could not write graph information (gob: type not registered for interface: timestamppb.Timestamp)
+2024/03/27 17:11:51 Listening on port 8080
+2024/03/27 17:11:51 Graph database started initiated
+2024/03/27 17:11:51 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 199 138 145 176 6 16 240 204 228 147 1 50 3 49 50 51 56 232 1 66 12 8 199 138 145 176 6 16 156 207 228 147 1]
+2024/03/27 17:11:51 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/27 17:11:51 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/27 17:11:51 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/27 17:11:51 Marshalled consumption 1 data:  [10 12 8 199 138 145 176 6 16 152 180 243 147 1 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/27 17:11:51 Marshalled  consumption 2 data:  [10 12 8 199 138 145 176 6 16 252 227 244 147 1 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/27 17:11:52 GraphError: Could not write graph information (gob: type not registered for interface: timestamppb.Timestamp)
+2024/03/27 17:18:14 Listening on port 8080
+2024/03/27 17:18:14 Graph database started initiated
+2024/03/27 17:18:14 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 198 141 145 176 6 16 230 135 254 208 3 50 3 49 50 51 56 232 1 66 12 8 198 141 145 176 6 16 202 136 254 208 3]
+2024/03/27 17:18:14 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/27 17:18:14 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/27 17:18:14 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/27 17:18:14 Marshalled consumption 1 data:  [10 12 8 198 141 145 176 6 16 134 153 139 209 3 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/27 17:18:14 Marshalled  consumption 2 data:  [10 12 8 198 141 145 176 6 16 174 195 140 209 3 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/27 17:18:17 GraphError: Could not write graph information (gob: type not registered for interface: main.Client)
+2024/03/27 17:44:19 Listening on port 8080
+2024/03/27 17:44:19 Graph database started initiated
+2024/03/27 17:44:19 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 227 153 145 176 6 16 221 208 184 252 2 50 3 49 50 51 56 232 1 66 12 8 227 153 145 176 6 16 193 209 184 252 2]
+2024/03/27 17:44:19 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/27 17:44:19 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/27 17:44:19 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/27 17:44:19 Marshalled consumption 1 data:  [10 12 8 227 153 145 176 6 16 217 165 196 252 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/27 17:44:19 Marshalled  consumption 2 data:  [10 12 8 227 153 145 176 6 16 205 191 197 252 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/27 17:44:19 GraphError: Invalid data (Node is missing a key value)
+2024/03/27 17:52:36 Listening on port 8080
+2024/03/27 17:52:36 Graph database started initiated
+2024/03/27 17:52:36 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 212 157 145 176 6 16 211 150 232 158 1 50 3 49 50 51 56 232 1 66 12 8 212 157 145 176 6 16 155 152 232 158 1]
+2024/03/27 17:52:36 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/27 17:52:36 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/27 17:52:36 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/27 17:52:36 Marshalled consumption 1 data:  [10 12 8 212 157 145 176 6 16 159 144 134 159 1 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/27 17:52:36 Marshalled  consumption 2 data:  [10 12 8 212 157 145 176 6 16 255 181 136 159 1 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/27 17:52:39 Committed Node store transaction
+2024/03/27 17:52:39 Testing edge 1
+2024/03/27 17:52:39 Created edge 1
+2024/03/27 17:52:39 Testing edge 2
+2024/03/27 17:52:39 Committed transaction
+2024/03/27 17:54:53 Connection Accepted:  127.0.0.1:50054
+2024/03/27 17:54:53 Fatal error: strconv.Atoi: parsing "get client where name = 'Client1'": invalid syntax
+2024/03/27 17:55:49 Listening on port 8080
+2024/03/27 17:55:49 Graph database started initiated
+2024/03/27 17:55:49 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 149 159 145 176 6 16 214 215 162 184 1 50 3 49 50 51 56 232 1 66 12 8 149 159 145 176 6 16 158 217 162 184 1]
+2024/03/27 17:55:49 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/27 17:55:49 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/27 17:55:49 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/27 17:55:49 Marshalled consumption 1 data:  [10 12 8 149 159 145 176 6 16 206 128 178 184 1 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/27 17:55:49 Marshalled  consumption 2 data:  [10 12 8 149 159 145 176 6 16 238 231 179 184 1 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/27 17:55:49 Committed Node store transaction
+2024/03/27 17:55:49 Testing edge 1
+2024/03/27 17:55:49 Created edge 1
+2024/03/27 17:55:49 Testing edge 2
+2024/03/27 17:55:49 Committed transaction
+2024/03/27 17:57:26 Connection Accepted:  127.0.0.1:33716
+2024/03/27 17:57:26 Fatal error: strconv.Atoi: parsing "get client where name = 'Client1'get client where name = 'Client1'": invalid syntax
+2024/03/27 23:41:49 Listening on port 8080
+2024/03/27 23:41:49 Graph database started initiated
+2024/03/27 23:41:49 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 173 193 146 176 6 16 148 214 140 231 2 50 3 49 50 51 56 232 1 66 12 8 173 193 146 176 6 16 248 214 140 231 2]
+2024/03/27 23:41:49 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/27 23:41:49 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/27 23:41:49 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/27 23:41:49 Marshalled consumption 1 data:  [10 12 8 173 193 146 176 6 16 168 153 147 231 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/27 23:41:49 Marshalled  consumption 2 data:  [10 12 8 173 193 146 176 6 16 184 128 148 231 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/27 23:41:49 Committed Node store transaction
+2024/03/27 23:41:49 Testing edge 1
+2024/03/27 23:41:49 Created edge 1
+2024/03/27 23:41:49 Testing edge 2
+2024/03/27 23:41:49 Committed transaction
+2024/03/27 23:44:15 Connection Accepted:  127.0.0.1:38248
+2024/03/27 23:44:15 Fatal error: strconv.Atoi: parsing "get client where name = 'Client1'": invalid syntax
+2024/03/27 23:44:27 Listening on port 8080
+2024/03/27 23:44:27 Graph database started initiated
+2024/03/27 23:44:27 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 203 194 146 176 6 16 194 222 168 244 2 50 3 49 50 51 56 232 1 66 12 8 203 194 146 176 6 16 166 223 168 244 2]
+2024/03/27 23:44:27 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/27 23:44:27 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/27 23:44:27 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/27 23:44:27 Marshalled consumption 1 data:  [10 12 8 203 194 146 176 6 16 254 147 178 244 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/27 23:44:27 Marshalled  consumption 2 data:  [10 12 8 203 194 146 176 6 16 206 135 179 244 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/27 23:44:27 Committed Node store transaction
+2024/03/27 23:44:27 Testing edge 1
+2024/03/27 23:44:27 Created edge 1
+2024/03/27 23:44:27 Testing edge 2
+2024/03/27 23:44:27 Committed transaction
+2024/03/27 23:44:31 Connection Accepted:  127.0.0.1:33886
+2024/03/27 23:44:31 Fatal error: strconv.Atoi: parsing "get client where name = 'Client1'": invalid syntax
+2024/03/28 09:39:45 Listening on port 8080
+2024/03/28 09:39:45 Graph database started initiated
+2024/03/28 09:39:45 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 209 217 148 176 6 16 180 141 145 198 3 50 3 49 50 51 56 232 1 66 12 8 209 217 148 176 6 16 152 142 145 198 3]
+2024/03/28 09:39:45 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 09:39:45 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 09:39:45 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 09:39:45 Marshalled consumption 1 data:  [10 12 8 209 217 148 176 6 16 248 208 154 198 3 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 09:39:45 Marshalled  consumption 2 data:  [10 12 8 209 217 148 176 6 16 164 208 155 198 3 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 09:39:46 Committed Node store transaction
+2024/03/28 09:39:46 Testing edge 1
+2024/03/28 09:39:46 Created edge 1
+2024/03/28 09:39:46 Testing edge 2
+2024/03/28 09:39:46 Committed transaction
+2024/03/28 11:32:24 Listening on port 8080
+2024/03/28 11:32:24 Entering Database Initialization function...
+2024/03/28 11:32:24 Graph database started initiated
+2024/03/28 11:32:24 Creating instances from the proto schema and marshalling the data...
+2024/03/28 11:32:24 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 184 142 149 176 6 16 231 195 235 153 1 50 3 49 50 51 56 232 1 66 12 8 184 142 149 176 6 16 203 196 235 153 1]
+2024/03/28 11:32:24 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 11:32:24 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 11:32:24 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 11:32:24 Marshalled consumption 1 data:  [10 12 8 184 142 149 176 6 16 219 250 243 153 1 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 11:32:24 Marshalled  consumption 2 data:  [10 12 8 184 142 149 176 6 16 243 211 245 153 1 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 11:32:24 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/28 11:32:24 Committed Node store transaction
+2024/03/28 11:32:24 Testing edge 1
+2024/03/28 11:32:24 Created edge 1
+2024/03/28 11:32:24 Testing edge 2
+2024/03/28 11:32:24 Committed transaction
+2024/03/28 11:32:24 Entering Database Query function...
+2024/03/28 11:32:24 Querying data using EQL (First Query)
+2024/03/28 11:32:24 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/03/28 11:32:24 Querying data using EQL (Second Query)
+2024/03/28 11:32:24 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/03/28 12:44:17 Listening on port 8080
+2024/03/28 12:44:17 Entering Database Initialization function...
+2024/03/28 12:44:17 Graph database started initiated
+2024/03/28 12:44:17 Creating instances from the proto schema and marshalling the data...
+2024/03/28 12:44:17 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 145 176 149 176 6 16 185 241 146 230 1 50 3 49 50 51 56 232 1 66 12 8 145 176 149 176 6 16 157 242 146 230 1]
+2024/03/28 12:44:17 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 12:44:17 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 12:44:17 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 12:44:17 Marshalled consumption 1 data:  [10 12 8 145 176 149 176 6 16 161 135 159 230 1 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 12:44:17 Marshalled  consumption 2 data:  [10 12 8 145 176 149 176 6 16 181 245 159 230 1 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 12:44:17 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/28 12:44:17 Committed Node store transaction
+2024/03/28 12:44:17 Testing edge 1
+2024/03/28 12:44:17 Created edge 1
+2024/03/28 12:44:17 Testing edge 2
+2024/03/28 12:44:17 Committed transaction
+2024/03/28 12:44:18 Entering Database Query function...
+2024/03/28 12:44:18 Querying data using EQL (First Query)
+2024/03/28 12:44:18 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/03/28 12:44:18 Querying data using EQL (Second Query)
+2024/03/28 12:44:18 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/03/28 14:19:59 Listening on port 8080
+2024/03/28 14:19:59 Entering Database Initialization function...
+2024/03/28 14:19:59 Graph database started initiated
+2024/03/28 14:19:59 Creating instances from the proto schema and marshalling the data...
+2024/03/28 14:19:59 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 255 220 149 176 6 16 229 231 137 143 1 50 3 49 50 51 56 232 1 66 12 8 255 220 149 176 6 16 173 233 137 143 1]
+2024/03/28 14:19:59 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 14:19:59 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 14:19:59 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 14:19:59 Marshalled consumption 1 data:  [10 12 8 255 220 149 176 6 16 161 248 150 143 1 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 14:19:59 Marshalled  consumption 2 data:  [10 12 8 255 220 149 176 6 16 193 226 151 143 1 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 14:19:59 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/28 14:19:59 Committed Node store transaction
+2024/03/28 14:19:59 Testing edge 1
+2024/03/28 14:19:59 Created edge 1
+2024/03/28 14:19:59 Testing edge 2
+2024/03/28 14:19:59 Committed transaction
+2024/03/28 14:19:59 Querying data using EQL
+2024/03/28 14:19:59 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/28 14:19:59 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/03/28 14:22:32 Listening on port 8080
+2024/03/28 14:22:32 Entering Database Initialization function...
+2024/03/28 14:22:32 Graph database started initiated
+2024/03/28 14:22:32 Creating instances from the proto schema and marshalling the data...
+2024/03/28 14:22:32 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 11 8 152 222 149 176 6 16 203 254 155 110 50 3 49 50 51 56 232 1 66 11 8 152 222 149 176 6 16 175 255 155 110]
+2024/03/28 14:22:32 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 14:22:32 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 14:22:32 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 14:22:32 Marshalled consumption 1 data:  [10 11 8 152 222 149 176 6 16 255 212 166 110 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 14:22:32 Marshalled  consumption 2 data:  [10 11 8 152 222 149 176 6 16 191 219 168 110 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 14:22:32 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/28 14:22:32 Committed Node store transaction
+2024/03/28 14:22:32 Testing edge 1
+2024/03/28 14:22:32 Created edge 1
+2024/03/28 14:22:32 Testing edge 2
+2024/03/28 14:22:32 Committed transaction
+2024/03/28 14:22:32 Querying data using EQL
+2024/03/28 14:22:32 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/28 14:22:32 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 11 8 152 222 149 176 6 16 255 212 166 110 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 11 8 152 222 149 176 6 16 191 219 168 110 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/28 15:21:05 Connection Accepted:  127.0.0.1:39036
+2024/03/28 15:21:05 Fatal error: strconv.Atoi: parsing "get client where name = 'Client1'": invalid syntax

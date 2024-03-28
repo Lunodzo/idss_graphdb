@@ -346,3 +346,67 @@ Format: auto, auto, auto, auto, auto, auto, auto, auto, auto
 Data: 1:n:key, 1:n:client, 1:n:contract, 1:n:location, 1:n:name, 1:n:phone, 1:n:power, 1:n:time, 1:n:value
 456, <not set>, 245, Mombasa, Client2, 0712345679, 3433, <not set>, <not set>
 
+2024/03/26 10:32:23 Listening on port 8080
+2024/03/26 10:32:23 Stored node 1
+2024/03/26 10:32:23 Stored node 2
+2024/03/26 10:32:23 Stored node 3
+2024/03/26 10:32:23 Stored node 4
+2024/03/26 10:32:23 Stored node 5
+2024/03/26 10:32:23 Stored node 6
+2024/03/26 10:32:23 Committed transaction
+2024/03/26 10:32:23 Testing edge 1
+2024/03/26 10:32:23 Created edge 1
+2024/03/26 10:32:23 Querying data using EQL (First Query)
+2024/03/26 10:32:23 Labels: Client Key, Client, Contract, Location, Client Name, Phone, Power, Time, Value
+Format: auto, auto, auto, auto, auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:client, 1:n:contract, 1:n:location, 1:n:name, 1:n:phone, 1:n:power, 1:n:time, 1:n:value
+123, <not set>, 244, Nairobi, Client1, 0712345678, 3432, <not set>, <not set>
+
+2024/03/26 10:32:23 Querying data using EQL (Second Query)
+2024/03/26 10:32:23 Labels: Client Key, Client, Contract, Location, Client Name, Phone, Power, Time, Value
+Format: auto, auto, auto, auto, auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:client, 1:n:contract, 1:n:location, 1:n:name, 1:n:phone, 1:n:power, 1:n:time, 1:n:value
+456, <not set>, 245, Mombasa, Client2, 0712345679, 3433, <not set>, <not set>
+
+2024/03/26 10:33:20 Connecting to server...
+2024/03/26 10:33:20 Connected to server
+2024/03/26 10:33:20 Connection Accepted:  127.0.0.1:50926
+2024/03/26 10:33:20 Received the sum from server
+2024/03/26 10:33:36 Connecting to server...
+2024/03/26 10:33:36 Connection Accepted:  127.0.0.1:41350
+2024/03/26 10:33:36 Connected to server
+2024/03/26 10:33:36 Received the sum from server
+2024/03/26 15:40:25 Listening on port 8080
+2024/03/26 15:40:25 Stored node 1
+2024/03/26 15:40:25 Stored node 2
+2024/03/26 15:40:25 Stored node 3
+2024/03/26 15:40:25 Stored node 4
+2024/03/26 15:40:25 Stored node 5
+2024/03/26 15:40:25 Stored node 6
+2024/03/26 15:40:25 Committed transaction
+2024/03/26 15:40:25 Testing edge 1
+2024/03/26 15:40:25 Created edge 1
+2024/03/26 15:40:25 Querying data using EQL (First Query)
+2024/03/26 15:40:25 Labels: Client Key, Client, Contract, Location, Client Name, Phone, Power, Time, Value
+Format: auto, auto, auto, auto, auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:client, 1:n:contract, 1:n:location, 1:n:name, 1:n:phone, 1:n:power, 1:n:time, 1:n:value
+123, <not set>, 244, Nairobi, Client1, 0712345678, 3432, <not set>, <not set>
+
+2024/03/26 15:40:25 Querying data using EQL (Second Query)
+2024/03/26 15:40:25 Labels: Client Key, Client, Contract, Location, Client Name, Phone, Power, Time, Value
+Format: auto, auto, auto, auto, auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:client, 1:n:contract, 1:n:location, 1:n:name, 1:n:phone, 1:n:power, 1:n:time, 1:n:value
+456, <not set>, 245, Mombasa, Client2, 0712345679, 3433, <not set>, <not set>
+
+2024/03/27 17:54:53 Connecting to server...
+2024/03/27 17:54:53 Connected to server
+2024/03/27 17:54:53 Client 127.0.0.1:50054 queries to server...
+2024/03/27 17:54:53 Welcome to the InnoCyPES Data Storage Service!
+
+2024/03/27 17:54:53 Fatal error  read tcp 127.0.0.1:50054->127.0.0.1:8080: read: connection reset by peer
+2024/03/27 17:57:26 Connecting to server...
+2024/03/27 17:57:26 Connected to server
+2024/03/27 17:57:26 Client 127.0.0.1:33716 queries to server...
+2024/03/27 17:57:26 Welcome to the InnoCyPES Data Storage Service!
+
+2024/03/27 17:57:26 Fatal error  EOF

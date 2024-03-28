@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "idss/graphdb";
+
+message QueryManager{
+    int32 id_query = 1;
+    int64 uqid = 2;
+    string query = 3;
+    int64 ttl = 4;
+    google.protobuf.Timestamp arrived_at = 5;
+    string sender_id = 6;
+    int32 local_execution = 7;
+    google.protobuf.Timestamp completed = 8;
+    bool sent_back = 9;
+    bool failed = 10;
+}
+
+message Client{
+    int32 client_id = 1;
+    string client_name = 2;
+    int64 contract_number = 3;
+    int32 power = 4;
+}
+
+message Consumption{
+    google.protobuf.Timestamp timestamp = 1;
+    double measurement = 2;
+    Client client = 3;
+}

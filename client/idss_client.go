@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -38,8 +37,18 @@ func main() {
 	*/
 
 	//TODO: Implement the client's logic here focusing on the IDSS service
-	// Numbers to send to server
-	numbers := "1,2,3,4,5"
+	//TODO: Compose queries to be sent to the server
+	LOG_QUERY := "get client where name = 'Client1'"
+	DATA_QUERY1 := "get client where name = 'Client1'"
+	DATA_QUERY2 := "get client where name = 'Client2'"
+	DATA_QUERY3 := "get client where name = 'Client3'"
+
+	// Send the queries to the server
+	log.Printf("Client %s queries to server...", conn.LocalAddr())
+	database_queries(conn, LOG_QUERY, DATA_QUERY1, DATA_QUERY2, DATA_QUERY3)
+
+
+	/* numbers := "1,2,3,4,5"
 	_, err = conn.Write([]byte(numbers))
 	checkError(err)
 
@@ -47,7 +56,11 @@ func main() {
 	length, err := conn.Read(buffer)
 	checkError(err)
 	fmt.Println(string(buffer[:length]))
-	log.Println("Received the sum from server")
+	log.Println("Received the sum from server") */
+
+	// Close the connection and clear everything
+	conn.Close()
+	log.Println("Connection closed")
 }
 
 // Function to check for errors
@@ -55,6 +68,19 @@ func checkError(err error) {
 	if err != nil {
 		log.Println("Fatal error ", err.Error())
 		os.Exit(1)
+	}
+}
+
+func database_queries(conn net.Conn, log_query, query1, query2, query3 string) {
+	queries := []string{log_query, query1, query2, query3}
+	for _, query := range queries {
+		_, err := conn.Write([]byte(query))
+		checkError(err)
+
+		buffer := make([]byte, 1024)
+		length, err := conn.Read(buffer)
+		checkError(err)
+		log.Println(string(buffer[:length]))
 	}
 }
 
