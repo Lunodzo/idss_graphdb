@@ -321,3 +321,1215 @@ Data: 1:n:key, 1:n:data
 
 2024/03/28 15:21:05 Connection Accepted:  127.0.0.1:39036
 2024/03/28 15:21:05 Fatal error: strconv.Atoi: parsing "get client where name = 'Client1'": invalid syntax
+2024/03/28 16:04:39 Listening on port 8080
+2024/03/28 16:04:39 Entering Database Initialization function...
+2024/03/28 16:04:39 Graph database started initiated
+2024/03/28 16:04:39 Creating instances from the proto schema and marshalling the data...
+2024/03/28 16:04:39 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 135 142 150 176 6 16 143 184 214 139 2 50 3 49 50 51 56 232 1 66 12 8 135 142 150 176 6 16 243 184 214 139 2]
+2024/03/28 16:04:39 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 16:04:39 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 16:04:39 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 16:04:39 Marshalled consumption 1 data:  [10 12 8 135 142 150 176 6 16 211 189 227 139 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 16:04:39 Marshalled  consumption 2 data:  [10 12 8 135 142 150 176 6 16 251 181 228 139 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 16:04:39 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/28 16:04:39 Committed Node store transaction
+2024/03/28 16:04:39 Testing edge 1
+2024/03/28 16:04:39 Created edge 1
+2024/03/28 16:04:39 Testing edge 2
+2024/03/28 16:04:39 Committed transaction
+2024/03/28 16:04:39 Querying data using EQL
+2024/03/28 16:04:39 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/28 16:04:39 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 12 8 135 142 150 176 6 16 211 189 227 139 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 12 8 135 142 150 176 6 16 251 181 228 139 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/28 16:04:39 client_id:123 client_name:"Lunodzo" contract_number:244 power:343
+2024/03/28 16:04:39 client_id:456 client_name:"Juma" contract_number:245 power:344
+2024/03/28 16:04:39 client_id:789 client_name:"Mwana" contract_number:246 power:345
+2024/03/28 16:05:34 Listening on port 8080
+2024/03/28 16:05:34 Entering Database Initialization function...
+2024/03/28 16:05:34 Graph database started initiated
+2024/03/28 16:05:34 Creating instances from the proto schema and marshalling the data...
+2024/03/28 16:05:34 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 190 142 150 176 6 16 225 222 146 179 3 50 3 49 50 51 56 232 1 66 12 8 190 142 150 176 6 16 169 224 146 179 3]
+2024/03/28 16:05:34 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 16:05:34 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 16:05:34 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 16:05:34 Marshalled consumption 1 data:  [10 12 8 190 142 150 176 6 16 137 166 155 179 3 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 16:05:34 Marshalled  consumption 2 data:  [10 12 8 190 142 150 176 6 16 181 240 156 179 3 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 16:05:34 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/28 16:05:34 Committed Node store transaction
+2024/03/28 16:05:34 Testing edge 1
+2024/03/28 16:05:35 Created edge 1
+2024/03/28 16:05:35 Testing edge 2
+2024/03/28 16:05:35 Committed transaction
+2024/03/28 16:05:35 Querying data using EQL
+2024/03/28 16:05:35 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/28 16:05:35 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 12 8 190 142 150 176 6 16 137 166 155 179 3 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 12 8 190 142 150 176 6 16 181 240 156 179 3 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/28 16:05:35 Row is not a node
+2024/03/28 16:05:35 Row is not a node
+2024/03/28 16:05:35 Row is not a node
+2024/03/28 16:05:51 Listening on port 8080
+2024/03/28 16:05:51 Entering Database Initialization function...
+2024/03/28 16:05:51 Graph database started initiated
+2024/03/28 16:05:51 Creating instances from the proto schema and marshalling the data...
+2024/03/28 16:05:51 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 207 142 150 176 6 16 234 215 163 172 3 50 3 49 50 51 56 232 1 66 12 8 207 142 150 176 6 16 178 217 163 172 3]
+2024/03/28 16:05:51 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 16:05:51 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 16:05:51 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 16:05:51 Marshalled consumption 1 data:  [10 12 8 207 142 150 176 6 16 238 174 179 172 3 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 16:05:51 Marshalled  consumption 2 data:  [10 12 8 207 142 150 176 6 16 166 170 180 172 3 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 16:05:51 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/28 16:05:51 Committed Node store transaction
+2024/03/28 16:05:51 Testing edge 1
+2024/03/28 16:05:52 Created edge 1
+2024/03/28 16:05:52 Testing edge 2
+2024/03/28 16:05:52 Committed transaction
+2024/03/28 16:05:52 Querying data using EQL
+2024/03/28 16:05:52 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/28 16:05:52 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 12 8 207 142 150 176 6 16 238 174 179 172 3 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 12 8 207 142 150 176 6 16 166 170 180 172 3 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/28 16:06:07 Listening on port 8080
+2024/03/28 16:06:07 Entering Database Initialization function...
+2024/03/28 16:06:07 Graph database started initiated
+2024/03/28 16:06:07 Creating instances from the proto schema and marshalling the data...
+2024/03/28 16:06:07 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 223 142 150 176 6 16 243 202 152 213 1 50 3 49 50 51 56 232 1 66 12 8 223 142 150 176 6 16 215 203 152 213 1]
+2024/03/28 16:06:07 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 16:06:07 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 16:06:07 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 16:06:07 Marshalled consumption 1 data:  [10 12 8 223 142 150 176 6 16 171 134 166 213 1 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 16:06:07 Marshalled  consumption 2 data:  [10 12 8 223 142 150 176 6 16 239 225 167 213 1 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 16:06:07 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/28 16:06:07 Committed Node store transaction
+2024/03/28 16:06:07 Testing edge 1
+2024/03/28 16:06:07 Created edge 1
+2024/03/28 16:06:07 Testing edge 2
+2024/03/28 16:06:07 Committed transaction
+2024/03/28 16:06:07 Querying data using EQL
+2024/03/28 16:06:07 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/28 16:06:07 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 12 8 223 142 150 176 6 16 171 134 166 213 1 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 12 8 223 142 150 176 6 16 239 225 167 213 1 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/28 16:06:07 client_id:123 client_name:"Lunodzo" contract_number:244 power:343
+2024/03/28 16:06:07 client_id:456 client_name:"Juma" contract_number:245 power:344
+2024/03/28 16:06:07 client_id:789 client_name:"Mwana" contract_number:246 power:345
+2024/03/28 16:07:40 Listening on port 8080
+2024/03/28 16:07:40 Entering Database Initialization function...
+2024/03/28 16:07:40 Graph database started initiated
+2024/03/28 16:07:40 Creating instances from the proto schema and marshalling the data...
+2024/03/28 16:07:40 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 11 8 188 143 150 176 6 16 130 215 159 8 50 3 49 50 51 56 232 1 66 11 8 188 143 150 176 6 16 174 217 159 8]
+2024/03/28 16:07:40 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 16:07:40 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 16:07:40 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 16:07:40 Marshalled consumption 1 data:  [10 11 8 188 143 150 176 6 16 162 197 167 8 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 16:07:40 Marshalled  consumption 2 data:  [10 11 8 188 143 150 176 6 16 174 190 168 8 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 16:07:40 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/28 16:07:40 Committed Node store transaction
+2024/03/28 16:07:40 Testing edge 1
+2024/03/28 16:07:40 Created edge 1
+2024/03/28 16:07:40 Testing edge 2
+2024/03/28 16:07:40 Committed transaction
+2024/03/28 16:07:40 Querying data using EQL
+2024/03/28 16:07:40 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/28 16:07:40 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 11 8 188 143 150 176 6 16 162 197 167 8 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 11 8 188 143 150 176 6 16 174 190 168 8 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/28 16:07:40 client_id:123  client_name:"Lunodzo"  contract_number:244  power:343
+2024/03/28 16:07:40 client_id:456  client_name:"Juma"  contract_number:245  power:344
+2024/03/28 16:07:40 client_id:789  client_name:"Mwana"  contract_number:246  power:345
+2024/03/28 16:07:40 timestamp:{seconds:1711638460  nanos:17425058}  measurement:100  client:{client_id:123}
+2024/03/28 16:07:40 timestamp:{seconds:1711638460  nanos:17440558}  measurement:200  client:{client_id:456}
+2024/03/28 16:11:19 Listening on port 8080
+2024/03/28 16:11:19 Entering Database Initialization function...
+2024/03/28 16:11:19 Graph database started initiated
+2024/03/28 16:11:19 Creating instances from the proto schema and marshalling the data...
+2024/03/28 16:11:19 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 151 145 150 176 6 16 194 179 139 194 2 50 3 49 50 51 56 232 1 66 12 8 151 145 150 176 6 16 166 180 139 194 2]
+2024/03/28 16:11:19 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 16:11:19 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 16:11:19 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 16:11:19 Marshalled consumption 1 data:  [10 12 8 151 145 150 176 6 16 246 143 148 194 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 16:11:19 Marshalled  consumption 2 data:  [10 12 8 151 145 150 176 6 16 138 254 148 194 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 16:11:19 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/28 16:11:19 Committed Node store transaction
+2024/03/28 16:11:19 Testing edge 1
+2024/03/28 16:11:19 Created edge 1
+2024/03/28 16:11:19 Testing edge 2
+2024/03/28 16:11:19 Committed transaction
+2024/03/28 16:11:20 Entering Database Query function...
+2024/03/28 16:11:20 Querying data using EQL
+2024/03/28 16:11:20 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/28 16:11:20 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 12 8 151 145 150 176 6 16 246 143 148 194 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 12 8 151 145 150 176 6 16 138 254 148 194 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/28 16:11:20 client_id:123 client_name:"Lunodzo" contract_number:244 power:343
+2024/03/28 16:11:20 client_id:456 client_name:"Juma" contract_number:245 power:344
+2024/03/28 16:11:20 client_id:789 client_name:"Mwana" contract_number:246 power:345
+2024/03/28 16:11:20 timestamp:{seconds:1711638679 nanos:675612662} measurement:100 client:{client_id:123}
+2024/03/28 16:11:20 timestamp:{seconds:1711638679 nanos:675626762} measurement:200 client:{client_id:456}
+2024/03/28 16:49:20 Listening on port 8080
+2024/03/28 16:49:20 Entering Database Initialization function...
+2024/03/28 16:49:20 Graph database started initiated
+2024/03/28 16:49:20 Creating instances from the proto schema and marshalling the data...
+2024/03/28 16:49:20 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 11 8 128 163 150 176 6 16 156 241 205 22 50 3 49 50 51 56 232 1 66 11 8 128 163 150 176 6 16 228 242 205 22]
+2024/03/28 16:49:20 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/28 16:49:20 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/28 16:49:20 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/28 16:49:20 Marshalled consumption 1 data:  [10 11 8 128 163 150 176 6 16 228 137 215 22 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/28 16:49:20 Marshalled  consumption 2 data:  [10 11 8 128 163 150 176 6 16 248 247 215 22 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/28 16:49:20 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/28 16:49:20 Committed Node store transaction
+2024/03/28 16:49:20 Testing edge 1
+2024/03/28 16:49:20 Created edge 1
+2024/03/28 16:49:20 Testing edge 2
+2024/03/28 16:49:20 Committed transaction
+2024/03/28 16:49:20 Entering Database Query function...
+2024/03/28 16:49:20 Querying data using EQL
+2024/03/28 16:49:20 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/28 16:49:20 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 11 8 128 163 150 176 6 16 228 137 215 22 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 11 8 128 163 150 176 6 16 248 247 215 22 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/28 16:49:20 client_id:123 client_name:"Lunodzo" contract_number:244 power:343
+2024/03/28 16:49:20 client_id:456 client_name:"Juma" contract_number:245 power:344
+2024/03/28 16:49:20 client_id:789 client_name:"Mwana" contract_number:246 power:345
+2024/03/28 16:49:20 timestamp:{seconds:1711640960 nanos:47564004} measurement:100 client:{client_id:123}
+2024/03/28 16:49:20 timestamp:{seconds:1711640960 nanos:47578104} measurement:200 client:{client_id:456}
+2024/03/30 15:36:49 Listening on port 8080
+2024/03/30 15:36:49 Entering Database Initialization function...
+2024/03/30 15:36:49 Graph database started initiated
+2024/03/30 15:36:49 Creating instances from the proto schema and marshalling the data...
+2024/03/30 15:36:49 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 129 199 160 176 6 16 151 248 187 134 2 50 3 49 50 51 56 232 1 66 12 8 129 199 160 176 6 16 223 249 187 134 2]
+2024/03/30 15:36:49 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/30 15:36:49 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/30 15:36:49 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/30 15:36:49 Marshalled consumption 1 data:  [10 12 8 129 199 160 176 6 16 219 196 194 134 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/30 15:36:49 Marshalled  consumption 2 data:  [10 12 8 129 199 160 176 6 16 243 185 195 134 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/30 15:36:49 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/30 15:36:49 Committed Node store transaction
+2024/03/30 15:36:49 Testing edge 1
+2024/03/30 15:36:49 Created edge 1
+2024/03/30 15:36:49 Testing edge 2
+2024/03/30 15:36:49 Committed transaction
+2024/03/30 15:36:50 Entering Database Query function...
+2024/03/30 15:36:50 Querying data using EQL
+2024/03/30 15:36:50 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/30 15:36:50 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 12 8 129 199 160 176 6 16 219 196 194 134 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 12 8 129 199 160 176 6 16 243 185 195 134 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/30 15:36:50 client_id:123 client_name:"Lunodzo" contract_number:244 power:343
+2024/03/30 15:36:50 client_id:456 client_name:"Juma" contract_number:245 power:344
+2024/03/30 15:36:50 client_id:789 client_name:"Mwana" contract_number:246 power:345
+2024/03/30 15:36:50 timestamp:{seconds:1711809409 nanos:550543963} measurement:100 client:{client_id:123}
+2024/03/30 15:36:50 timestamp:{seconds:1711809409 nanos:550558963} measurement:200 client:{client_id:456}
+2024/03/30 15:42:55 Listening on port 8080
+2024/03/30 15:42:55 Entering Database Query function...
+2024/03/30 15:42:55 Querying data using EQL
+2024/03/30 15:42:55 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/30 15:42:55 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 12 8 129 199 160 176 6 16 219 196 194 134 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 12 8 129 199 160 176 6 16 243 185 195 134 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/30 15:42:55 client_id:123 client_name:"Lunodzo" contract_number:244 power:343
+2024/03/30 15:42:55 client_id:456 client_name:"Juma" contract_number:245 power:344
+2024/03/30 15:42:55 client_id:789 client_name:"Mwana" contract_number:246 power:345
+2024/03/30 15:42:55 timestamp:{seconds:1711809409 nanos:550543963} measurement:100 client:{client_id:123}
+2024/03/30 15:42:55 timestamp:{seconds:1711809409 nanos:550558963} measurement:200 client:{client_id:456}
+2024/03/31 03:27:54 Listening on port 8080
+2024/03/31 03:27:54 Entering the database initialisation...
+2024/03/31 03:27:54 Database initialised successfully
+2024/03/31 03:27:54 Creating instances from the protofile if it does not exist...
+2024/03/31 03:27:54 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 154 248 162 176 6 16 161 232 136 212 2 50 3 49 50 51 56 232 1 66 12 8 154 248 162 176 6 16 233 233 136 212 2]
+2024/03/31 03:27:54 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/31 03:27:54 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/31 03:27:54 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/31 03:27:54 Marshalled consumption 1 data:  [10 12 8 154 248 162 176 6 16 133 225 147 212 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/31 03:27:54 Marshalled  consumption 2 data:  [10 12 8 154 248 162 176 6 16 129 134 150 212 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/31 03:27:54 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/31 03:27:54 Committed Node store transaction
+2024/03/31 03:27:54 Testing edge 1
+2024/03/31 03:27:54 Created edge 1
+2024/03/31 03:27:54 Testing edge 2
+2024/03/31 03:27:54 Committed transaction
+2024/03/31 03:27:55 Entering Database Query function...
+2024/03/31 03:27:55 Querying data using EQL
+2024/03/31 03:27:55 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/31 03:27:55 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 12 8 154 248 162 176 6 16 133 225 147 212 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 12 8 154 248 162 176 6 16 129 134 150 212 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/31 03:27:55 client_id:123  client_name:"Lunodzo"  contract_number:244  power:343
+2024/03/31 03:27:55 client_id:456  client_name:"Juma"  contract_number:245  power:344
+2024/03/31 03:27:55 client_id:789  client_name:"Mwana"  contract_number:246  power:345
+2024/03/31 03:27:55 timestamp:{seconds:1711848474  nanos:713355397}  measurement:100  client:{client_id:123}
+2024/03/31 03:27:55 timestamp:{seconds:1711848474  nanos:713392897}  measurement:200  client:{client_id:456}
+2024/03/31 03:28:55 Listening on port 8080
+2024/03/31 03:28:55 This is a message from a different file..
+2024/03/31 03:28:55 Entering the database initialisation from...
+2024/03/31 03:28:55 Database initialised successfully
+2024/03/31 03:28:55 Creating instances from the protofile if it does not exist...
+2024/03/31 03:28:55 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 12 8 215 248 162 176 6 16 190 251 218 181 2 50 3 49 50 51 56 232 1 66 12 8 215 248 162 176 6 16 134 253 218 181 2]
+2024/03/31 03:28:55 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/03/31 03:28:55 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/03/31 03:28:55 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/03/31 03:28:55 Marshalled consumption 1 data:  [10 12 8 215 248 162 176 6 16 238 255 228 181 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/03/31 03:28:55 Marshalled  consumption 2 data:  [10 12 8 215 248 162 176 6 16 146 241 229 181 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/03/31 03:28:55 Creating nodes and edges in the graph database based on marshalled data...
+2024/03/31 03:28:55 Committed Node store transaction
+2024/03/31 03:28:55 Testing edge 1
+2024/03/31 03:28:55 Created edge 1
+2024/03/31 03:28:55 Testing edge 2
+2024/03/31 03:28:55 Committed transaction
+2024/03/31 03:28:56 Entering Database Query function...
+2024/03/31 03:28:56 Querying data using EQL
+2024/03/31 03:28:56 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+124, [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+125, [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+126, [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+
+2024/03/31 03:28:56 Labels: Consumption Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+127, [10 12 8 215 248 162 176 6 16 238 255 228 181 2 17 0 0 0 0 0 0 89 64 26 2 8 123]
+128, [10 12 8 215 248 162 176 6 16 146 241 229 181 2 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+
+2024/03/31 03:28:56 client_id:123 client_name:"Lunodzo" contract_number:244 power:343
+2024/03/31 03:28:56 client_id:456 client_name:"Juma" contract_number:245 power:344
+2024/03/31 03:28:56 client_id:789 client_name:"Mwana" contract_number:246 power:345
+2024/03/31 03:28:56 timestamp:{seconds:1711848535 nanos:649674734} measurement:100 client:{client_id:123}
+2024/03/31 03:28:56 timestamp:{seconds:1711848535 nanos:649689234} measurement:200 client:{client_id:456}
+2024/04/01 01:52:35 Entering the database initialisation from...
+2024/04/01 01:52:35 Database initialised successfully
+2024/04/01 01:52:35 Creating instances from the protofile if it does not exist...
+2024/04/01 01:52:35 Marshalled query manager data:  [8 12 16 123 26 33 103 101 116 32 99 108 105 101 110 116 32 119 104 101 114 101 32 110 97 109 101 32 61 32 39 67 108 105 101 110 116 49 39 32 100 42 11 8 195 238 167 176 6 16 134 239 132 73 50 3 49 50 51 56 232 1]
+2024/04/01 01:52:35 Marshalled client 1 data:  [8 123 18 7 76 117 110 111 100 122 111 24 244 1 32 215 2]
+2024/04/01 01:52:35 Marshalled client 2 data:  [8 200 3 18 4 74 117 109 97 24 245 1 32 216 2]
+2024/04/01 01:52:35 Marshalled client 3 data:  [8 149 6 18 5 77 119 97 110 97 24 246 1 32 217 2]
+2024/04/01 01:52:35 Marshalled consumption 1 data:  [10 11 8 195 238 167 176 6 16 218 237 140 73 17 0 0 0 0 0 0 89 64 26 2 8 123]
+2024/04/01 01:52:35 Marshalled  consumption 2 data:  [10 11 8 195 238 167 176 6 16 230 230 141 73 17 0 0 0 0 0 0 105 64 26 3 8 200 3]
+2024/04/01 01:52:35 Creating nodes and edges in the graph database based on marshalled data...
+2024/04/01 01:52:35 Committed Node store transaction
+2024/04/01 01:52:35 Testing edge 1
+2024/04/01 01:52:35 Created edge 1
+2024/04/01 01:52:35 Testing edge 2
+2024/04/01 01:52:35 Committed transaction
+2024/04/01 01:52:35 Server listening on port 8080
+2024/04/01 01:55:49 Server listening on port 8080
+2024/04/01 02:07:16 Connection Accepted:  127.0.0.1:43112
+2024/04/01 02:07:16 Received command: get client where name = 'Client1'ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:07:16 Processing command: get client where name = 'Client1'ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:07:16 Invalid command
+2024/04/01 02:12:22 Server listening on port 8080
+2024/04/01 02:12:36 Connection Accepted:  127.0.0.1:42204
+2024/04/01 02:12:36 Received command: get client where name = 'Client1'ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:12:36 Processing command: get client where name = 'Client1'ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:12:36 Invalid command
+2024/04/01 02:14:23 Connection Accepted:  127.0.0.1:45692
+2024/04/01 02:14:23 Received command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:14:23 Processing command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:14:23 Marshalled client data:  [8 123 18 7 67 108 105 101 110 116 50 24 244 1]
+2024/04/01 02:14:23 Client added successfully
+2024/04/01 02:15:54 Connection Accepted:  127.0.0.1:43764
+2024/04/01 02:15:54 Received command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:15:54 Processing command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:15:54 Marshalled client data:  [8 123 18 7 67 108 105 101 110 116 50 24 244 1]
+2024/04/01 02:15:54 Client added successfully
+2024/04/01 02:15:54 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:43764: write: connection reset by peer
+2024/04/01 02:16:17 Server listening on port 8080
+2024/04/01 02:16:32 Connection Accepted:  127.0.0.1:39504
+2024/04/01 02:16:32 Received command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:16:32 Processing command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:16:32 Marshalled client data:  [8 123 18 7 67 108 105 101 110 116 50 24 244 1]
+2024/04/01 02:16:32 Client added successfully
+2024/04/01 02:18:05 Connection Accepted:  127.0.0.1:40148
+2024/04/01 02:18:05 Received command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:18:05 Processing command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:18:05 Marshalled client data:  [8 123 18 7 67 108 105 101 110 116 50 24 244 1]
+2024/04/01 02:18:05 Client added successfully
+2024/04/01 02:18:05 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:40148: write: connection reset by peer
+2024/04/01 02:18:16 Server listening on port 8080
+2024/04/01 02:18:19 Connection Accepted:  127.0.0.1:35496
+2024/04/01 02:18:19 Received command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123 
+2024/04/01 02:18:19 Processing command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:18:19 Marshalled client data:  [8 123 18 7 67 108 105 101 110 116 50 24 244 1]
+2024/04/01 02:18:19 Client added successfully
+2024/04/01 02:18:19 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:35496: write: connection reset by peer
+2024/04/01 02:18:43 Server listening on port 8080
+2024/04/01 02:18:52 Connection Accepted:  127.0.0.1:56822
+2024/04/01 02:18:52 Received command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123 
+2024/04/01 02:18:52 Processing command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:18:52 Marshalled client data:  [8 123 18 7 67 108 105 101 110 116 50 24 244 1]
+2024/04/01 02:18:52 Client added successfully
+2024/04/01 02:18:52 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:56822: write: connection reset by peer
+2024/04/01 02:19:22 Server listening on port 8080
+2024/04/01 02:19:26 Connection Accepted:  127.0.0.1:36498
+2024/04/01 02:19:26 Received command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123 
+2024/04/01 02:19:26 Processing command: ADD_CLIENT 123 Client2 244 343ADD_CONSUMPTION 123 123 343 2021-09-01 12:00:00get client where name = 'Client3'get consumption where consumption_id = 123
+2024/04/01 02:19:26 Marshalled client data:  [8 123 18 7 67 108 105 101 110 116 50 24 244 1]
+2024/04/01 02:19:26 Client added successfully
+2024/04/01 02:19:26 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:36498: write: connection reset by peer
+2024/04/01 02:21:52 Server listening on port 8080
+2024/04/01 02:21:56 Connection Accepted:  127.0.0.1:56600
+2024/04/01 02:21:56 Received command: get client where name = 'Client3' 
+2024/04/01 02:21:56 Processing command: get client where name = 'Client3'
+2024/04/01 02:21:56 Invalid command
+2024/04/01 02:23:39 Connection Accepted:  127.0.0.1:48206
+2024/04/01 02:23:39 Received command: GET_CLIENT get client where name = 'Client3' 
+2024/04/01 02:23:39 Processing command: GET_CLIENT get client where name = 'Client3'
+2024/04/01 02:23:39 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/04/01 02:25:08 Connection Accepted:  127.0.0.1:49840
+2024/04/01 02:25:08 Received command: GET_CLIENT get client where name = '' 
+2024/04/01 02:25:08 Processing command: GET_CLIENT get client where name = ''
+2024/04/01 02:25:08 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/04/01 02:25:09 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:49840: write: connection reset by peer
+2024/04/01 02:25:19 Server listening on port 8080
+2024/04/01 02:25:22 Connection Accepted:  127.0.0.1:53316
+2024/04/01 02:25:22 Received command: GET_CLIENT get client where name = '' 
+2024/04/01 02:25:22 Processing command: GET_CLIENT get client where name = ''
+2024/04/01 02:25:22 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/04/01 02:28:56 Connection Accepted:  127.0.0.1:39832
+2024/04/01 02:29:28 Received command: GET_CLIENT 
+2024/04/01 02:29:28 Processing command: GET_CLIENT
+2024/04/01 02:29:47 Server listening on port 8080
+2024/04/01 02:29:57 Connection Accepted:  127.0.0.1:37632
+2024/04/01 02:30:04 Received command: GET_CLIENT 
+2024/04/01 02:30:04 Processing command: GET_CLIENT
+2024/04/01 02:32:03 Server listening on port 8080
+2024/04/01 02:32:10 Connection Accepted:  127.0.0.1:32818
+2024/04/01 02:32:29 Received command: GET_CLIENT 
+2024/04/01 02:32:29 Processing command: GET_CLIENT
+2024/04/01 02:33:03 Server listening on port 8080
+2024/04/01 02:33:10 Connection Accepted:  127.0.0.1:47586
+2024/04/01 02:33:20 Received command: GET_CLIENT 
+2024/04/01 02:33:20 Processing command: GET_CLIENT
+2024/04/01 02:33:58 Server listening on port 8080
+2024/04/01 02:34:02 Connection Accepted:  127.0.0.1:38064
+2024/04/01 02:34:02 Received command: GET_CLIENT get client where name = '' 
+2024/04/01 02:34:02 Processing command: GET_CLIENT get client where name = ''
+2024/04/01 02:34:02 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/04/01 02:35:58 Server listening on port 8080
+2024/04/01 02:36:02 Connection Accepted:  127.0.0.1:41836
+2024/04/01 02:36:02 Received command: GET_CLIENT get client where name = '' 
+2024/04/01 02:36:02 Processing command: GET_CLIENT get client where name = ''
+2024/04/01 02:36:02 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/04/01 02:36:27 Connection Accepted:  127.0.0.1:41916
+2024/04/01 02:36:27 Received command: GET_CLIENT get client where name = 'Client1' 
+2024/04/01 02:36:27 Processing command: GET_CLIENT get client where name = 'Client1'
+2024/04/01 02:36:27 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/04/01 14:46:20 Connection Accepted:  [::1]:56048
+2024/04/01 14:46:20 Connection Accepted:  [::1]:56054
+2024/04/01 14:46:21 Connection Accepted:  [::1]:56070
+2024/04/01 14:46:21 Received command: GET /room HTTP/1.1
+Host: localhost:8080
+Connection: Upgrade
+Pragma: no-cache
+Cache-Control: no-cache
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0
+Upgrade: websocket
+Origin: http://localhost:8080
+Sec-WebSocket-Version: 13
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,en-GB;q=0.8,sv;q=0.7,it-IT;q=0.6,it;q=0.5,sw;q=0.4
+Sec-WebSocket-Key: EVykpjlkbcD59gZzxU3sjA==
+Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+
+ 
+2024/04/01 14:46:21 Processing command: GET /room HTTP/1.1
+Host: localhost:8080
+Connection: Upgrade
+Pragma: no-cache
+Cache-Control: no-cache
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0
+Upgrade: websocket
+Origin: http://localhost:8080
+Sec-WebSocket-Version: 13
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,en-GB;q=0.8,sv;q=0.7,it-IT;q=0.6,it;q=0.5,sw;q=0.4
+Sec-WebSocket-Key: EVykpjlkbcD59gZzxU3sjA==
+Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+
+2024/04/01 14:46:21 Invalid command
+2024/04/01 14:46:21 Received command: GET /favicon.ico HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+sec-ch-ua: "Microsoft Edge";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+DNT: 1
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0
+sec-ch-ua-platform: "Windows"
+Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: image
+Referer: http://localhost:8080/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,en-GB;q=0.8,sv;q=0.7,it-IT;q=0.6,it;q=0.5,sw;q=0.4
+
+ 
+2024/04/01 14:46:21 Processing command: GET /favicon.ico HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+sec-ch-ua: "Microsoft Edge";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+DNT: 1
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0
+sec-ch-ua-platform: "Windows"
+Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: image
+Referer: http://localhost:8080/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,en-GB;q=0.8,sv;q=0.7,it-IT;q=0.6,it;q=0.5,sw;q=0.4
+
+2024/04/01 14:46:21 Invalid command
+2024/04/01 14:46:23 Fatal error: EOF
+2024/04/01 15:30:15 Server listening on port 8080
+2024/04/01 15:30:23 Connection Accepted:  [::1]:51546
+2024/04/01 15:30:23 Received command: GET / HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+sec-ch-ua: "Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Windows"
+DNT: 1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,sw-TZ;q=0.8,sw;q=0.7,en-GB-oxendict;q=0.6
+Cookie: JSESSIONID=node01dxpkk6txw2qh1r25nqabeywgb0.node0
+
+ 
+2024/04/01 15:30:23 Processing command: GET / HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+sec-ch-ua: "Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Windows"
+DNT: 1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,sw-TZ;q=0.8,sw;q=0.7,en-GB-oxendict;q=0.6
+Cookie: JSESSIONID=node01dxpkk6txw2qh1r25nqabeywgb0.node0
+
+2024/04/01 15:30:23 Invalid command
+2024/04/01 15:30:23 Connection Accepted:  [::1]:51550
+2024/04/01 15:30:24 Connection Accepted:  [::1]:51556
+2024/04/01 15:30:24 Received command: GET / HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Cache-Control: max-age=0
+sec-ch-ua: "Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Windows"
+DNT: 1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,sw-TZ;q=0.8,sw;q=0.7,en-GB-oxendict;q=0.6
+Cookie: JSESSIONID=node01dxpkk6txw2qh1r25nqabeywgb0.node0
+
+ 
+2024/04/01 15:30:24 Processing command: GET / HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Cache-Control: max-age=0
+sec-ch-ua: "Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Windows"
+DNT: 1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,sw-TZ;q=0.8,sw;q=0.7,en-GB-oxendict;q=0.6
+Cookie: JSESSIONID=node01dxpkk6txw2qh1r25nqabeywgb0.node0
+
+2024/04/01 15:30:24 Invalid command
+2024/04/01 15:30:29 Connection Accepted:  [::1]:51564
+2024/04/01 15:30:29 Received command: GET / HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Cache-Control: max-age=0
+sec-ch-ua: "Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Windows"
+DNT: 1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,sw-TZ;q=0.8,sw;q=0.7,en-GB-oxendict;q=0.6
+Cookie: JSESSIONID=node01dxpkk6txw2qh1r25nqabeywgb0.node0
+
+ 
+2024/04/01 15:30:29 Processing command: GET / HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Cache-Control: max-age=0
+sec-ch-ua: "Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Windows"
+DNT: 1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,sw-TZ;q=0.8,sw;q=0.7,en-GB-oxendict;q=0.6
+Cookie: JSESSIONID=node01dxpkk6txw2qh1r25nqabeywgb0.node0
+
+2024/04/01 15:30:29 Invalid command
+2024/04/01 15:30:59 Connection Accepted:  [::1]:39070
+2024/04/01 15:30:59 Received command: GET / HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Cache-Control: max-age=0
+sec-ch-ua: "Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Windows"
+DNT: 1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,sw-TZ;q=0.8,sw;q=0.7,en-GB-oxendict;q=0.6
+Cookie: JSESSIONID=node01dxpkk6txw2qh1r25nqabeywgb0.node0
+
+ 
+2024/04/01 15:30:59 Processing command: GET / HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Cache-Control: max-age=0
+sec-ch-ua: "Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Windows"
+DNT: 1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9,sw-TZ;q=0.8,sw;q=0.7,en-GB-oxendict;q=0.6
+Cookie: JSESSIONID=node01dxpkk6txw2qh1r25nqabeywgb0.node0
+
+2024/04/01 15:30:59 Invalid command
+2024/04/01 15:30:59 Fatal error: write tcp [::1]:8080->[::1]:51564: write: broken pipe
+2024/04/01 15:31:21 Server listening on port 8080
+2024/04/01 15:31:29 Connection Accepted:  127.0.0.1:60956
+2024/04/01 15:31:29 Received command: GET_CLIENT get client where name = 'Client1' 
+2024/04/01 15:31:29 Processing command: GET_CLIENT get client where name = 'Client1'
+2024/04/01 15:31:29 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/04/01 15:42:23 Server listening on port 8080
+2024/04/01 15:42:57 Connection Accepted:  127.0.0.1:48384
+2024/04/01 15:42:57 Received command: GET_CLIENT get client where name = 'Client1' 
+2024/04/01 15:42:57 Processing command: GET_CLIENT get client where name = 'Client1'
+2024/04/01 15:42:57 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/04/01 15:42:57 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:48384: write: connection reset by peer
+2024/04/01 15:43:22 Server listening on port 8080
+2024/04/01 15:43:26 Connection Accepted:  127.0.0.1:43056
+2024/04/01 15:43:26 Received command: GET_CLIENT get client where name = 'Client1' 
+2024/04/01 15:43:26 Processing command: GET_CLIENT get client where name = 'Client1'
+2024/04/01 15:43:26 Labels: Client Key, Data
+Format: auto, auto
+Data: 1:n:key, 1:n:data
+
+2024/04/01 16:07:18 Server listening on port 8080
+2024/04/01 16:07:21 Connection Accepted:  127.0.0.1:35304
+2024/04/01 16:07:21 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 16:07:21 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/01 16:07:21 Getting client...
+2024/04/01 16:07:36 Connection Accepted:  127.0.0.1:59802
+2024/04/01 16:07:36 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 16:07:36 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/01 16:07:36 Getting client...
+2024/04/01 16:08:02 Connection Accepted:  127.0.0.1:42446
+2024/04/01 16:08:02 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 16:08:02 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/01 16:08:02 Getting client...
+2024/04/01 16:08:02 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:42446: write: connection reset by peer
+2024/04/01 17:57:30 Server listening on port 8080
+2024/04/01 17:57:32 Connection Accepted:  127.0.0.1:40708
+2024/04/01 17:57:32 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 17:57:32 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/01 17:57:32 Getting client...
+2024/04/01 18:00:33 Server listening on port 8080
+2024/04/01 18:00:37 Connection Accepted:  127.0.0.1:59918
+2024/04/01 18:00:37 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 18:00:37 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/01 18:00:37 Getting client...
+2024/04/01 18:00:37 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:59918: write: connection reset by peer
+2024/04/01 18:00:43 Server listening on port 8080
+2024/04/01 18:00:46 Connection Accepted:  127.0.0.1:34312
+2024/04/01 18:00:46 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 18:00:46 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/01 18:00:46 Getting client...
+2024/04/01 18:00:46 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:34312: write: connection reset by peer
+2024/04/01 18:03:44 Server listening on port 8080
+2024/04/01 18:03:47 Connection Accepted:  127.0.0.1:48454
+2024/04/01 18:03:47 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 18:03:47 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/01 18:03:47 Getting client...
+2024/04/01 18:03:47 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:48454: write: connection reset by peer
+2024/04/01 18:06:45 Server listening on port 8080
+2024/04/01 18:06:50 Connection Accepted:  127.0.0.1:57076
+2024/04/01 18:06:50 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 18:06:50 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/01 18:06:50 Getting client...
+2024/04/01 18:06:50 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:57076: write: connection reset by peer
+2024/04/01 21:11:37 Server listening on port 8080
+2024/04/01 21:11:42 Connection Accepted:  127.0.0.1:57264
+2024/04/01 21:11:42 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 21:11:42 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:57264: write: connection reset by peer
+2024/04/01 23:11:58 Server listening on port 8080
+2024/04/01 23:12:01 Connection Accepted:  127.0.0.1:53570
+2024/04/01 23:12:01 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 23:12:01 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/01 23:12:01 Getting client...
+2024/04/01 23:12:30 Connection Accepted:  127.0.0.1:35808
+2024/04/01 23:12:30 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 23:12:30 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/01 23:12:30 Getting client...
+2024/04/01 23:12:30 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:35808: write: broken pipe
+2024/04/01 23:12:38 Server listening on port 8080
+2024/04/01 23:12:42 Connection Accepted:  127.0.0.1:40190
+2024/04/01 23:12:42 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/01 23:12:42 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:40190: write: connection reset by peer
+2024/04/04 15:06:49 Server listening on port 8080
+2024/04/04 15:06:57 Connection Accepted:  127.0.0.1:54910
+2024/04/04 15:06:57 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 15:06:57 Fatal error: GraphError: Failed to open graph storage (mkdir /server/idss_graph_db: no such file or directory)
+2024/04/04 15:07:23 Server listening on port 8080
+2024/04/04 15:07:27 Connection Accepted:  127.0.0.1:42370
+2024/04/04 15:07:27 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 15:07:27 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 15:07:27 Getting client...
+2024/04/04 15:07:27 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:42370: write: connection reset by peer
+2024/04/04 15:38:40 Server listening on port 8080
+2024/04/04 15:38:44 Connection Accepted:  127.0.0.1:54554
+2024/04/04 15:38:44 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 15:38:44 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 15:38:44 Getting client...
+2024/04/04 15:38:45 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:54554: write: connection reset by peer
+2024/04/04 16:54:38 Server listening on port 8080
+2024/04/04 16:55:22 Connection Accepted:  127.0.0.1:46052
+2024/04/04 16:55:22 Client connected:  127.0.0.1:46052
+2024/04/04 16:55:22 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 16:55:22 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 16:55:22 Getting client...
+2024/04/04 16:55:22 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:46052: write: connection reset by peer
+2024/04/04 17:01:25 Server listening on port 8080
+2024/04/04 17:01:29 Connection Accepted:  127.0.0.1:60984
+2024/04/04 17:01:29 Client connected:  127.0.0.1:60984
+2024/04/04 17:01:29 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 17:01:29 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 17:01:29 Getting client...
+2024/04/04 17:01:29 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:60984: write: broken pipe
+2024/04/04 17:02:27 Server listening on port 8080
+2024/04/04 17:02:33 Connection Accepted:  127.0.0.1:47878
+2024/04/04 17:02:33 Client connected:  127.0.0.1:47878
+2024/04/04 17:02:33 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 17:02:33 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 17:02:33 Getting client...
+2024/04/04 17:02:33 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:47878: write: broken pipe
+2024/04/04 17:10:44 Server listening on port 8080
+2024/04/04 17:10:48 Connection Accepted:  127.0.0.1:42198
+2024/04/04 17:10:48 Client connected:  127.0.0.1:42198
+2024/04/04 17:10:48 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 17:10:48 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 17:10:48 Getting client...
+2024/04/04 17:10:48 Error sending data to client:  write tcp 127.0.0.1:8080->127.0.0.1:42198: write: connection reset by peer
+2024/04/04 17:10:48 Error sending data to client:  write tcp 127.0.0.1:8080->127.0.0.1:42198: use of closed network connection
+2024/04/04 17:10:48 Error sending data to client:  write tcp 127.0.0.1:8080->127.0.0.1:42198: use of closed network connection
+2024/04/04 17:10:48 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:42198: use of closed network connection
+2024/04/04 17:20:03 Server listening on port 8080
+2024/04/04 17:20:07 Connection Accepted:  127.0.0.1:44844
+2024/04/04 17:20:07 Client connected:  127.0.0.1:44844
+2024/04/04 17:20:07 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 17:20:07 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 17:20:07 Getting client...
+2024/04/04 17:20:07 Error sending data to client:  write tcp 127.0.0.1:8080->127.0.0.1:44844: write: broken pipe
+2024/04/04 17:20:07 Error sending data to client:  write tcp 127.0.0.1:8080->127.0.0.1:44844: use of closed network connection
+2024/04/04 17:20:07 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:44844: use of closed network connection
+2024/04/04 17:21:03 Connection Accepted:  127.0.0.1:60590
+2024/04/04 17:21:03 Client connected:  127.0.0.1:60590
+2024/04/04 17:21:03 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 17:21:03 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 17:21:03 Getting client...
+2024/04/04 17:21:03 Error sending data to client:  write tcp 127.0.0.1:8080->127.0.0.1:60590: write: broken pipe
+2024/04/04 17:21:03 Error sending data to client:  write tcp 127.0.0.1:8080->127.0.0.1:60590: use of closed network connection
+2024/04/04 17:21:03 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:60590: use of closed network connection
+2024/04/04 17:23:23 Server listening on port 8080
+2024/04/04 17:23:27 Connection Accepted:  127.0.0.1:45482
+2024/04/04 17:23:27 Client connected:  127.0.0.1:45482
+2024/04/04 17:23:27 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 17:23:27 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 17:23:27 Getting client...
+2024/04/04 17:23:27 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:45482: write: connection reset by peer
+2024/04/04 17:23:27 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:45482: use of closed network connection
+2024/04/04 17:23:27 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:45482: use of closed network connection
+2024/04/04 17:23:27 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:45482: use of closed network connection
+2024/04/04 17:26:01 Server listening on port 8080
+2024/04/04 17:26:05 Connection Accepted:  127.0.0.1:35740
+2024/04/04 17:26:05 Client connected:  127.0.0.1:35740
+2024/04/04 17:26:05 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 17:26:05 Error sending success message to client:  write tcp 127.0.0.1:8080->127.0.0.1:35740: write: connection reset by peer
+2024/04/04 17:26:05 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 17:26:05 Getting client...
+2024/04/04 17:26:05 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:35740: use of closed network connection
+2024/04/04 17:26:05 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:35740: use of closed network connection
+2024/04/04 17:26:05 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:35740: use of closed network connection
+2024/04/04 17:26:05 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:35740: use of closed network connection
+2024/04/04 17:28:32 Server listening on port 8080
+2024/04/04 17:28:35 Connection Accepted:  127.0.0.1:57372
+2024/04/04 17:28:35 Client connected:  127.0.0.1:57372
+2024/04/04 17:28:35 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 17:28:35 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 17:28:35 Getting client...
+2024/04/04 17:28:35 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:57372: write: connection reset by peer
+2024/04/04 17:28:35 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:57372: use of closed network connection
+2024/04/04 17:28:35 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:57372: use of closed network connection
+2024/04/04 17:28:35 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:57372: use of closed network connection
+2024/04/04 18:03:58 Server listening on port 8080
+2024/04/04 18:04:01 Connection Accepted:  127.0.0.1:46874
+2024/04/04 18:04:01 Client connected:  127.0.0.1:46874
+2024/04/04 18:04:01 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 18:04:01 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 18:04:01 Getting client...
+2024/04/04 18:04:01 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:46874: write: connection reset by peer
+2024/04/04 18:04:01 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:46874: use of closed network connection
+2024/04/04 18:04:01 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:46874: use of closed network connection
+2024/04/04 18:04:01 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:46874: use of closed network connection
+2024/04/04 18:06:01 Server listening on port 8080
+2024/04/04 18:06:05 Connection Accepted:  127.0.0.1:41696
+2024/04/04 18:06:05 Client connected:  127.0.0.1:41696
+2024/04/04 18:06:05 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 18:06:05 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 18:06:05 Getting client...
+2024/04/04 18:06:05 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:41696: write: connection reset by peer
+2024/04/04 18:06:05 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:41696: use of closed network connection
+2024/04/04 18:06:05 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:41696: use of closed network connection
+2024/04/04 18:06:05 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:41696: use of closed network connection
+2024/04/04 18:06:09 Connection Accepted:  127.0.0.1:41700
+2024/04/04 18:06:09 Client connected:  127.0.0.1:41700
+2024/04/04 18:06:09 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 18:06:09 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 18:06:09 Getting client...
+2024/04/04 18:06:09 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:41700: write: broken pipe
+2024/04/04 18:06:09 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:41700: use of closed network connection
+2024/04/04 18:06:09 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:41700: use of closed network connection
+2024/04/04 18:06:09 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:41700: use of closed network connection
+2024/04/04 18:06:11 Connection Accepted:  127.0.0.1:60360
+2024/04/04 18:06:11 Client connected:  127.0.0.1:60360
+2024/04/04 18:06:11 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 18:06:11 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 18:06:11 Getting client...
+2024/04/04 18:06:11 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:60360: write: broken pipe
+2024/04/04 18:06:11 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:60360: use of closed network connection
+2024/04/04 18:06:11 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:60360: use of closed network connection
+2024/04/04 18:06:14 Connection Accepted:  127.0.0.1:60366
+2024/04/04 18:06:14 Client connected:  127.0.0.1:60366
+2024/04/04 18:06:14 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 18:06:14 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 18:06:14 Getting client...
+2024/04/04 18:06:14 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:60366: write: broken pipe
+2024/04/04 18:06:14 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:60366: use of closed network connection
+2024/04/04 18:06:14 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:60366: use of closed network connection
+2024/04/04 18:07:40 Connection Accepted:  127.0.0.1:43946
+2024/04/04 18:07:40 Client connected:  127.0.0.1:43946
+2024/04/04 18:07:40 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 18:07:40 Error sending success message to client:  write tcp 127.0.0.1:8080->127.0.0.1:43946: write: broken pipe
+2024/04/04 18:07:40 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 18:07:40 Getting client...
+2024/04/04 18:07:40 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:43946: use of closed network connection
+2024/04/04 18:07:40 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:43946: use of closed network connection
+2024/04/04 18:07:40 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:43946: use of closed network connection
+2024/04/04 18:07:41 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:43946: use of closed network connection
+2024/04/04 20:20:18 Connection Accepted:  127.0.0.1:46648
+2024/04/04 20:20:18 Client connected:  127.0.0.1:46648
+2024/04/04 20:20:18 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 20:20:18 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 20:20:18 Getting client...
+2024/04/04 20:20:18 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:46648: write: connection reset by peer
+2024/04/04 20:20:18 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:46648: use of closed network connection
+2024/04/04 20:20:18 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:46648: use of closed network connection
+2024/04/04 20:20:19 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:46648: use of closed network connection
+2024/04/04 20:20:31 Server listening on port 8080
+2024/04/04 20:20:40 Connection Accepted:  127.0.0.1:54552
+2024/04/04 20:20:40 Client connected:  127.0.0.1:54552
+2024/04/04 20:20:40 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 20:20:40 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 20:20:40 Getting client...
+2024/04/04 20:20:40 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:54552: write: connection reset by peer
+2024/04/04 20:20:40 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:54552: use of closed network connection
+2024/04/04 20:20:40 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:54552: use of closed network connection
+2024/04/04 20:20:40 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:54552: use of closed network connection
+2024/04/04 20:27:33 Connection Accepted:  127.0.0.1:48876
+2024/04/04 20:27:33 Client connected:  127.0.0.1:48876
+2024/04/04 20:27:33 Received command: GET_CLIENT get client where kind = 'client'exit 
+2024/04/04 20:27:33 Processing command: GET_CLIENT get client where kind = 'client'exit
+2024/04/04 20:27:33 Getting client...
+2024/04/04 20:27:33 Error querying data:  EQL error in myQuery: Invalid construct (value) (Line:1 Pos:33)
+2024/04/04 20:35:51 Server listening on port 8080
+2024/04/04 20:35:55 Connection Accepted:  127.0.0.1:52346
+2024/04/04 20:35:55 Client connected:  127.0.0.1:52346
+2024/04/04 20:35:55 Received command: GET_CLIENT get client where kind = 'client' 
+2024/04/04 20:35:55 Processing command: GET_CLIENT get client where kind = 'client'
+2024/04/04 20:35:55 Getting client...
+2024/04/04 20:35:55 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:52346: write: broken pipe
+2024/04/04 20:35:55 Error sending unmarshalled result to client:  write tcp 127.0.0.1:8080->127.0.0.1:52346: use of closed network connection
+2024/04/04 20:35:55 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:52346: use of closed network connection
+2024/04/04 20:50:43 Server listening on port 8080
+2024/04/04 20:50:46 Connection Accepted:  127.0.0.1:44286
+2024/04/04 20:50:46 Client connected:  127.0.0.1:44286
+2024/04/04 20:50:46 Error reading data from client:  EOF
+2024/04/04 20:50:46 Error sending command instructions to client:  write tcp 127.0.0.1:8080->127.0.0.1:44286: use of closed network connection
+2024/04/04 20:50:46 Error reading data from client:  read tcp 127.0.0.1:8080->127.0.0.1:44286: use of closed network connection
+2024/04/04 20:50:46 Received command:  
+2024/04/04 20:50:46 Error sending success message to client:  write tcp 127.0.0.1:8080->127.0.0.1:44286: use of closed network connection
+2024/04/04 20:50:46 Processing command: 
+2024/04/04 20:50:46 Invalid command
+2024/04/04 20:50:46 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:44286: use of closed network connection
+2024/04/04 21:03:00 Server listening on port 8080
+2024/04/04 21:03:03 Connection Accepted:  127.0.0.1:60912
+2024/04/04 21:03:03 Client connected:  127.0.0.1:60912
+2024/04/04 21:04:14 Error reading data from client:  EOF
+2024/04/04 21:04:14 Error sending command instructions to client:  write tcp 127.0.0.1:8080->127.0.0.1:60912: use of closed network connection
+2024/04/04 21:04:14 Error reading data from client:  read tcp 127.0.0.1:8080->127.0.0.1:60912: use of closed network connection
+2024/04/04 21:04:14 Received command:  
+2024/04/04 21:04:14 Error sending success message to client:  write tcp 127.0.0.1:8080->127.0.0.1:60912: use of closed network connection
+2024/04/04 21:04:14 Processing command: 
+2024/04/04 21:04:14 Invalid command
+2024/04/04 21:04:14 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:60912: use of closed network connection
+2024/04/04 21:04:33 Server listening on port 8080
+2024/04/04 21:04:37 Connection Accepted:  127.0.0.1:57632
+2024/04/04 21:04:37 Client connected:  127.0.0.1:57632
+2024/04/04 21:06:22 Error reading data from client:  EOF
+2024/04/04 21:06:22 Error sending command instructions to client:  write tcp 127.0.0.1:8080->127.0.0.1:57632: use of closed network connection
+2024/04/04 21:06:22 Error reading data from client:  read tcp 127.0.0.1:8080->127.0.0.1:57632: use of closed network connection
+2024/04/04 21:06:22 Received command:  
+2024/04/04 21:06:22 Error sending success message to client:  write tcp 127.0.0.1:8080->127.0.0.1:57632: use of closed network connection
+2024/04/04 21:06:22 Processing command: 
+2024/04/04 21:06:22 Invalid command
+2024/04/04 21:06:22 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:57632: use of closed network connection
+2024/04/04 21:06:39 Server listening on port 8080
+2024/04/04 21:06:43 Connection Accepted:  127.0.0.1:57812
+2024/04/04 21:06:43 Client connected:  127.0.0.1:57812
+2024/04/04 21:20:55 Error reading data from client:  EOF
+2024/04/04 21:20:55 Error sending command instructions to client:  write tcp 127.0.0.1:8080->127.0.0.1:57812: use of closed network connection
+2024/04/04 21:20:55 Error reading data from client:  read tcp 127.0.0.1:8080->127.0.0.1:57812: use of closed network connection
+2024/04/04 21:20:55 Received command:  
+2024/04/04 21:20:55 Error sending success message to client:  write tcp 127.0.0.1:8080->127.0.0.1:57812: use of closed network connection
+2024/04/04 21:20:55 Processing command: 
+2024/04/04 21:20:55 Invalid command
+2024/04/04 21:20:55 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:57812: use of closed network connection
+2024/04/04 21:20:58 Server listening on port 8080
+2024/04/04 21:21:01 Connection Accepted:  127.0.0.1:53558
+2024/04/04 21:21:01 Client connected:  127.0.0.1:53558
+2024/04/04 21:24:45 Error reading data from client:  EOF
+2024/04/04 21:24:45 Error sending command instructions to client:  write tcp 127.0.0.1:8080->127.0.0.1:53558: use of closed network connection
+2024/04/04 21:24:45 Error reading data from client:  read tcp 127.0.0.1:8080->127.0.0.1:53558: use of closed network connection
+2024/04/04 21:24:45 Received command:  
+2024/04/04 21:24:45 Error sending success message to client:  write tcp 127.0.0.1:8080->127.0.0.1:53558: use of closed network connection
+2024/04/04 21:24:45 Processing command: 
+2024/04/04 21:24:45 Invalid command
+2024/04/04 21:24:45 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:53558: use of closed network connection
+2024/04/04 21:24:59 Server listening on port 8080
+2024/04/04 21:25:06 Connection Accepted:  127.0.0.1:44798
+2024/04/04 21:25:06 Client connected:  127.0.0.1:44798
+2024/04/04 21:25:49 Error reading data from client:  EOF
+2024/04/04 21:25:49 Error sending command instructions to client:  write tcp 127.0.0.1:8080->127.0.0.1:44798: use of closed network connection
+2024/04/04 21:25:49 Error reading data from client:  read tcp 127.0.0.1:8080->127.0.0.1:44798: use of closed network connection
+2024/04/04 21:25:49 Received command:  
+2024/04/04 21:25:49 Error sending success message to client:  write tcp 127.0.0.1:8080->127.0.0.1:44798: use of closed network connection
+2024/04/04 21:25:49 Processing command: 
+2024/04/04 21:25:49 Invalid command
+2024/04/04 21:25:49 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:44798: use of closed network connection
+2024/04/04 21:28:19 Server listening on port 8080
+2024/04/04 21:28:23 Connection Accepted:  127.0.0.1:50534
+2024/04/04 21:28:23 Client connected:  127.0.0.1:50534
+2024/04/04 21:28:23 Received data from client 127.0.0.1:50534: Hello from the client
+2024/04/04 21:31:58 Error reading data from client:  EOF
+2024/04/04 21:31:58 Error sending command instructions to client:  write tcp 127.0.0.1:8080->127.0.0.1:50534: use of closed network connection
+2024/04/04 21:31:58 Error reading data from client:  read tcp 127.0.0.1:8080->127.0.0.1:50534: use of closed network connection
+2024/04/04 21:31:58 Received command:  
+2024/04/04 21:31:58 Error sending success message to client:  write tcp 127.0.0.1:8080->127.0.0.1:50534: use of closed network connection
+2024/04/04 21:31:58 Processing command: 
+2024/04/04 21:31:58 Invalid command
+2024/04/04 21:31:58 Fatal error: write tcp 127.0.0.1:8080->127.0.0.1:50534: use of closed network connection
+2024/04/04 21:32:01 Server listening on port 8080
+2024/04/04 21:32:04 Connection Accepted:  127.0.0.1:59814
+2024/04/04 21:32:04 Client connected:  127.0.0.1:59814
+2024/04/04 21:32:08 Received data from client 127.0.0.1:59814: Ooooy
+
+Hello from the client
+2024/04/04 23:15:31 Server listening on port 8080
+2024/04/04 23:15:35 Connection Accepted:  127.0.0.1:41046
+2024/04/04 23:15:35 Client connected:  127.0.0.1:41046
+2024/04/04 23:15:49 Received data from client 127.0.0.1:41046: GET_CLIENT client
+
+2024/04/04 23:15:49 Processing command: GET_CLIENT client
+2024/04/04 23:15:49 Getting client...
+2024/04/04 23:15:49 Error querying data:  EQL error in myQuery: Invalid construct (Unknown query type: client) (Line:1 Pos:1)
+2024/04/04 23:17:43 Server listening on port 8080
+2024/04/04 23:17:47 Connection Accepted:  127.0.0.1:45048
+2024/04/04 23:17:47 Client connected:  127.0.0.1:45048
+2024/04/04 23:18:05 Received data from client 127.0.0.1:45048: GET_CLIENT get client where kind = client
+
+2024/04/04 23:18:05 Processing command: GET_CLIENT get client where kind = client
+2024/04/04 23:18:05 Getting client...
+2024/04/04 23:18:43 Error reading data from client:  EOF
+2024/04/04 23:18:43 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:45048: use of closed network connection
+2024/04/04 23:19:11 Connection Accepted:  127.0.0.1:37888
+2024/04/04 23:19:11 Client connected:  127.0.0.1:37888
+2024/04/04 23:19:30 Received data from client 127.0.0.1:37888: GET_CLIENT get client where kind = client
+
+2024/04/04 23:19:30 Processing command: GET_CLIENT get client where kind = client
+2024/04/04 23:19:30 Getting client...
+2024/04/04 23:19:46 Error reading data from client:  EOF
+2024/04/04 23:19:46 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:37888: use of closed network connection
+2024/04/04 23:19:52 Connection Accepted:  127.0.0.1:43694
+2024/04/04 23:19:52 Client connected:  127.0.0.1:43694
+2024/04/04 23:20:07 Received data from client 127.0.0.1:43694: GET_CLIENT get client where kind = client
+
+2024/04/04 23:20:07 Processing command: GET_CLIENT get client where kind = client
+2024/04/04 23:20:07 Getting client...
+2024/04/04 23:20:48 Error reading data from client:  EOF
+2024/04/04 23:20:48 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:43694: use of closed network connection
+2024/04/04 23:20:50 Connection Accepted:  127.0.0.1:37728
+2024/04/04 23:20:50 Client connected:  127.0.0.1:37728
+2024/04/04 23:21:11 Received data from client 127.0.0.1:37728: GET_CLIENT get client where client_name = Lunodzo
+
+2024/04/04 23:21:11 Processing command: GET_CLIENT get client where client_name = Lunodzo
+2024/04/04 23:21:11 Getting client...
+2024/04/04 23:21:28 Error reading data from client:  EOF
+2024/04/04 23:21:28 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:37728: use of closed network connection
+2024/04/04 23:24:21 Server listening on port 8080
+2024/04/04 23:24:24 Connection Accepted:  127.0.0.1:52994
+2024/04/04 23:24:24 Client connected:  127.0.0.1:52994
+2024/04/04 23:24:41 Received data from client 127.0.0.1:52994: GET_CLIENT get client where kind = client
+
+2024/04/04 23:24:41 Processing command: GET_CLIENT get client where kind = client
+2024/04/04 23:24:41 Getting client...
+2024/04/04 23:27:57 Server listening on port 8080
+2024/04/04 23:27:59 Connection Accepted:  127.0.0.1:56570
+2024/04/04 23:27:59 Client connected:  127.0.0.1:56570
+2024/04/04 23:28:21 Received data from client 127.0.0.1:56570: GET_CLIENT get client where kind = client
+
+2024/04/04 23:28:21 Processing command: GET_CLIENT get client where kind = client
+2024/04/04 23:28:21 Getting client...
+2024/04/04 23:28:49 Error reading data from client:  EOF
+2024/04/04 23:28:49 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:56570: use of closed network connection
+2024/04/04 23:28:52 Connection Accepted:  127.0.0.1:58830
+2024/04/04 23:28:52 Client connected:  127.0.0.1:58830
+2024/04/04 23:29:14 Received data from client 127.0.0.1:58830: GET_CLIENT get client where kind = client
+
+2024/04/04 23:29:14 Processing command: GET_CLIENT get client where kind = client
+2024/04/04 23:29:14 Getting client...
+2024/04/04 23:29:55 Error reading data from client:  EOF
+2024/04/04 23:29:55 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:58830: use of closed network connection
+2024/04/04 23:29:57 Connection Accepted:  127.0.0.1:34330
+2024/04/04 23:29:57 Client connected:  127.0.0.1:34330
+2024/04/04 23:30:10 Received data from client 127.0.0.1:34330: GET_CLIENT get client where kind = client
+
+2024/04/04 23:30:10 Processing command: GET_CLIENT get client where kind = client
+2024/04/04 23:30:10 Getting client...
+2024/04/04 23:31:57 Error reading data from client:  EOF
+2024/04/04 23:31:57 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:34330: use of closed network connection
+2024/04/04 23:31:59 Connection Accepted:  127.0.0.1:46866
+2024/04/04 23:31:59 Client connected:  127.0.0.1:46866
+2024/04/04 23:32:16 Received data from client 127.0.0.1:46866: GET_CLIENT get client where kind = client
+
+2024/04/04 23:32:16 Processing command: GET_CLIENT get client where kind = client
+2024/04/04 23:32:16 Getting client...
+2024/04/05 00:24:21 Error reading data from client:  EOF
+2024/04/05 00:24:21 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:46866: use of closed network connection
+2024/04/05 00:25:29 Connection Accepted:  127.0.0.1:48670
+2024/04/05 00:25:29 Client connected:  127.0.0.1:48670
+2024/04/05 00:25:45 Received data from client 127.0.0.1:48670: GET_CLIENT get client where kind = client
+
+2024/04/05 00:25:45 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 00:25:45 Getting client...
+2024/04/05 00:31:30 Error reading data from client:  EOF
+2024/04/05 00:31:30 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:48670: use of closed network connection
+2024/04/05 00:31:34 Connection Accepted:  127.0.0.1:38096
+2024/04/05 00:31:34 Client connected:  127.0.0.1:38096
+2024/04/05 00:31:47 Received data from client 127.0.0.1:38096: GET_CLIENT get client where kind=client
+
+2024/04/05 00:31:47 Processing command: GET_CLIENT get client where kind=client
+2024/04/05 00:31:47 Getting client...
+2024/04/05 00:32:06 Received data from client 127.0.0.1:38096: GET_CLIENT get client where kind=client
+
+2024/04/05 00:32:06 Processing command: GET_CLIENT get client where kind=client
+2024/04/05 00:32:06 Getting client...
+2024/04/05 00:33:42 Error reading data from client:  read tcp 127.0.0.1:8080->127.0.0.1:38096: read: connection reset by peer
+2024/04/05 00:33:42 Cannot send response of processed query:  write tcp 127.0.0.1:8080->127.0.0.1:38096: use of closed network connection
+2024/04/05 00:33:44 Connection Accepted:  127.0.0.1:49142
+2024/04/05 00:33:44 Client connected:  127.0.0.1:49142
+2024/04/05 00:34:01 Received data from client 127.0.0.1:49142: GET_CLIENT get client where kind = client
+
+2024/04/05 00:34:01 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 00:34:01 Getting client...
+2024/04/05 00:35:06 Server listening on port 8080
+2024/04/05 00:35:09 Connection Accepted:  127.0.0.1:39162
+2024/04/05 00:35:09 Client connected:  127.0.0.1:39162
+2024/04/05 00:35:22 Received data from client 127.0.0.1:39162: GET_CLIENT get client where kind = client
+
+2024/04/05 00:35:22 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 00:35:22 Getting client...
+2024/04/05 00:35:22 Command processed successfully
+2024/04/05 00:36:18 Server listening on port 8080
+2024/04/05 00:36:23 Connection Accepted:  127.0.0.1:51174
+2024/04/05 00:36:23 Client connected:  127.0.0.1:51174
+2024/04/05 00:36:40 Received data from client 127.0.0.1:51174: GET_CLIENT get client where kind = client
+
+2024/04/05 00:36:40 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 00:36:40 Getting client...
+2024/04/05 00:36:40 Command processed successfully

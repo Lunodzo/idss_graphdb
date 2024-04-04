@@ -1,327 +1,26 @@
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/krotik/eliasdb/eql"
 	"github.com/krotik/eliasdb/graph"
 	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-const DB_PATH = "idss_graph_db"
+const DB_PATH = "../server/idss_graph_db"
+const PORT = ":8080"
 
 
-func Database_init() {
-	log.Println("Entering Database Initialization function...")
-	gob.Register(&timestamppb.Timestamp{})
-	GRAPH_DB, err := graphstorage.NewDiskGraphStorage(DB_PATH, false)
-	if err != nil {
-		log.Fatal("Error starting graph database: ", err)
-	}
-	defer GRAPH_DB.Close()
-	log.Println("Graph database started initiated")
-
-	// Create a new graph manager
-	GRAPH_MANAGER := graph.NewGraphManager(GRAPH_DB)
-
-	// Creating instances from the proto file and marshalling the data
-	//TODO: Parse actual data from the client
-	log.Println("Creating instances from the proto schema and marshalling the data...")
-	query_mng := &QueryManager{
-		IdQuery:         12,
-		Uqid:            123,
-		Query:           "get client where name = 'Client1'",
-		Ttl:             100,
-		ArrivedAt:       timestamppb.New(time.Now()),
-		SenderId:        "123",
-		LocalExecution:  232,
-		Completed:       timestamppb.New(time.Now()),
-		SentBack:        false,
-		Failed:          false,
-	}
-	query_data, err := proto.Marshal(query_mng)
-	if err != nil {
-		log.Fatal("Error marshalling data: ", err)
-	}
-	// Print the marshalled data
-	log.Println("Marshalled query manager data: ", query_data)
-
-	client1 := &Client{
-		ClientId:    	123,
-		ClientName: 	"Lunodzo",
-		ContractNumber: 244,
-		Power: 			343,
-	}
-
-	data1, err := proto.Marshal(client1)
-	if err != nil {
-		log.Fatal("Error marshalling data: ", err)
-	}
-	// Print the marshalled data
-	log.Println("Marshalled client 1 data: ", data1)
-
-	client2 := &Client{
-		ClientId:    456,
-		ClientName: "Juma",
-		ContractNumber: 245,
-		Power: 344,
-	}
-	data2, err := proto.Marshal(client2)
-	if err != nil {
-		log.Fatal("Error marshalling data: ", err)
-	}
-	// Print the marshalled data
-	log.Println("Marshalled client 2 data: ", data2)
-
-	client3 := &Client{
-		ClientId:    789,
-		ClientName: "Mwana",
-		ContractNumber: 246,
-		Power: 345,
-	}
-	data3, err := proto.Marshal(client3)
-	if err != nil {
-		log.Fatal("Error marshalling data: ", err)
-	}
-	// Print the marshalled data
-	log.Println("Marshalled client 3 data: ", data3)
-
-	consumption1 := &Consumption{
-		Timestamp:    timestamppb.New(time.Now()),
-		Measurement: 100,
-		Client: &Client{ClientId: 123},
-	}
-
-	consumption_data1, err := proto.Marshal(consumption1)
-	if err != nil {
-		log.Fatal("Error marshalling data: ", err)
-	}
-	// Print the marshalled data
-	log.Println("Marshalled consumption 1 data: ", consumption_data1)
-
-	consumption2 := &Consumption{
-		Timestamp:    timestamppb.New(time.Now()),
-		Measurement: 200,
-		Client: &Client{ClientId: 456},
-	}
-
-	consumption_data2, err := proto.Marshal(consumption2)
-	if err != nil {
-		log.Fatal("Error marshalling data: ", err)
-	}
-	// Print the marshalled data
-	log.Println("Marshalled  consumption 2 data: ", consumption_data2)
-
-
-	log.Println("Creating nodes and edges in the graph database based on marshalled data...")
-	// Create transaction
-	trans := graph.NewGraphTrans(GRAPH_MANAGER)
-
-	// Create all nodes
-	queriesNode := data.NewGraphNode()
-
-	client1Node := data.NewGraphNode()
-	client2Node := data.NewGraphNode()
-	client3Node := data.NewGraphNode()
-
-	consumption1Node := data.NewGraphNode()
-	consumption2Node := data.NewGraphNode()
-
-	// Create the node kinds
-	queriesNode.SetAttr("kind", "query")
-	queriesNode.SetAttr("data", query_data)
-	queriesNode.SetAttr("key", "123")
-
-	client1Node.SetAttr("key", "124")
-	client1Node.SetAttr("kind", "client")
-	client1Node.SetAttr("data", data1)
-
-	client2Node.SetAttr("key", "125")
-	client2Node.SetAttr("kind", "client")
-	client2Node.SetAttr("data", data2)
-
-	client3Node.SetAttr("key", "126")
-	client3Node.SetAttr("kind", "client")
-	client3Node.SetAttr("data", data3)
-
-	consumption1Node.SetAttr("key", "127")
-	consumption1Node.SetAttr("kind", "consumption")
-	consumption1Node.SetAttr("data", consumption_data1)
-
-	consumption2Node.SetAttr("key", "128")
-	consumption2Node.SetAttr("kind", "consumption")
-	consumption2Node.SetAttr("data", consumption_data2)
-
-
-	// Insert nodes
-	if err := trans.StoreNode("main", queriesNode); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := trans.StoreNode("main", client1Node); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := trans.StoreNode("main", client2Node); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := trans.StoreNode("main", client3Node); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := trans.StoreNode("main", consumption1Node); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := trans.StoreNode("main", consumption2Node); err != nil {
-		log.Fatal(err)
-	}
-
-	// Commit the transaction
-	if err := trans.Commit(); err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Committed Node store transaction")
-
-	trans = graph.NewGraphTrans(GRAPH_MANAGER)
-	
-	// Store edge
-	edge := data.NewGraphEdge()
-	edge.SetAttr(data.NodeKey, "client1consumption1")
-	edge.SetAttr(data.NodeKind, "clientconsumption")
-
-	edge.SetAttr(data.EdgeEnd1Key, client1Node.Key())
-	edge.SetAttr(data.EdgeEnd1Kind, client1Node.Kind())
-	edge.SetAttr(data.EdgeEnd1Role, "client1")
-	edge.SetAttr(data.EdgeEnd1Cascading, true)
-
-	edge.SetAttr(data.EdgeEnd2Key, consumption1Node.Key())
-	edge.SetAttr(data.EdgeEnd2Kind, consumption1Node.Kind())
-	edge.SetAttr(data.EdgeEnd2Role, "consumption")
-	edge.SetAttr(data.EdgeEnd2Cascading, false)
-
-	edge.SetAttr(data.NodeName, "Client1Consumption1")
-
-	log.Println("Testing edge 1")
-	if err := GRAPH_MANAGER.StoreEdge("main", edge); err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Created edge 1")
-
-	// Edge 2
-	edge2 := data.NewGraphEdge()
-	edge2.SetAttr(data.NodeKey, "client2consumption2")
-	edge2.SetAttr(data.NodeKind, "clientconsumption")
-
-	edge2.SetAttr(data.EdgeEnd1Key, client2Node.Key())
-	edge2.SetAttr(data.EdgeEnd1Kind, client2Node.Kind())
-	edge2.SetAttr(data.EdgeEnd1Role, "client2")
-	edge2.SetAttr(data.EdgeEnd1Cascading, true)
-
-	edge2.SetAttr(data.EdgeEnd2Key, consumption2Node.Key())
-	edge2.SetAttr(data.EdgeEnd2Kind, consumption2Node.Kind())
-	edge2.SetAttr(data.EdgeEnd2Role, "consumption")
-	edge2.SetAttr(data.EdgeEnd2Cascading, false)
-
-	edge2.SetAttr(data.NodeName, "Client2Consumption2")
-
-	log.Println("Testing edge 2")
-	if err := GRAPH_MANAGER.StoreEdge("main", edge2); err != nil {
-		log.Fatal(err)
-	}
-
-	// Commit the transaction
-	if err := trans.Commit(); err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Committed transaction")
-
-
-	// Query the data using EQL
-	log.Println("Querying data using EQL")
-	var SELECT_QUERY = "get client where kind = 'client'"
-	var SELECT_QUERY2 = "get consumption where kind = 'consumption'"
-	result, err := eql.RunQuery("myQuery", "main", SELECT_QUERY, GRAPH_MANAGER)
-	if err != nil {
-		log.Println("Error querying data: ", err)
-	}
-	log.Println(result)
-
-	result2, err := eql.RunQuery("myQuery", "main", SELECT_QUERY2, GRAPH_MANAGER)
-	if err != nil {
-		log.Println("Error querying data: ", err)
-	}
-	log.Println(result2)
-
-
-}
-
-func Database_query() {
-	log.Println("Entering Database Query function...")
-
-	GRAPH_DB, err := graphstorage.NewDiskGraphStorage(DB_PATH, false)
-	CheckError(err)
-	defer GRAPH_DB.Close()
-	GRAPH_MANAGER := graph.NewGraphManager(GRAPH_DB)
-
-
-	//TODO: To be read from the client
-	//TODO: Modify variables to be read from the client using conn.Read()
-	// Query the data using EQL
-
-	var SELECT_QUERY = "get client where kind = 'client'"
-	var SELECT_QUERY2 = "get client where kind = 'consumption'"
-
-
-	log.Println("Querying data using EQL (First Query)")
-	result, err := eql.RunQuery("myQuery", "main", SELECT_QUERY, GRAPH_MANAGER)
-	if err != nil {
-		log.Println("Error querying data: ", err)
-	}
-	log.Println(result)
-
-	// Iterate over the nodes in the result
-	/* for _, row := range result.Rows() {
-		// Get the marshalled data
-		node, ok := row.(*data.Node)
-		if !ok {
-			log.Println("Row is not a node")
-			continue
-		}
-
-		// Unmarshal the data
-		client := &Client{}
-		err := proto.Unmarshal(data, client)
-		if err != nil {
-			log.Println("Error unmarshalling data: ", err)
-			continue
-		}
-		log.Println(client) */
-	//}
-
-	log.Println("Querying data using EQL (Second Query)")
-	result2, err := eql.RunQuery("myQuery", "main", SELECT_QUERY2, GRAPH_MANAGER)
-	if err != nil {
-		log.Println("Error querying data: ", err)
-	}
-	log.Println(result2)
-}
-
-
-func main() {
-	// Enable logging and save logs into server.log file
+func setupLogging() {
 	logfile, err := os.OpenFile("idss.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("Error starting logging: ", err)
@@ -335,19 +34,97 @@ func main() {
 		MaxBackups: 3,
 		MaxAge: 30, //days
 	})
+}
+
+// Function to query the database
+//NOTE: This function is not used in the main function, it is for testing
+func Database_query() {
+	log.Println("Entering Database Query function...")
+
+	GRAPH_DB, err := graphstorage.NewDiskGraphStorage(DB_PATH, false)
+	CheckError(err)
+	defer GRAPH_DB.Close()
+	GRAPH_MANAGER := graph.NewGraphManager(GRAPH_DB)
+
+
+	//TODO: To be read from the client
+	//TODO: Modify variables to be read from the client using conn.Read()
+	// Query the data using EQL
+
+	log.Println("Querying data using EQL")
+	var SELECT_QUERY = "get client where kind = 'client'"
+	var SELECT_QUERY2 = "get consumption where kind = 'consumption'"
+
+
+	result, err := eql.RunQuery("myQuery", "main", SELECT_QUERY, GRAPH_MANAGER)
+	if err != nil {
+		log.Println("Error querying data: ", err)
+	}
+	log.Println(result)
+
+	// Iterate over the rows in the result
+	for _, row := range result.Rows() {
+		// Get the marshalled data
+		data, ok := row[1].([]byte)
+		if !ok {
+			log.Println("Row is not a node")
+			continue
+		}
+
+		// Unmarshal the data
+		client := &Client{}
+		err := proto.Unmarshal(data, client)
+		if err != nil {
+			log.Println("Error unmarshalling data: ", err)
+			continue
+		}
+		log.Println(client)
+	}
+
+
+	result2, err := eql.RunQuery("myQuery", "main", SELECT_QUERY2, GRAPH_MANAGER)
+	if err != nil {
+		log.Println("Error querying data: ", err)
+	}
+	log.Println(result2)
+
+	// Iterate over the rows in the result2
+	for _, row := range result2.Rows() {
+		// Get the marshalled data
+		data, ok := row[1].([]byte)
+		if !ok {
+			log.Println("Row is not a node")
+			continue
+		}
+
+		// Unmarshal the data
+		consumption := &Consumption{}
+		err := proto.Unmarshal(data, consumption)
+		if err != nil {
+			log.Println("Error unmarshalling data: ", err)
+			continue
+		}
+		log.Println(consumption)
+	}
+}
+
+
+func main() {
+	// Enable logging and save logs into server.log file
+	setupLogging()
+	//Database_init()
 
 	// Listen for incoming connections
-	listener, err := net.Listen("tcp", ":8080")
+	listener, err := net.Listen("tcp", PORT)
 	CheckError(err)
 	defer listener.Close()
-	log.Println("Listening on port 8080")
+	log.Println("Server listening on port 8080")
 
 	// Add support for Graph Database using EliasDB
 	// Calling functions from idss_db_init.go
-	Database_init()
+	//Database_init()
 
 	// Running sample queries
-	//TODO: FIXME
 	//Database_query()
 
 	// Accept incoming connections
@@ -362,6 +139,51 @@ func main() {
 	}
 }
 
+
+// A function to handle incoming requests from clients
+func handleRequest(conn net.Conn) {
+	defer conn.Close()
+
+	// Get the client address
+	CLIENT_ADDRESS := conn.RemoteAddr().String()
+	log.Println("Client connected: ", CLIENT_ADDRESS)
+
+	_, err := conn.Write([]byte("Welcome to the InnoCyPES Data Storage Service!\n"))
+	if err != nil {
+		log.Println("Error sending data to client: ", err)
+		conn.Close()
+	}
+
+	// Create a buffer to hold the incoming data
+	buffer := make([]byte, 4096)
+
+	for{
+		length, err := conn.Read(buffer)
+		if err != nil {
+			log.Println("Error reading data from client: ", err)
+			conn.Close()
+			break
+		}
+
+		// Check if the client wants to exit
+		if strings.TrimSpace(string(buffer[:length])) == "exit" {
+			log.Println("Client exited: ", CLIENT_ADDRESS)
+			conn.Close()
+			break
+		}
+
+		// Print the received data
+		log.Printf("Received data from client %s: %s\n", CLIENT_ADDRESS, string(buffer[:length]))
+
+		// Process the received query
+		processCommand(string(buffer[:length]), conn)
+		log.Println("Command processed successfully")
+
+		// Clear the buffer
+		buffer = make([]byte, 4096)
+	}											
+}
+
 // Function to check for errors
 func CheckError(err error) {
 	if err != nil {
@@ -370,28 +192,164 @@ func CheckError(err error) {
 	}
 }
 
-// A function to handle incoming requests from clients
-func handleRequest(conn net.Conn) {
-	defer conn.Close()
-	_, err := conn.Write([]byte("Welcome to the InnoCyPES Data Storage Service!\n"))
-	CheckError(err)
 
-	// Read data from client
-	buffer := make([]byte, 1024)
-	length, err := conn.Read(buffer)
+// Function to process the received command
+func processCommand(command string, conn net.Conn) {
+	/* Pass the command and decide what to do with it
+	if the command starts with ADD_CLIENT,  extract the client data from the 
+	command and call a function to add the client to the database. */
+	GRAPH_DB, err := graphstorage.NewDiskGraphStorage(DB_PATH, false)
 	CheckError(err)
+	defer GRAPH_DB.Close()
+	GRAPH_MANAGER := graph.NewGraphManager(GRAPH_DB)
 
-	// Convert byte array to string and compute sum
-	data := string(buffer[:length])
-	numbers := strings.Split(data, ",")
-	var sum int
-	for _, numberString := range numbers {
-		number, err := strconv.Atoi(numberString)
+	log.Printf("Processing command: %s", command)
+
+	// Check command type and call appropiate function
+	if strings.HasPrefix(command, "ADD_CLIENT") {
+		// Extract client data from the command
+		client_data := strings.Split(command, " ")
+		client_id, _ := strconv.Atoi(client_data[1])
+		client_name := client_data[2]
+		contract_number, _ := strconv.Atoi(client_data[3])
+		power, _ := strconv.Atoi(client_data[4])
+
+		// Add the client to the database
+		addClient(client_id, client_name, contract_number, power)
+	}else if strings.HasPrefix(command, "ADD_CONSUMPTION") {
+		// Extract consumption data from the command
+		consumption_data := strings.Split(command, " ")
+		consumption_id, _ := strconv.Atoi(consumption_data[1])
+		client_id, _ := strconv.Atoi(consumption_data[2])
+		consumption, _ := strconv.Atoi(consumption_data[3])
+		timestamp := consumption_data[4]
+
+		// Add the consumption to the database
+		addConsumption(consumption_id, client_id, consumption, timestamp)
+	}else if strings.HasPrefix(command, "GET_CLIENT") {
+		// Remove the GET_CLIENT prefix from the command
+		client_query := strings.TrimPrefix(command, "GET_CLIENT ")
+
+		getClient(client_query, GRAPH_MANAGER, conn)
+	}else if strings.HasPrefix(command, "GET_CONSUMPTION") {
+		// Extract consumption id from the command
+		consumption_data := strings.Split(command, " ")
+		consumption_id, _ := strconv.Atoi(consumption_data[1])
+
+		// Get the consumption from the database
+		getConsumption(consumption_id, GRAPH_MANAGER)
+	}else {
+		log.Println("Invalid command", command)
+		// Send response back to client
+		_, err := conn.Write([]byte("Invalid command "+command+"\n"))
 		CheckError(err)
-		sum += number
+	}
+}
+
+//TODO: Implement the following functions
+func getConsumption(consumption_id int, GER *graph.Manager) {
+	// Get the consumption from the database
+	// Query the data using EQL
+	SELECT_QUERY := "get consumption where id = " + strconv.Itoa(consumption_id)
+	result, err := eql.RunQuery("myQuery", "main", SELECT_QUERY, GER)
+	if err != nil {
+		log.Println("Error querying data: ", err)
+	}
+	log.Println(result)
+
+	// Iterate over the rows in the result
+	for _, row := range result.Rows() {
+		// Get the marshalled data
+		data, ok := row[1].([]byte)
+		if !ok {
+			log.Println("Row is not a node")
+			continue
+		}
+
+		// Unmarshal the data
+		consumption := &Consumption{}
+		err := proto.Unmarshal(data, consumption)
+		if err != nil {
+			log.Println("Error unmarshalling data: ", err)
+			continue
+		}
+		fmt.Println(consumption)
+	}
+}
+
+func getClient(client_query string, GER *graph.Manager, conn net.Conn) {
+	// Get the client from the database 
+	log.Println("Getting client...")
+	result, err := eql.RunQuery("myQuery", "main", client_query, GER)
+	if err != nil {
+		log.Println("Error querying data: ", err)
 	}
 
-	// Send sum back to client
-	_, err = conn.Write([]byte(fmt.Sprintf("Sum of numbers is %d", sum)))
+	// Iterate over the rows in the result
+	for _, row := range result.Rows() {
+		// Get the marshalled data
+		data, ok := row[1].([]byte)
+		if !ok {
+			log.Println("Row is not a node")
+			continue
+		}
+
+		// Unmarshal the data
+		client := &Client{}
+		err := proto.Unmarshal(data, client)
+		if err != nil {
+			log.Println("Error unmarshalling data: ", err)
+			continue
+		}
+
+
+		// Send the results to the client
+		_, err = conn.Write([]byte("\nResults: \n"+client.String()+" \n"))
+		if err != nil {
+			log.Println("Error sending unmarshalled result to client: ", err)
+			conn.Close()
+		}
+	}
+}
+
+func addConsumption(consumption_id, client_id, consumption int, timestamp string) {
+	// Add received consumption data to the database (consider using eliasdb and protobuf)
+	// Create a new consumption
+	
+}
+
+func addClient(client_id int, client_name string, contract_number, power int) {
+	// Add received client data to the database (consider using eliasdb and protobuf)
+	// Create a new client
+	client := &Client{
+		ClientId:    int32(client_id),
+		ClientName: client_name,
+		ContractNumber: int64(contract_number),
+		Power: int32(power),
+	}
+
+	// Marshal the client data
+	dataa, err := proto.Marshal(client)
+	if err != nil {
+		log.Fatal("Error marshalling data: ", err)
+	}
+
+	// Print the marshalled data
+	log.Println("Marshalled client data: ", dataa)
+
+	// Add the client to the database
+	GRAPH_DB, err := graphstorage.NewDiskGraphStorage(DB_PATH, false)
 	CheckError(err)
+	defer GRAPH_DB.Close()
+	GRAPH_MANAGER := graph.NewGraphManager(GRAPH_DB)
+
+	// Store the client in the database
+	clientNode := data.NewGraphNode()
+	clientNode.SetAttr("kind", "client")
+	clientNode.SetAttr("data", dataa)
+
+	// Store the client node
+	GRAPH_MANAGER.StoreNode("data", clientNode)
+
+	log.Println("Client added successfully")
 }
