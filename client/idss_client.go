@@ -30,14 +30,17 @@ func main() {
 	// Send a query to the server
 	_, err = conn.Write([]byte(query))
 	checkError(err)
+	log.Println("Query sent to server")
 
 
-	// Create a reader to read incomings from the server
+	// Create a buffer for incomings from the server
 	buffer := make([]byte, 4096)
+	log.Println("Entering the loop to read data from the server...")
 	for {
 		length, err := conn.Read(buffer)
 		if err != nil {
-			fmt.Println("Server closed connection")
+			fmt.Println("Error reading data: ", err)
+			log.Println("Error reading data: ", err)
 			break
 		}
 		fmt.Println(string(buffer[:length]))

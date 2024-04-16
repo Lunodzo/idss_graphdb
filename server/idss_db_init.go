@@ -117,6 +117,9 @@ func Database_init() {
 	// Create transaction
 	trans := graph.NewGraphTrans(GRAPH_MANAGER)
 
+	sds := data.NodeSlice{}
+	sds = append(sds, data.NewGraphNode())
+
 	// Create all nodes
 	queriesNode := data.NewGraphNode()
 

@@ -1533,3 +1533,129 @@ Hello from the client
 2024/04/05 00:36:40 Processing command: GET_CLIENT get client where kind = client
 2024/04/05 00:36:40 Getting client...
 2024/04/05 00:36:40 Command processed successfully
+2024/04/05 00:42:05 Error reading data from client:  EOF
+2024/04/05 00:42:21 Connection Accepted:  127.0.0.1:54104
+2024/04/05 00:42:21 Client connected:  127.0.0.1:54104
+2024/04/05 00:42:41 Received data from client 127.0.0.1:54104: GET_CLIENT get client where kind = client
+
+2024/04/05 00:42:41 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 00:42:41 Getting client...
+2024/04/05 00:42:41 Command processed successfully
+2024/04/05 00:47:57 Error reading data from client:  EOF
+2024/04/05 00:47:59 Connection Accepted:  127.0.0.1:53058
+2024/04/05 00:47:59 Client connected:  127.0.0.1:53058
+2024/04/05 00:48:01 Received data from client 127.0.0.1:53058: 
+
+2024/04/05 00:48:01 Processing command: 
+2024/04/05 00:48:01 Invalid command 
+
+2024/04/05 00:48:01 Command processed successfully
+2024/04/05 00:48:05 Error reading data from client:  EOF
+2024/04/05 00:48:07 Connection Accepted:  127.0.0.1:49154
+2024/04/05 00:48:07 Client connected:  127.0.0.1:49154
+2024/04/05 00:48:27 Received data from client 127.0.0.1:49154: GET_CLIENT get client where kind = client
+
+2024/04/05 00:48:27 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 00:48:27 Getting client...
+2024/04/05 00:48:27 Command processed successfully
+2024/04/05 10:33:20 Server listening on port 8080
+2024/04/05 10:33:24 Connection Accepted:  127.0.0.1:40658
+2024/04/05 10:33:24 Client connected:  127.0.0.1:40658
+2024/04/05 10:33:36 Connection Accepted:  127.0.0.1:46216
+2024/04/05 10:33:36 Client connected:  127.0.0.1:46216
+2024/04/05 10:34:00 Received data from client 127.0.0.1:40658: GET_CLIENT get client where kind = client
+2024/04/05 10:34:00 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 10:34:00 Getting client...
+2024/04/05 10:34:00 Command processed successfully
+2024/04/05 10:34:32 Received data from client 127.0.0.1:46216: GET_CLIENT get client where kind = client
+2024/04/05 10:34:32 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 10:34:32 Getting client...
+2024/04/05 10:34:32 Command processed successfully
+2024/04/05 10:35:11 Error reading data from client:  EOF
+2024/04/05 10:37:59 Server listening on port 8080
+2024/04/05 10:38:04 Connection Accepted:  127.0.0.1:48144
+2024/04/05 10:38:04 Client connected:  127.0.0.1:48144
+2024/04/05 10:38:16 Received data from client 127.0.0.1:48144: 1
+2024/04/05 10:38:16 Processing command: 1
+2024/04/05 10:38:16 Invalid command 1
+
+2024/04/05 10:38:16 Command processed successfully
+2024/04/05 10:38:38 Error reading data from client:  EOF
+2024/04/05 10:38:48 Connection Accepted:  127.0.0.1:48360
+2024/04/05 10:38:48 Client connected:  127.0.0.1:48360
+2024/04/05 10:38:57 Connection Accepted:  127.0.0.1:60810
+2024/04/05 10:38:57 Client connected:  127.0.0.1:60810
+2024/04/05 10:41:19 Error reading data from client:  read tcp 127.0.0.1:8080->127.0.0.1:60810: read: connection reset by peer
+2024/04/05 10:41:19 Error reading data from client:  read tcp 127.0.0.1:8080->127.0.0.1:48360: read: connection reset by peer
+2024/04/05 10:43:33 Server listening on port 8080
+2024/04/05 10:43:46 Connection Accepted:  127.0.0.1:60944
+2024/04/05 10:43:46 Client connected:  127.0.0.1:60944
+2024/04/05 10:43:55 Connection Accepted:  127.0.0.1:60952
+2024/04/05 10:43:55 Client connected:  127.0.0.1:60952
+2024/04/05 10:45:31 Client exited:  127.0.0.1:60944
+2024/04/05 10:45:52 Connection Accepted:  127.0.0.1:56718
+2024/04/05 10:45:52 Client connected:  127.0.0.1:56718
+2024/04/05 10:49:14 Client exited:  127.0.0.1:56718
+2024/04/05 10:51:38 Server listening on port 8080
+2024/04/05 10:51:44 Connection Accepted:  127.0.0.1:41484
+2024/04/05 10:51:44 Client connected:  127.0.0.1:41484
+2024/04/05 10:51:47 Client exited:  127.0.0.1:41484
+2024/04/05 10:52:14 Server listening on port 8080
+2024/04/05 10:52:18 Connection Accepted:  127.0.0.1:58074
+2024/04/05 10:52:18 Client connected:  127.0.0.1:58074
+2024/04/05 10:52:21 Client exited:  127.0.0.1:58074
+2024/04/05 10:53:10 Server listening on port 8080
+2024/04/05 10:53:13 Connection Accepted:  127.0.0.1:49770
+2024/04/05 10:53:13 Client connected:  127.0.0.1:49770
+2024/04/05 10:53:21 Connection Accepted:  127.0.0.1:36840
+2024/04/05 10:53:21 Client connected:  127.0.0.1:36840
+2024/04/05 10:53:59 Received data from client 127.0.0.1:49770: GET_CLIENT get client where kind = client
+2024/04/05 10:53:59 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 10:53:59 Getting client...
+2024/04/05 10:53:59 Command processed successfully
+2024/04/05 10:54:36 Received data from client 127.0.0.1:36840: GET_CLIENT get client where kind = client
+2024/04/05 10:54:36 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 10:54:36 Getting client...
+2024/04/05 10:54:36 Command processed successfully
+2024/04/05 10:55:28 Error reading data from client:  EOF
+2024/04/05 10:55:30 Connection Accepted:  127.0.0.1:43974
+2024/04/05 10:55:30 Client connected:  127.0.0.1:43974
+2024/04/05 10:55:36 Error reading data from client:  EOF
+2024/04/05 10:55:38 Connection Accepted:  127.0.0.1:36860
+2024/04/05 10:55:38 Client connected:  127.0.0.1:36860
+2024/04/05 10:56:08 Received data from client 127.0.0.1:43974: GET_CLIENT get client where kind = client
+2024/04/05 10:56:08 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 10:56:08 Getting client...
+2024/04/05 10:56:08 Command processed successfully
+2024/04/05 10:56:40 Received data from client 127.0.0.1:36860: GET_CLIENT get client where kind = client
+2024/04/05 10:56:40 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 10:56:40 Getting client...
+2024/04/05 10:56:40 Command processed successfully
+2024/04/05 10:56:48 Error reading data from client:  EOF
+2024/04/05 10:56:51 Error reading data from client:  EOF
+2024/04/05 10:56:58 Server listening on port 8080
+2024/04/05 10:57:01 Connection Accepted:  127.0.0.1:44166
+2024/04/05 10:57:01 Client connected:  127.0.0.1:44166
+2024/04/05 10:57:08 Error reading data from client:  read tcp 127.0.0.1:8080->127.0.0.1:44166: read: connection reset by peer
+2024/04/05 10:58:07 Server listening on port 8080
+2024/04/05 10:58:14 Connection Accepted:  127.0.0.1:54872
+2024/04/05 10:58:14 Client connected:  127.0.0.1:54872
+2024/04/05 10:58:22 Connection Accepted:  127.0.0.1:60746
+2024/04/05 10:58:22 Client connected:  127.0.0.1:60746
+2024/04/05 10:58:44 Received data from client 127.0.0.1:54872: GET_CLIENT get client where kind = client
+2024/04/05 10:58:44 Processing command: GET_CLIENT get client where kind = client
+2024/04/05 10:58:44 Getting client...
+2024/04/05 10:58:44 Command processed successfully
+2024/04/05 10:59:02 Received data from client 127.0.0.1:60746: GET_CLIENT get client where kind =client
+2024/04/05 10:59:02 Processing command: GET_CLIENT get client where kind =client
+2024/04/05 10:59:02 Getting client...
+2024/04/05 10:59:02 Command processed successfully
+2024/04/05 10:59:08 Error reading data from client:  EOF
+2024/04/05 10:59:16 Error reading data from client:  EOF
+2024/04/05 10:59:23 Connection Accepted:  127.0.0.1:51418
+2024/04/05 10:59:23 Client connected:  127.0.0.1:51418
+2024/04/05 10:59:25 Client exited:  127.0.0.1:51418
+2024/04/05 11:00:49 Server listening on port 8080
+2024/04/05 11:00:58 Connection Accepted:  127.0.0.1:37870
+2024/04/05 11:00:58 Client connected:  127.0.0.1:37870
+2024/04/05 11:01:03 Client 127.0.0.1:37870 exit: 

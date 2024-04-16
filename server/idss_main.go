@@ -167,13 +167,17 @@ func handleRequest(conn net.Conn) {
 
 		// Check if the client wants to exit
 		if strings.TrimSpace(string(buffer[:length])) == "exit" {
-			log.Println("Client exited: ", CLIENT_ADDRESS)
-			conn.Close()
+			log.Printf("Client %s exit: ", CLIENT_ADDRESS)
+			_, err := conn.Write([]byte("Client send a command to exit\n"))
+			if err != nil {
+				log.Println("Error sending data to client: ", err)
+			}
+			//conn.Close()
 			break
 		}
 
 		// Print the received data
-		log.Printf("Received data from client %s: %s\n", CLIENT_ADDRESS, string(buffer[:length]))
+		log.Printf("Received data from client %s: %s", CLIENT_ADDRESS, string(buffer[:length]))
 
 		// Process the received query
 		processCommand(string(buffer[:length]), conn)
