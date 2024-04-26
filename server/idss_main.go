@@ -5,127 +5,45 @@ import (
 	"log"
 	"net"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/krotik/eliasdb/eql"
 	"github.com/krotik/eliasdb/graph"
-	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
-	"google.golang.org/protobuf/proto"
+	//"google.golang.org/protobuf/proto"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const DB_PATH = "../server/idss_graph_db"
 const PORT = ":8080"
 
-
 func setupLogging() {
 	logfile, err := os.OpenFile("idss.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal("Error starting logging: ", err)
-
-	}
+	CheckError(err)
 
 	defer logfile.Close()
 	log.SetOutput(&lumberjack.Logger{
-		Filename: "idss.log",
-		MaxSize: 10, // megabytes
+		Filename:   "idss.log",
+		MaxSize:    10, // megabytes
 		MaxBackups: 3,
-		MaxAge: 30, //days
+		MaxAge:     2, //days
 	})
 }
 
-// Function to query the database
-//NOTE: This function is not used in the main function, it is for testing
-func Database_query() {
-	log.Println("Entering Database Query function...")
-
-	GRAPH_DB, err := graphstorage.NewDiskGraphStorage(DB_PATH, false)
-	CheckError(err)
-	defer GRAPH_DB.Close()
-	GRAPH_MANAGER := graph.NewGraphManager(GRAPH_DB)
-
-
-	//TODO: To be read from the client
-	//TODO: Modify variables to be read from the client using conn.Read()
-	// Query the data using EQL
-
-	log.Println("Querying data using EQL")
-	var SELECT_QUERY = "get client where kind = 'client'"
-	var SELECT_QUERY2 = "get consumption where kind = 'consumption'"
-
-
-	result, err := eql.RunQuery("myQuery", "main", SELECT_QUERY, GRAPH_MANAGER)
-	if err != nil {
-		log.Println("Error querying data: ", err)
-	}
-	log.Println(result)
-
-	// Iterate over the rows in the result
-	for _, row := range result.Rows() {
-		// Get the marshalled data
-		data, ok := row[1].([]byte)
-		if !ok {
-			log.Println("Row is not a node")
-			continue
-		}
-
-		// Unmarshal the data
-		client := &Client{}
-		err := proto.Unmarshal(data, client)
-		if err != nil {
-			log.Println("Error unmarshalling data: ", err)
-			continue
-		}
-		log.Println(client)
-	}
-
-
-	result2, err := eql.RunQuery("myQuery", "main", SELECT_QUERY2, GRAPH_MANAGER)
-	if err != nil {
-		log.Println("Error querying data: ", err)
-	}
-	log.Println(result2)
-
-	// Iterate over the rows in the result2
-	for _, row := range result2.Rows() {
-		// Get the marshalled data
-		data, ok := row[1].([]byte)
-		if !ok {
-			log.Println("Row is not a node")
-			continue
-		}
-
-		// Unmarshal the data
-		consumption := &Consumption{}
-		err := proto.Unmarshal(data, consumption)
-		if err != nil {
-			log.Println("Error unmarshalling data: ", err)
-			continue
-		}
-		log.Println(consumption)
-	}
-}
-
-
 func main() {
-	// Enable logging and save logs into server.log file
+	// Enable logging and save logs into idss.log file
 	setupLogging()
-	//Database_init()
 
 	// Listen for incoming connections
 	listener, err := net.Listen("tcp", PORT)
 	CheckError(err)
 	defer listener.Close()
-	log.Println("Server listening on port 8080")
+	log.Println("Server listening on port ", PORT)
 
-	// Add support for Graph Database using EliasDB
-	// Calling functions from idss_db_init.go
-	//Database_init()
+	// Calling functions from idss_db_init.go ONCE to create the database nodes and edges
+	// SAMPLE_DATA := "sample_data.json"
+	// Database_init(SAMPLE_DATA)
 
-	// Running sample queries
-	//Database_query()
 
 	// Accept incoming connections
 	for {
@@ -134,226 +52,122 @@ func main() {
 			log.Println("Error accepting connection: ", err.Error())
 			continue // Continue listening for more connections without exiting the server
 		}
-		log.Println("Connection Accepted: ", conn.RemoteAddr().String())
-		go handleRequest(conn)
+		// Get the client address
+		CLIENT_ADDRESS := conn.RemoteAddr().String()
+		log.Println("Client connected: ", CLIENT_ADDRESS)
+		go handleRequest(conn, CLIENT_ADDRESS)
 	}
 }
 
-
 // A function to handle incoming requests from clients
-func handleRequest(conn net.Conn) {
+func handleRequest(conn net.Conn, CLIENT_ADDRESS string) {
 	defer conn.Close()
 
-	// Get the client address
-	CLIENT_ADDRESS := conn.RemoteAddr().String()
-	log.Println("Client connected: ", CLIENT_ADDRESS)
-
-	_, err := conn.Write([]byte("Welcome to the InnoCyPES Data Storage Service!\n"))
-	if err != nil {
-		log.Println("Error sending data to client: ", err)
-		conn.Close()
-	}
-
 	// Create a buffer to hold the incoming data
-	buffer := make([]byte, 4096)
-
-	for{
+	for {
+		buffer := make([]byte, 4096)
 		length, err := conn.Read(buffer)
+		
 		if err != nil {
-			log.Println("Error reading data from client: ", err)
+			if err.Error() == "EOF" {
+				log.Printf("Client %s exit: ", CLIENT_ADDRESS)
+			}else{
+				log.Println("Error reading input from client: ", err)
+			}
 			conn.Close()
 			break
-		}
-
-		// Check if the client wants to exit
-		if strings.TrimSpace(string(buffer[:length])) == "exit" {
-			log.Printf("Client %s exit: ", CLIENT_ADDRESS)
-			_, err := conn.Write([]byte("Client send a command to exit\n"))
-			if err != nil {
-				log.Println("Error sending data to client: ", err)
-			}
-			//conn.Close()
+		}else if length > 0 {
+			log.Printf("Received input from client %s: %s", CLIENT_ADDRESS, string(buffer[:length]))
+			// Send a response to the client
+			_, err := conn.Write([]byte("Input received by the server, sending to process\n"))
+			CheckError(err)
+		}else if strings.ContainsAny(string(buffer[:length]), "\x00"){
+			log.Println("Input contains non-printable characters")
+			_, err := conn.Write([]byte("Input contains non-printable characters\n"))
+			CheckError(err)
+			conn.Close()
 			break
+		}else if strings.TrimSpace(string(buffer[:length])) == "exit"{
+			log.Printf("Client %s exit: ", CLIENT_ADDRESS)
+			 _, err := conn.Write([]byte("Client exit\n"))
+            CheckError(err, "Writing client exit message")
+			conn.Close()
+			break
+		}else if length > len(buffer){
+			log.Println("Input exceeds buffer size")
+			_, err := conn.Write([]byte("Input exceeds buffer size\n"))
+			CheckError(err, "Writing input exceeds buffer size")
+			conn.Close()
+			break
+		} else {
+			log.Println("No data received from client: ", CLIENT_ADDRESS)
+			_, err := conn.Write([]byte("No data received\n"))
+			CheckError(err, "Writing no data received")
 		}
-
-		// Print the received data
-		log.Printf("Received data from client %s: %s", CLIENT_ADDRESS, string(buffer[:length]))
 
 		// Process the received query
 		processCommand(string(buffer[:length]), conn)
-		log.Println("Command processed successfully")
-
-		// Clear the buffer
-		buffer = make([]byte, 4096)
-	}											
+	}
 }
 
 // Function to check for errors
-func CheckError(err error) {
+func CheckError(err error, message ...string) {
 	if err != nil {
-		log.Fatal("Fatal error: ", err.Error())
-		os.Exit(1)
+		log.Fatal("Error during operation '%s': %v", message, err)
 	}
 }
-
 
 // Function to process the received command
 func processCommand(command string, conn net.Conn) {
-	/* Pass the command and decide what to do with it
-	if the command starts with ADD_CLIENT,  extract the client data from the 
-	command and call a function to add the client to the database. */
+	// Add support for Graph Database using EliasDB
 	GRAPH_DB, err := graphstorage.NewDiskGraphStorage(DB_PATH, false)
 	CheckError(err)
 	defer GRAPH_DB.Close()
 	GRAPH_MANAGER := graph.NewGraphManager(GRAPH_DB)
-
 	log.Printf("Processing command: %s", command)
 
-	// Check command type and call appropiate function
-	if strings.HasPrefix(command, "ADD_CLIENT") {
-		// Extract client data from the command
-		client_data := strings.Split(command, " ")
-		client_id, _ := strconv.Atoi(client_data[1])
-		client_name := client_data[2]
-		contract_number, _ := strconv.Atoi(client_data[3])
-		power, _ := strconv.Atoi(client_data[4])
+	/* 
+	SAMPLE QUERIES get and lookup
+	TRAVERSAL SYNTAX: 
+	<source role>:<relationship kind>:<destination role>:<destination kind>
 
-		// Add the client to the database
-		addClient(client_id, client_name, contract_number, power)
-	}else if strings.HasPrefix(command, "ADD_CONSUMPTION") {
-		// Extract consumption data from the command
-		consumption_data := strings.Split(command, " ")
-		consumption_id, _ := strconv.Atoi(consumption_data[1])
-		client_id, _ := strconv.Atoi(consumption_data[2])
-		consumption, _ := strconv.Atoi(consumption_data[3])
-		timestamp := consumption_data[4]
+	SAMPLE QUERIES
+	>> get Consumption traverse ::: where name = "Alice" (WORKING)
+	>> lookup client '3' traverse ::: (WORKING)
+	>> get Client traverse owner:belongs_to:usage:Consumption (WORKING)
+	
 
-		// Add the consumption to the database
-		addConsumption(consumption_id, client_id, consumption, timestamp)
-	}else if strings.HasPrefix(command, "GET_CLIENT") {
-		// Remove the GET_CLIENT prefix from the command
-		client_query := strings.TrimPrefix(command, "GET_CLIENT ")
-
-		getClient(client_query, GRAPH_MANAGER, conn)
-	}else if strings.HasPrefix(command, "GET_CONSUMPTION") {
-		// Extract consumption id from the command
-		consumption_data := strings.Split(command, " ")
-		consumption_id, _ := strconv.Atoi(consumption_data[1])
-
-		// Get the consumption from the database
-		getConsumption(consumption_id, GRAPH_MANAGER)
-	}else {
-		log.Println("Invalid command", command)
-		// Send response back to client
-		_, err := conn.Write([]byte("Invalid command "+command+"\n"))
+	COUNT FUNCTION IN EQL
+	>> get Client where @count(owner:belongs_to:usage:Consumption) > 2 (WORKING)
+	>> get Client where @count(owner:belongs_to:usage:Consumption) > 4 (WORKING)
+	        NOTE: Only Alice and Bob will be returned as they have more than 4 connections
+					They have more 4 consumption nodes each
+	>> get Consumption where @count(:::) > 0 (WORKING) 
+			NOTE: Returns all the nodes in the graph who are connected to each other 
+			and its count is greater than 0, so any connected node will be returned
+	*/
+	result, err := eql.RunQuery("myQuery", "main", command, GRAPH_MANAGER)
+	if err != nil {
+		log.Println("Error querying data: ", err)
+		// This error will be printed on the client side sometimes because of quoting issues in the query. 
+		// It is recommended to use double quotes for the query
+		_, err := conn.Write([]byte("Error querying data: " + err.Error() + "\n"))
 		CheckError(err)
-	}
-}
-
-//TODO: Implement the following functions
-func getConsumption(consumption_id int, GER *graph.Manager) {
-	// Get the consumption from the database
-	// Query the data using EQL
-	SELECT_QUERY := "get consumption where id = " + strconv.Itoa(consumption_id)
-	result, err := eql.RunQuery("myQuery", "main", SELECT_QUERY, GER)
-	if err != nil {
-		log.Println("Error querying data: ", err)
-	}
-	log.Println(result)
-
-	// Iterate over the rows in the result
-	for _, row := range result.Rows() {
-		// Get the marshalled data
-		data, ok := row[1].([]byte)
-		if !ok {
-			log.Println("Row is not a node")
-			continue
-		}
-
-		// Unmarshal the data
-		consumption := &Consumption{}
-		err := proto.Unmarshal(data, consumption)
-		if err != nil {
-			log.Println("Error unmarshalling data: ", err)
-			continue
-		}
-		fmt.Println(consumption)
-	}
-}
-
-func getClient(client_query string, GER *graph.Manager, conn net.Conn) {
-	// Get the client from the database 
-	log.Println("Getting client...")
-	result, err := eql.RunQuery("myQuery", "main", client_query, GER)
-	if err != nil {
-		log.Println("Error querying data: ", err)
+		return
 	}
 
-	// Iterate over the rows in the result
-	for _, row := range result.Rows() {
-		// Get the marshalled data
-		data, ok := row[1].([]byte)
-		if !ok {
-			log.Println("Row is not a node")
-			continue
-		}
-
-		// Unmarshal the data
-		client := &Client{}
-		err := proto.Unmarshal(data, client)
-		if err != nil {
-			log.Println("Error unmarshalling data: ", err)
-			continue
-		}
-
-
-		// Send the results to the client
-		_, err = conn.Write([]byte("\nResults: \n"+client.String()+" \n"))
-		if err != nil {
-			log.Println("Error sending unmarshalled result to client: ", err)
+	// Check if the result is empty
+	if len(result.Rows()) == 0 {
+		if _, err := conn.Write([]byte("No result found\n")) ; err != nil {
+			log.Println("Error sending data to client: ", err)
 			conn.Close()
 		}
-	}
-}
-
-func addConsumption(consumption_id, client_id, consumption int, timestamp string) {
-	// Add received consumption data to the database (consider using eliasdb and protobuf)
-	// Create a new consumption
-	
-}
-
-func addClient(client_id int, client_name string, contract_number, power int) {
-	// Add received client data to the database (consider using eliasdb and protobuf)
-	// Create a new client
-	client := &Client{
-		ClientId:    int32(client_id),
-		ClientName: client_name,
-		ContractNumber: int64(contract_number),
-		Power: int32(power),
+		return
 	}
 
-	// Marshal the client data
-	dataa, err := proto.Marshal(client)
-	if err != nil {
-		log.Fatal("Error marshalling data: ", err)
-	}
-
-	// Print the marshalled data
-	log.Println("Marshalled client data: ", dataa)
-
-	// Add the client to the database
-	GRAPH_DB, err := graphstorage.NewDiskGraphStorage(DB_PATH, false)
+	// Print the result
+	// Results can be printed in any format as per the requirement
+	log.Printf("Query result: %v", result)
+	_, err = conn.Write([]byte("Command processed successfully\n"))
 	CheckError(err)
-	defer GRAPH_DB.Close()
-	GRAPH_MANAGER := graph.NewGraphManager(GRAPH_DB)
-
-	// Store the client in the database
-	clientNode := data.NewGraphNode()
-	clientNode.SetAttr("kind", "client")
-	clientNode.SetAttr("data", dataa)
-
-	// Store the client node
-	GRAPH_MANAGER.StoreNode("data", clientNode)
-
-	log.Println("Client added successfully")
 }
