@@ -28,13 +28,12 @@ func Test_Database_init(t *testing.T) {
 
 	// Query manager instance creation with empty values for the first time to create the instance
 	query_mng := &QueryManager{
-		IdQuery:         12, // Generate autoincremented ID
-		Uqid:            123, // Generate unique ID based on the client port number and the current time
+		Uqid:            "123", // Generate unique ID based on the client port number and the current time
 		Query:           "get client where name = 'Client1'",
 		Ttl:             100,
 		ArrivedAt:       timestamppb.New(time.Now()),
 		SenderId:        "123", // Call client address coming from the established connection
-		LocalExecution:  232,
+		LocalExecution:  true,
 		Completed:       false,
 		SentBack:        false,
 		Failed:          false,
@@ -46,25 +45,7 @@ func Test_Database_init(t *testing.T) {
 	// Print the marshalled data
 	t.Log("Marshalled query manager data: ", query_data)
 
-	client1 := &Client{
-		ClientId:    	123,
-		ClientName: 	"Lunodzo",
-		ContractNumber: 244,
-		Power: 			343,
-	}
-
-	data1, err := proto.Marshal(client1)
-	if err != nil {
-		t.Errorf("Error marshalling data: %v", err)
-	}
-	// Print the marshalled data
-	t.Log("Marshalled client data: ", data1)
-
-	// Create nodes
-	node1 := data.NewGraphNode()
-	node1.SetAttr("name", "Client1")
-	node1.SetAttr("data", data1)
-	node1.SetAttr("kind", "client")
+	
 
 	node2 := data.NewGraphNode()
 	node2.SetAttr("name", "QueryManager1")
@@ -82,11 +63,6 @@ func Test_Database_init(t *testing.T) {
 	edge2.SetAttr(data.NodeKey, "Client1")
 	edge2.SetAttr("kind", "response")
 
-	// Add nodes and edges to the graph
-	GRAPH_MANAGER.StoreNode("main", node1)
-	GRAPH_MANAGER.StoreNode("main", node2)
-	GRAPH_MANAGER.StoreEdge("main", edge1)
-	GRAPH_MANAGER.StoreEdge("main", edge2)
 
 	// Get the nodes and edges from the graph
 	nodes, _ := GRAPH_MANAGER.FetchNode("main", "kind", "client")

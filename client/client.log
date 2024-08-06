@@ -1,0 +1,22 @@
+2024/06/19 00:28:34 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 7168 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes for details.
+2024/06/19 00:28:34 Libp2p host created
+2024/06/19 00:28:34 Kademlia DHT created
+2024/06/19 00:28:34 DHT bootstrapped
+2024/06/19 00:28:34 Announcing ourselves...
+2024/06/19 00:28:34 Fatal error  failed to parse peer ID: invalid cid: selected encoding not supported
+2024/06/19 00:29:22 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 7168 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes for details.
+2024/06/19 00:29:22 Libp2p host created
+2024/06/19 00:29:22 Kademlia DHT created
+2024/06/19 00:29:22 DHT bootstrapped
+2024/06/19 00:29:22 Announcing ourselves...
+2024/06/19 00:29:22 Fatal error  failed to parse peer ID: invalid cid: selected encoding not supported
+2024/06/19 00:30:13 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 7168 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes for details.
+2024/06/19 00:30:13 Libp2p host created
+2024/06/19 00:30:13 Kademlia DHT created
+2024/06/19 00:30:13 DHT bootstrapped
+2024/06/19 00:30:13 Announcing ourselves...
+2024/06/19 00:30:13 Fatal error  failed to parse peer ID: invalid cid: selected encoding not supported
+2024/06/19 00:33:56 Kademlia DHT created
+2024/06/19 00:33:56 DHT bootstrapped
+2024/06/19 00:33:56 Announcing ourselves...
+2024/06/19 00:33:56 Fatal error  failed to parse peer ID: invalid cid: selected encoding not supported

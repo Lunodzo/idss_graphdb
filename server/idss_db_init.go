@@ -2,10 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"log"
-	//"time"
 	"os"
-	"github.com/krotik/eliasdb/graph"
+
+	eliasdb "github.com/krotik/eliasdb/graph"
 	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
 	//"google.golang.org/protobuf/proto"
@@ -14,9 +13,8 @@ import (
 )
 
 // Function to initialise the database
-
-func Database_init(filename string) {
-	log.Println("Entering the database initialisation function...")
+func Database_init(filename string, DB_PATH string) {
+	log.Info("Entering the database initialisation function...")
 
 	type Node struct {
 		Kind           string `json:"kind"`
@@ -46,15 +44,19 @@ func Database_init(filename string) {
 		Edges []Edge `json:"edges"`
 	}
 
+
 	// Create an instance of graph storage in the disk
 	// (false parameter means that the database is not read-only)
 	GRAPH_DB, err := graphstorage.NewDiskGraphStorage(DB_PATH, false)
-	CheckError(err)
+	if err != nil {
+		log.Error("Error creating graph storage: ", err)
+	}
+
 	defer GRAPH_DB.Close()
-	log.Println("Database storage initialised successfully")
+	log.Info("Database storage initialised successfully")
 
 	// Create graph manager
-	GRAPH_MANAGER := graph.NewGraphManager(GRAPH_DB)
+	GRAPH_MANAGER := eliasdb.NewGraphManager(GRAPH_DB)
 
 	// Create instances from the protofile and marshal the data
 	//log.Println("Creating instances from the protofile...")
@@ -145,7 +147,7 @@ func Database_init(filename string) {
 	// Print the marshalled data
 	log.Println("Marshalled  consumption 2 data: ", consumption_data2) */
 
-	log.Println("Creating nodes and edges in the graph database based on json data...")
+	log.Info("Creating nodes and edges in the graph database based on json data...")
 	
 	// Read the sample data
 	myData, err := os.ReadFile(filename)
@@ -157,24 +159,27 @@ func Database_init(filename string) {
 	// Unmarshal the json data
 	var graphData GraphData
 	err = json.Unmarshal(myData, &graphData) 
-	CheckError(err)
+	if err != nil {
+		log.Fatal("Can't unmarshal json data", err)
+	}
 
 	// Create transaction
-	trans := graph.NewGraphTrans(GRAPH_MANAGER)
+	trans := eliasdb.NewGraphTrans(GRAPH_MANAGER)
 
 	// Create nodes
+	log.Info("Creating client and consumption nodes...")
 	for _, node := range graphData.Nodes {
 		graphNode := data.NewGraphNode()
 		// Start creating nodes of type Client and Consumption
 		if node.Kind == "Client" {
-			log.Println("Creating client node...")
+			
 			graphNode.SetAttr("key", node.Key)
 			graphNode.SetAttr("kind", node.Kind)
 			graphNode.SetAttr("name", node.Name)
 			graphNode.SetAttr("contract", node.ContractNumber)
 			graphNode.SetAttr("power", node.Power)
 		}else if node.Kind == "Consumption" {
-			log.Println("Creating consumption node...")
+			//log.Println("Creating consumption node...")
 			graphNode.SetAttr("key", node.Key)
 			graphNode.SetAttr("kind", node.Kind)
 			graphNode.SetAttr("timestamp", node.Timestamp)
@@ -187,13 +192,14 @@ func Database_init(filename string) {
 		//GRAPH_MANAGER.StoreNode("main", graphNode)
 
 		// Verify that nodes have been created
-		log.Println("Created node: ", node.Key)
+		//log.Println("Created node: ", node.Key)
 	}
 
 
 	// Create edges
+	log.Println("Creating edges...")
 	for _, edge := range graphData.Edges {
-		log.Println("Creating edge...")
+		
 		graphEdge := data.NewGraphEdge()
 		graphEdge.SetAttr("key", edge.Key)
 		graphEdge.SetAttr("kind", edge.Kind)
@@ -207,8 +213,6 @@ func Database_init(filename string) {
 		graphEdge.SetAttr("end2cascading", edge.End2Cascading)
 
 		trans.StoreEdge("main", graphEdge)
-		//GRAPH_MANAGER.StoreEdge("main", graphEdge)
-		log.Println("Created edge: ", edge.Key)
 	}
 
 	// Commit the transaction
@@ -249,7 +253,5 @@ func Database_init(filename string) {
 	consumption2Node.SetAttr("kind", "consumption")
 	consumption2Node.SetAttr("name", "consumption2")
 	consumption2Node.SetAttr("data", consumption_data2) */
-
-	
-	log.Println("Committed Node and Edge store transaction")
+	log.Info("Committed Node and Edge store transaction")
 }

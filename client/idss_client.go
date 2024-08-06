@@ -1,79 +1,239 @@
 package main
 
-import (
-	"bufio"
-	"fmt"
-	"log"
-	"net"
-	"os"
-	"strings"
+/*
+===================================
+=== IDSS Client Implementation ===
+Requirements:
+1. The client should be able to connect to the server using the server's multiaddress.
+2. The client should be able to send queries to the server.
+3. The client should be able to receive responses from the server.
+4. The client should be able to exit gracefully.
+5. The client should be able to discover and connect to peers in the network.
+6. The client should be able to refresh the routing table and periodically find and connect to peers.
+7. The client should be able to handle termination signals.
+8. The client should be able to generate a key pair for the host, create libp2p host.
+10. The client should be able to create a DHT, bootstrap the DHT.
+12. The client should be able to create, write and read a stream to the server.
 
-	"gopkg.in/natefinch/lumberjack.v2"
+Implementation:
+1. The client connects to the server using the server's multiaddress.
+2. The client sends queries to the server.
+3. The client receives responses from the server.
+4. The client exits gracefully when the user types 'exit'.
+5. The client discovers and connects to peers in the network.
+6. The client refreshes the routing table and periodically finds and connects to peers.
+
+Usage:
+1. Run the server using the command: go run idss_main.go
+2. Run the client using the command: go run idss_client.go -s <server_multiaddress>
+3. Enter your query or 'exit' to quit.
+4. The client will send the query to the server and print the response.
+5. The client will continue to send queries until the user types 'exit'.
+===================================
+*/
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"io"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+	"bufio"
+	"github.com/libp2p/go-libp2p"
+	dht "github.com/libp2p/go-libp2p-kad-dht"
+	"github.com/libp2p/go-libp2p/core/crypto"
+	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
+	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
+	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/protocol"
+	"github.com/multiformats/go-multiaddr"
+	"github.com/sirupsen/logrus"
+)
+
+const(
+	protocolString = "/idss/1.0.0" // The protocol string for the IDSS protocol
+	discoveryServiceTag = "kadProtocol" // The tag used to advertise and discover the IDSS service
+)
+
+var(
+	IDSS_PROTOCOL = protocol.ID(protocolString)
+	log = logrus.New()
 )
 
 func main() {
-	// Enable logging and save logs into server.log file
-	setupLogging()
+	// Define flag
+	serverAddrFlag := flag.String("s", "", "Server multiaddress")
+	flag.Parse()
 
-	// Connect to the server
-	conn, err := net.Dial("tcp", "localhost:8080")
-	checkError(err)
-	log.Printf("Connected to server %s", conn.RemoteAddr())
-	defer conn.Close()
+	if *serverAddrFlag == "" {
+		log.Fatal("Please provide the server's multiaddress using the -s flag.")
+	}
 
-	// Create a buffer for incomings from the server
-	buffer := make([]byte, 4096)
-	reader := bufio.NewReader(conn)
-	
-	for {
-		// Read query from the user
+	// Create context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Generate key pair for the server/host
+	priv, _, err := crypto.GenerateKeyPair(crypto.RSA, 2048)
+	if err != nil {
+		log.Fatal("Error generating RSA key pair:", err)
+	}
+
+	// Dynamic port allocation 
+	listenAddr, err := multiaddr.NewMultiaddr("/ip4/127.0.0.1/tcp/0")
+	if err != nil {
+		log.Fatal("Error creating listening address:", err)
+	}
+
+	// Create libp2p host
+	host, err := libp2p.New(
+		libp2p.Identity(priv),
+		libp2p.ListenAddrs(listenAddr),
+	)
+	if err != nil {
+		panic(err)
+	}
+	defer host.Close()
+
+	// Print the host's listening addresses
+	for _, addr := range host.Addrs() {
+		completePeerAddr := addr.Encapsulate(multiaddr.StringCast("/p2p/" + host.ID().String()))
+		log.Info("Client listening on:", completePeerAddr)
+	}
+
+	// Initialize the DHT
+    kademliaDHT, err := dht.New(ctx, host) // can be set to client mode, however, it comes with limitations
+    if err != nil {
+        log.Fatal("Error creating DHT:", err)
+    }
+
+    // Bootstrapping the DHT on the client is important for it to participate in the network
+    if err := kademliaDHT.Bootstrap(ctx); err != nil {
+        log.Fatal("Error bootstrapping DHT:", err)
+    }
+
+	// Handle termination signals
+    handleTerminationSignals(host)
+	reader := bufio.NewReader(os.Stdin)
+
+	// Extract the peer ID from the server multiaddress
+	serverMultiaddr := *serverAddrFlag
+	serverPeer, err := multiaddr.NewMultiaddr(serverMultiaddr)
+	if err != nil {
+		log.Error("Error creating multiaddress:", err)
+	}
+	// Split the multiaddress to find the peer ID component
+    _, peerID := peer.SplitAddr(serverPeer) 
+	addrInfo := peer.AddrInfo{
+		ID: peerID,
+		Addrs: []multiaddr.Multiaddr{serverPeer},
+	}
+
+	if peerID == "" {
+        log.Fatal("No peer ID found in the multiaddress")
+    }
+	// A go routine to refresh the routing table and periodically find and connect to peers
+	discoverAndConnectPeers(ctx, host, kademliaDHT, addrInfo)
+
+	// get server peer info
+	serverPeerInfo, err := peer.AddrInfoFromP2pAddr(multiaddr.StringCast(*serverAddrFlag))
+    CheckError(err, "Error creating multiaddress") // Handle potential errors
+
+	// Loop to continouesly accept queries from the user or exit command
+	for{
 		fmt.Println("Enter your query or 'exit' to quit: ")
-		query, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-
-		// Exit the loop if the server sends the exit message
-		if strings.TrimSpace(query) == "exit" {
-			log.Println("Connection closed by the client...")
-			defer conn.Close()
-			break
-		}
-
-		// Send a query to the server
-		_, err = conn.Write([]byte(query))
-		checkError(err)
-		log.Println("Query sent to server")
-
-		// Read the response from the server
-		response, err := reader.Read(buffer)
+		query, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Error reading data: ", err)
-			log.Println("Error reading data: ", err)
-			break
+			log.Error("Error reading query from user:", err)
+			continue
 		}
-		fmt.Println(string(buffer[:response]))
+        if strings.TrimSpace(query) == "exit" {
+            log.Warning("Client exiting...")
+            break
+        }
+		
+		// Open stream
+		stream , err := host.NewStream(ctx, serverPeerInfo.ID, IDSS_PROTOCOL)
+		if err != nil {
+			log.Error("Error opening stream:", err)
+			continue
+		}
+		defer stream.Close()
+		log.Info("Stream opened.")
+
+		 _, err = stream.Write([]byte(query)) // Send query without the peer ID
+        if err != nil {
+            log.Errorf("Error writing to stream: %s", err)
+            continue
+        }
+		log.Info("Query sent to server.")
+
+        // Read and print response
+        response, err := io.ReadAll(stream)
+        if err != nil {
+            log.Errorf("Error reading response: %s", err)
+            continue
+        }
+        fmt.Println("The response:", string(response))
 	}
 }
 
-func setupLogging() {
-	logfile, err := os.OpenFile("../server/idss.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal("Error starting logging: ", err)
+func handleTerminationSignals(host host.Host) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
+	go func() {
+		sig := <-c
+		log.Printf("Received signal: %s. Peer exiting the network: %s", sig, host.ID().String())
+
+		// Clean up
+		if err := host.Close(); err != nil {
+			log.Error("Error shutting down IDSS: ", err)
+			os.Exit(1) // Different termination codes can be used
+		}
+		os.Exit(0) // normal termination
+
+	}()
+}
+
+func discoverAndConnectPeers(ctx context.Context, host host.Host, kademliaDHT *dht.IpfsDHT, addrInfo peer.AddrInfo) {
+	log.Info("Client is discovering and connecting to peers...")
+
+	routingDiscovery := drouting.NewRoutingDiscovery(kademliaDHT)
+	dutil.Advertise(ctx, routingDiscovery, discoveryServiceTag)
+
+	peerChan, err := routingDiscovery.FindPeers(ctx, discoveryServiceTag)
+	if err != nil {
+		log.Error("Error finding peers:", err)
+		return
 	}
 
-	defer logfile.Close()
-	log.SetOutput(&lumberjack.Logger{
-		Filename: "../server/idss.log",
-		MaxSize: 10, // megabytes
-		MaxBackups: 3,
-		MaxAge: 1, //days
-	})
+	// Check peerChan if there are any peers
+	if peerChan == nil {
+		log.Warning("No peers found.")
+		return
+	}
+
+
+	// Only attempt to connect to the serverPeer
+	err = host.Connect(ctx, addrInfo) 
+	if err != nil {
+		log.Error("Error connecting to peer:", err)
+		return
+	} else{
+		log.Info("Connected to peer:", addrInfo.ID.String())
+	} 
+
+	log.Info("Client has joined the network, now can send queries to the server.")
 }
 
 // Function to check for errors
-func checkError(err error) {
+func CheckError(err error, message ...string) {
 	if err != nil {
-		log.Println("Fatal error ", err.Error())
-		os.Exit(1)
+		log.Fatalf("Error during operation '%s': %v", message, err)
 	}
 }
-
