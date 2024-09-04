@@ -78,7 +78,7 @@ var (
 	KADDHT            *dht.IpfsDHT
 	GRAPH_MANAGER     *eliasdb.Manager
 	activeConnections int64
-	logger			= log.Logger("idss")
+	logger			= log.Logger("IDSS")
 	queryCache        sync.Map // A concurrent map to store queries
 )
 
@@ -92,7 +92,7 @@ MAIN FUNCTION
 func main() {
 	// Set up logging to file
 	log.SetAllLoggers(log.LevelWarn) // Or log.LevelInfo, log.LevelDebug, etc.
-	log.SetLogLevel("idss", "info")
+	log.SetLogLevel("IDSS", "info")
 
 	// Parse flags
 	help := flag.Bool("h", false, "Display help")
