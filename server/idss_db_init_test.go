@@ -2,12 +2,12 @@ package main
 
 import (
 	"testing"
-	"time"
+	//"time"
 	"github.com/krotik/eliasdb/graph"
 	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	//"google.golang.org/protobuf/proto"
+	//"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func Test_Database_init(t *testing.T) {
@@ -27,29 +27,23 @@ func Test_Database_init(t *testing.T) {
 	t.Log("Creating instances from the protofile...")
 
 	// Query manager instance creation with empty values for the first time to create the instance
-	query_mng := &QueryManager{
-		Uqid:            "123", // Generate unique ID based on the client port number and the current time
+	/* query_mng := &QueryMessage{
+		Uqi:            "123", // Generate unique ID based on the client port number and the current time
 		Query:           "get client where name = 'Client1'",
 		Ttl:             100,
-		ArrivedAt:       timestamppb.New(time.Now()),
-		SenderId:        "123", // Call client address coming from the established connection
-		LocalExecution:  true,
-		Completed:       false,
-		SentBack:        false,
-		Failed:          false,
 	}
 	query_data, err := proto.Marshal(query_mng)
 	if err != nil {
 		t.Errorf("Error marshalling data: %v", err)
 	}
 	// Print the marshalled data
-	t.Log("Marshalled query manager data: ", query_data)
+	t.Log("Marshalled query manager data: ", query_data) */
 
 	
 
 	node2 := data.NewGraphNode()
 	node2.SetAttr("name", "QueryManager1")
-	node2.SetAttr("data", query_data)
+	//node2.SetAttr("data", query_data)
 	node2.SetAttr("kind", "query_manager")
 	
 	// Create edges

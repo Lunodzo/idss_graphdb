@@ -33,34 +33,40 @@ Usage:
 */
 
 import (
+	"bufio"
 	"context"
+	"encoding/binary"
 	"flag"
 	"fmt"
+	"idss/graphdb/common"
 	"io"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-	"bufio"
+	"time"
+
 	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/crypto"
-	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
-	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
+	"google.golang.org/protobuf/proto"
+
+	//"github.com/gogo/protobuf/proto"
+	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
+	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/sirupsen/logrus"
 )
 
 const(
-	protocolString = "/idss/1.0.0" // The protocol string for the IDSS protocol
+	IDSS_PROTOCOL       = protocol.ID("/idss/1.0.0") // The protocol string for the IDSS protocol
 	discoveryServiceTag = "kadProtocol" // The tag used to advertise and discover the IDSS service
 )
 
 var(
-	IDSS_PROTOCOL = protocol.ID(protocolString)
 	log = logrus.New()
 )
 
@@ -155,8 +161,18 @@ func main() {
             log.Warning("Client exiting...")
             break
         }
+
+		// Define UQI
+        uqi := fmt.Sprintf("%s-%d", host.ID(), time.Now().UnixNano())
+
+		// Create the QueryMassage
+		msg := common.QueryMessage{
+			Uqi: uqi,
+			Query: query,
+			Ttl: 10,
+		}
 		
-		// Open stream
+		// Open stream 
 		stream , err := host.NewStream(ctx, serverPeerInfo.ID, IDSS_PROTOCOL)
 		if err != nil {
 			log.Error("Error opening stream:", err)
@@ -165,21 +181,82 @@ func main() {
 		defer stream.Close()
 		log.Info("Stream opened.")
 
-		 _, err = stream.Write([]byte(query)) // Send query without the peer ID
+		// Marshal and send the QueryMessage using Protobuf
+        msgBytes, err := proto.Marshal(&msg)
+        if err != nil {
+            log.Error("Error marshalling query message:", err)
+            continue
+        }
+
+		err = writeDelimitedMessage(stream, msgBytes)
         if err != nil {
             log.Errorf("Error writing to stream: %s", err)
             continue
         }
+
 		log.Info("Query sent to server.")
 
-        // Read and print response
-        response, err := io.ReadAll(stream)
-        if err != nil {
-            log.Errorf("Error reading response: %s", err)
-            continue
-        }
-        fmt.Println("The response:", string(response))
+        // Read and print response using Protobuf
+		responseBytes, err := readDelimitedMessage(stream)
+		if err != nil {
+			log.Error("Error reading response from server:", err)
+			continue
+		}
+
+		var response common.QueryResult
+		err = proto.Unmarshal(responseBytes, &response)
+		if err != nil {
+			log.Error("Error unmarshalling response:", err)
+			continue
+		}
+
+		// Print the response
+		if response.Error != "" {
+			log.Error("Error in response:", response.Error)
+		} else {
+			log.Info("The response:")
+			log.Infof("%+v", &response)
+			for _, result := range response.Result {
+				fmt.Println(result)
+			}
+		}
 	}
+}
+
+func writeDelimitedMessage(w io.Writer, data []byte) error {
+	// Write the message size
+	sizeBuf := make([]byte, binary.MaxVarintLen64)
+	size := binary.PutUvarint(sizeBuf, uint64(len(data)))
+
+	_, err := w.Write(sizeBuf[:size])
+	if err != nil {
+		return fmt.Errorf("failed to write message size: %w", err)
+	}
+
+	// Write the message data
+	_, err = w.Write(data)
+	if err != nil {
+		return fmt.Errorf("failed to write message data: %w", err)
+	}
+	return err
+}
+
+// Function to read a delimited message from a stream
+func readDelimitedMessage(r io.Reader) ([]byte, error) {
+	// Read the message size
+	size, err := binary.ReadUvarint(bufio.NewReader(r))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read message size: %w", err)
+	}
+
+	// Read the message data
+	buf := make([]byte, size)
+	_, err = io.ReadFull(r, buf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read message data: %w", err)
+	}
+
+	return buf, nil
 }
 
 func handleTerminationSignals(host host.Host) {

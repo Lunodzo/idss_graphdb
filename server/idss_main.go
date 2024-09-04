@@ -33,13 +33,14 @@ package main
 import (
 	"bufio"
 	"context"
-	"encoding/json"
+	"encoding/binary"
 	"flag"
 	"fmt"
+	"idss/graphdb/common"
 	"io"
 	"os"
 	"os/signal"
-	"strings"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -48,22 +49,19 @@ import (
 	libp2p "github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 
+	"github.com/ipfs/go-log/v2"
 	"github.com/krotik/eliasdb/eql"
 	eliasdb "github.com/krotik/eliasdb/graph"
 	"github.com/krotik/eliasdb/graph/graphstorage"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
-	peer "github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
 	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	"github.com/multiformats/go-multiaddr"
-
-	//"google.golang.org/protobuf/proto"
-	//"google.golang.org/protobuf/types/known/timestamppb"
-	logrotate "github.com/lestrrat-go/file-rotatelogs"
-	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 )
 
 /*
@@ -74,32 +72,15 @@ Constants
 const (
 	DB_PATH             = "../server/idss_graph_db" 
 	PORT                = "8080"                    //optional
-	discoveryServiceTag = "kadProtocol"             // The tag used to advertise and discover the IDSS service
-	IDSS_PROTOCOL       = protocol.ID("/idss/1.0.0")
-	MAX_HOPS = 5
 )
 
 var (
 	KADDHT            *dht.IpfsDHT
 	GRAPH_MANAGER     *eliasdb.Manager
 	activeConnections int64
-	log               = logrus.New()
+	logger			= log.Logger("idss")
 	queryCache        sync.Map // A concurrent map to store queries
-	logWithFile       *logrus.Logger
 )
-
-// Channel to collect query results from peers
-type QueryResult struct {
-	PeerID peer.ID
-	Result [][]interface{}
-	Error  error
-}
-
-type QueryMessage struct {
-	Query string
-	UQI   string
-	Hop   int // Number of hops the query has made
-}
 
 /*
 =====================
@@ -110,27 +91,25 @@ MAIN FUNCTION
 // Main function to start the server operations
 func main() {
 	// Set up logging to file
-	logFile, err := logrotate.New(
-		"idss_server.log.%Y%m%d", // Log rotation by day (change pattern as needed)
-		logrotate.WithLinkName("idss_server.log"),
-		logrotate.WithMaxAge(24*time.Hour*7),     // Keep logs for a week (optional)
-		logrotate.WithRotationTime(24*time.Hour), // Rotate at midnight every day (optional)
-	)
+	log.SetAllLoggers(log.LevelWarn) // Or log.LevelInfo, log.LevelDebug, etc.
+	log.SetLogLevel("idss", "info")
+
+	// Parse flags
+	help := flag.Bool("h", false, "Display help")
+	config, err := ParseFlags()
 	if err != nil {
-		log.Fatalf("Failed to create log file: %v", err)
+		logger.Fatalf("Error parsing flags: %v", err)
+		os.Exit(1)
 	}
-	defer logFile.Close()
 
-	// Create a new logger with the rotated log file as output
-	logWithFile = logrus.New()
-	logWithFile.SetFormatter(&logrus.TextFormatter{})
-	logWithFile.SetOutput(logFile)
+	filename := config.Filename
 
-	// String flag to specify the database file
-	filename := flag.String("f", "", "JSON file containing the graph data")
-
-	// Parse command line arguments
-	flag.Parse()
+	if *help {
+		fmt.Println("Usage: go run idss_main.go [options]")
+		fmt.Println("Options:")
+		flag.PrintDefaults()
+		return
+	}
 
 	// Increase the buffer size
 	err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &syscall.Rlimit{
@@ -138,7 +117,8 @@ func main() {
 		Max: 8192,
 	})
 	if err != nil {
-		log.Fatal("Error setting rlimit:", err)
+		logger.Fatalf("Error setting file limit: %v", err)
+		os.Exit(1)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -147,13 +127,13 @@ func main() {
 	// Generate key pair for the server/host
 	priv, _, err := crypto.GenerateKeyPair(crypto.RSA, 2048)
 	if err != nil {
-		log.Fatal("Error generating RSA key pair:", err)
+		logger.Fatal("Error generating RSA key pair:", err)
 	}
 
 	// Dynamic port allocation
 	listenAddr, err := multiaddr.NewMultiaddr("/ip4/127.0.0.1/tcp/0")
 	if err != nil {
-		log.Fatal("Error creating listening address:", err)
+		logger.Fatal("Error creating listening address:", err)
 	}
 
 	// Create libp2p host
@@ -162,108 +142,138 @@ func main() {
 		libp2p.ListenAddrs(listenAddr),
 	)
 	if err != nil {
-		panic(err)
+		logger.Fatalf("Error creating libp2p host: %v", err)
+		os.Exit(1)
 	}
 
 	// Print a complete peer listening address
 	for _, addr := range host.Addrs() {
 		completePeerAddr := addr.Encapsulate(multiaddr.StringCast("/p2p/" + host.ID().String()))
-		log.Info("Listening on peer Address:", completePeerAddr)
+		logger.Info("Listening on peer Address:", completePeerAddr)
 	}
 
-/**********************
+	/**********************
 
-	Graph database operations using EliasDB. This must be affected in all the connected peers.
-	Calling functions from idss_db_init.go to create the database nodes and edges.
+		Graph database operations using EliasDB. This must be affected in all the connected peers.
+		Calling functions from idss_db_init.go to create the database nodes and edges.
 
-	When a node do not have any file, it will skip the database creation and will not create any
-	nodes and edges in the graph database. In the event of data fetching it will fetch from
-	other peers.
+		When a node do not have any file, it will skip the database creation and will not create any
+		nodes and edges in the graph database. In the event of data fetching it will fetch from
+		other peers.
 
-************************/
+	************************/
 
 	// Initialise the database instance
-	initDBIntance(host.Peerstore().PeerInfo(host.ID()), *filename)
+	dbPath := fmt.Sprintf("%s/%s", DB_PATH, host.ID().String()) 
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		os.MkdirAll(dbPath, 0755)
+	}
 
-	// Check if the filename is provided
-	if *filename != "" {
-		log.Info("Creating nodes and edges in the graph database based on json data...")
+	// Create a new graph database instance
+	graphDB, err := graphstorage.NewDiskGraphStorage(dbPath, false)
+	CheckError(err, "Error creating graph database")
+	//defer graphDB.Close()
+	GRAPH_MANAGER = eliasdb.NewGraphManager(graphDB)
+
+	// Initialize the database only if the filename is provided
+	if filename != "" {
+		logger.Info("Creating nodes and edges in the graph database based on json data...")
 		// Read the sample data
-		Database_init(*filename, string(host.ID()))
-		logWithFile.Info("Graph database nodes and edges created successfully")
+		Database_init(filename, dbPath, graphDB, GRAPH_MANAGER)
+		logger.Info("Graph database nodes and edges created successfully")
 	} else {
-		log.Info("No file provided. Skipping database creation...")
+		logger.Info("No file provided. Skipping database creation...")
 	}
 
 	// Initialise the DHT
-	KADDHT = initialiseDHT(ctx, host)
+	KADDHT = initialiseDHT(ctx, host, config)
 
 	// A go routine to refresh the routing table and periodically find and connect to peers
-	go discoverAndConnectPeers(ctx, host)
+	go discoverAndConnectPeers(ctx, host, config)
 
 	// Handle streams
-	host.SetStreamHandler(IDSS_PROTOCOL, func(stream network.Stream) {
+	host.SetStreamHandler(protocol.ID(config.ProtocolID), func(stream network.Stream) {
 		atomic.AddInt64(&activeConnections, 1)
 		defer atomic.AddInt64(&activeConnections, -1) // decrement when the handler exits
-		go handleRequest(stream, stream.Conn().RemotePeer().String(), ctx)
+		go handleRequest(stream, stream.Conn().RemotePeer().String(), ctx, config)
 	})
 
 	// Handle SIGTERM and interrupt signals
-	HandleInterrupts(host, peer.AddrInfo{})
+	HandleInterrupts(host, peer.AddrInfo{}, graphDB)
 
 	// Keep the server running
 	select {}
 }
 
-func HandleInterrupts(host host.Host, peer peer.AddrInfo) {
+//TODO: Add condition to handle peer disconnection. Data should be reserved in the DHT
+func HandleInterrupts(host host.Host, peer peer.AddrInfo, graphDB graphstorage.Storage) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
+	// Monitor connection state
+	host.Network().Notify(&network.NotifyBundle{
+		DisconnectedF: func(net network.Network, conn network.Conn) {
+			//logger.Infof("Disconnected from peer: %s", conn.RemotePeer())
+			handlePeerDisconnection(conn.RemotePeer(), graphDB)
+		},
+	})
+
 	go func() {
 		sig := <-c
-		log.Printf("Received signal: %s. Peer exiting the network: %s", sig, host.ID().String())
+		logger.Infof("Received signal: %s. Peer exiting the network: %s", sig, host.ID().String())
 
 		for atomic.LoadInt64(&activeConnections) > 0 {
 			time.Sleep(100 * time.Millisecond) // Poll until all connections are closed
 		}
 
+		cleanup(graphDB, host)
+
 		// Clean up
 		if err := host.Close(); err != nil {
-			log.Error("Error shutting down IDSS: ", err)
-			logWithFile.Error("Error shutting down IDSS: ", err)
+			logger.Error("Error shutting down IDSS: ", err)
 			os.Exit(1) // Different termination codes can be used
 		}
 
-		// Delete the database
-		DB_PATH_PEER := DB_PATH + "/" + peer.ID.String()
-		if err := os.RemoveAll(DB_PATH_PEER); err != nil {
-			log.Error("Error deleting database: ", err)
-			logWithFile.Error("Error deleting database: ", err)
-		}
 		os.Exit(0) // normal termination
 	}()
 }
 
+func cleanup(graphDB graphstorage.Storage, host host.Host) {
+	// Close the graph database
+	if err := graphDB.Close(); err != nil {
+		logger.Error("Error closing graph database: ", err)
+	}
+
+	// Delete the database
+	peerDir := filepath.Join(DB_PATH, host.ID().String())
+	if err := os.RemoveAll(peerDir); err != nil {
+		logger.Error("Error deleting database: ", err)
+	}
+}
+// Function to handle peer disconnection
+func handlePeerDisconnection(iD peer.ID, graphDB graphstorage.Storage) {
+	// preserve the data in the DHT TODO: There is a task to be done here
+	//logger.Infof("Preserving data for peer %s", iD, graphDB)
+}
+
 // Function to discover and connect to peers
-func discoverAndConnectPeers(ctx context.Context, host host.Host) {
-	log.Info("Starting peer discovery...")
-	logWithFile.Info("Starting peer discovery...")
+func discoverAndConnectPeers(ctx context.Context, host host.Host, config Config) {
+	logger.Info("Starting peer discovery...")
 	startTime := time.Now()
 
+	logger.Info("Announcing the IDSS service...")
 	routingDiscovery := drouting.NewRoutingDiscovery(KADDHT)
-	dutil.Advertise(ctx, routingDiscovery, discoveryServiceTag)
+	dutil.Advertise(ctx, routingDiscovery, config.IDSSString)
+	logger.Debug("Announced the IDSS service")
 
 	// Look for other peers in the network who announced and connect to them
 	anyConnected := false
-	log.Info("Searching for peers...")
+	logger.Infoln("Searching for other peers...") //3YPK4CV 
+	fmt.Println("...")
 	for !anyConnected {
-		// Print a counter to show progress
-		fmt.Print(".")
-
-		peerChan, err := routingDiscovery.FindPeers(ctx, discoveryServiceTag)
+		peerChan, err := routingDiscovery.FindPeers(ctx, config.IDSSString)
 		if err != nil {
-			log.Error("Error finding peers:", err)
-			logWithFile.Error("Error finding peers:", err)
+			logger.Error("Error finding peers:", err)
 		}
 
 		for peer := range peerChan {
@@ -271,424 +281,639 @@ func discoverAndConnectPeers(ctx context.Context, host host.Host) {
 				continue // Skip over self
 			}
 
-			err := host.Connect(ctx, peer)
+			logger.Debug("Found peer announced, connecting to it :", peer)
+
+			err := host.Connect(ctx, peer) 
 			if err != nil {
-				//log.Error("Error connecting to peer:", err)
-			} else {
-				log.Info("Connected to peer:", peer.ID)
-				logWithFile.Info("Connected to peer:", peer.ID)
+				continue
+			}
+
+			// Advertise the protocol immediately after connecting to the peer
+			routingDiscovery := drouting.NewRoutingDiscovery(KADDHT)
+			dutil.Advertise(ctx, routingDiscovery, config.IDSSString)
+
+			stream, err := host.NewStream(ctx, peer.ID, protocol.ID(config.ProtocolID))
+			if err != nil {
+				logger.Error("Connection failed:", err)
+				continue
+			}else{
+				logger.Info("Connected to peer:", peer.ID)
 				anyConnected = true
+
+				rw := bufio.NewReadWriter(bufio.NewReader(stream), bufio.NewWriter(stream))
+
+				go writeData(rw)
+				go readData(rw)
 			}
 		}
 	}
-	log.Info("Finished peer discovery")
-	log.WithFields(logrus.Fields{
-		// Close peers
-		"numPeersFound": len(KADDHT.RoutingTable().GetPeerInfos()),
-	}).Info("Found peers in the DHT")
+
+	logger.Info("Finished peer discovery")
+	logger.Infof("Num of found peers in the DHT: %d", len(KADDHT.RoutingTable().GetPeerInfos()))
 
 	// Print time taken to find peers
-	log.Info("Time taken to find peers: ", time.Since(startTime))
-	logWithFile.Info("Peer discovery completed")
+	logger.Info("Time taken to find peers: ", time.Since(startTime))
+	logger.Info("Peer discovery completed")
+}
+
+func readData(rw *bufio.ReadWriter) {
+	for{
+		str, err := rw.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				logger.Warn("Connection closed by peer")
+				return
+			}else{
+				logger.Error("Error reading from stream:", err)
+			}
+		}
+
+		if str == "exit" {
+			logger.Warn("Closing connection due to 'exit' command")
+			return
+		}
+
+		if str == "" {
+			logger.Warn("Closing connection due to empty string")
+			return
+		}
+
+		if str != "\n" {
+			// Green console colour: 	\x1b[32m
+			// Reset console colour: 	\x1b[0m
+			fmt.Printf("\x1b[32m%s\x1b[0m> ", str)
+		}
+	}
+}
+
+func writeData(rw *bufio.ReadWriter) {
+	stdReader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("> ")
+		sendData, err := stdReader.ReadString('\n')
+		if err != nil {
+			logger.Error("Error reading from stdin:", err)
+		}
+
+		_, err = rw.WriteString(fmt.Sprintf("%s\n", sendData))
+		if err != nil {
+			logger.Error("Error writing to stream:", err)
+		}
+
+		err = rw.Flush()
+		if err != nil {
+			logger.Error("Error flushing stream:", err)
+		}
+	}
 }
 
 // Function to initialise the DHT and bootstrap the network with default nodes
-func initialiseDHT(ctx context.Context, host host.Host) *dht.IpfsDHT {
-	logWithFile.Info("Initialising the DHT...")
-	kadDHT, err := dht.New(ctx, host)
+func initialiseDHT(ctx context.Context, host host.Host, config Config) *dht.IpfsDHT {
+	logger.Info("Initialising the DHT...")
+	bootstrapPeers := make([]peer.AddrInfo, len(config.BootstrapPeers))
+
+	for i, addr := range config.BootstrapPeers {
+		peerinfo, _ := peer.AddrInfoFromP2pAddr(addr)
+		bootstrapPeers[i] = *peerinfo
+	}
+
+	kadDHT, err := dht.New(ctx, host, dht.BootstrapPeers(bootstrapPeers...))
 	if err != nil {
-		log.Fatal("Error creating DHT", err)
-		logWithFile.Fatal("Error creating DHT", err)
+		logger.Fatal("Error creating DHT", err)
 	}
 
+	logger.Debug("Bootstrapping the DHT")
 	if err := kadDHT.Bootstrap(ctx); err != nil {
-		log.Fatal("Error bootstrapping DHT", err)
-		logWithFile.Fatal("Error bootstrapping DHT", err)
+		logger.Fatalf("Error bootstrapping the DHT: %v", err)
+		os.Exit(1)
 	}
 
-	// Connect to the default bootstrap nodes
-	log.Info("Bootstrapping the DHT")
-
-	var wg sync.WaitGroup
-	for _, peerAddr := range dht.DefaultBootstrapPeers {
-		peerinfo, _ := peer.AddrInfoFromP2pAddr(peerAddr)
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			if err := host.Connect(ctx, *peerinfo); err != nil {
-				log.Error("Error connecting to bootstrap node:", err)
-				logWithFile.Error("Error connecting to bootstrap node:", err)
-			}
-		}()
-	}
-	// Wait for all connections to finish
-	log.Info("Waiting for connections to bootstrap nodes to finish")
-	wg.Wait()
-
-	// Log the progress
-	log.Info("Bootstrapped the DHT")
-	logWithFile.Info("DHT initialised successfully")
+	logger.Info("Bootstrapped the DHT")
 
 	return kadDHT
 }
 
 // A function to handle incoming requests from clients
-func handleRequest(conn network.Stream, REMOTE_ADDRESS string, ctx context.Context) {
-	logWithFile.Infof("Handling request from %s", REMOTE_ADDRESS)
+func handleRequest(conn network.Stream, REMOTE_ADDRESS string, ctx context.Context, config Config) {
+	logger.Infof("Handling request from %s", REMOTE_ADDRESS)
 	defer conn.Close()
 
-	// Create a Reader to efficiently handle input
-	reader := bufio.NewReader(conn)
-
 	for {
-		// Read until newline to get complete command
-		command, err := reader.ReadString('\n')
+		// Read the incoming QueryMessage using protobuf
+		msgBytes, err := readDelimitedMessage(conn, ctx)
 		if err != nil {
 			if err != io.EOF {
-				log.Println("Error reading from stream:", err)
-				logWithFile.Error("Error reading from stream:", err)
+				logger.Errorf("Error reading from stream:", err)
 			}
 			break
 		}
 
-		// Trim the command to remove leading/trailing whitespace and newline
-		query := strings.TrimSpace(command)
+		// Decode the incoming query message
+		var msg common.QueryMessage 
+		err = proto.Unmarshal(msgBytes, &msg)
+        if err != nil {
+			logger.Errorf("Error unmarshalling query message: %v", err)
+			continue
+        }
 
-		if query == "exit" {
-			log.Warn("Closing connection due to 'exit' command")
-			return // Exit the handleRequest function
-		}
+		query := msg.Query
+		uqi := msg.Uqi
+		ttl := msg.Ttl
 
-		// Define UQI
-		uqi := fmt.Sprintf("%s-%d", KADDHT.Host().ID(), time.Now().UnixNano())
+		peerQueryCacheKey := fmt.Sprintf("%s-%s", KADDHT.Host().ID(), uqi)
+
+		// Initialise the query state
+		queryState := &common.QueryState{}
 
 		// Check query cache for duplicate queries
-		if _, loaded := queryCache.LoadOrStore(uqi, struct{}{}); loaded {
-			log.Infof("Duplicate query received: %s (UQI: %s)", query, uqi)
-			logWithFile.Infof("Duplicate query received: %s (UQI: %s)", query, uqi)
+		if _, loaded := queryCache.LoadOrStore(peerQueryCacheKey, struct{}{}); loaded {
+			logger.Warnf("Duplicate query received on this peer: Peer: %s %s (UQI: %s)", KADDHT.Host().ID(), query, uqi)
 			continue // Skip duplicate query
+		}else{
+			logger.Infof("New query received on this peer: Peer: %s %s (UQI: %s)", KADDHT.Host().ID(), query, uqi)
 		}
 
-		log.Infof("Received query: %s (UQI: %s)", query, uqi)
-		logWithFile.Infof("Received query: %s (UQI: %s)", query, uqi)
+		// Create context with deadline based on the TTL
+		queryCtx, cancel := context.WithTimeout(ctx, time.Duration(ttl) * time.Second)
+		defer cancel()
 
-		// Channel to collect results from peers
-		// TODO: Change size to count of peers with the IDSS protocol
-		//channelSize := len(KADDHT.RoutingTable().ListPeers())
-		idssPeers := 0
-		for _, peer := range KADDHT.RoutingTable().ListPeers() {
-			if supportsIDSSProtocol(peer) {
-				idssPeers++
+		localResult, header, err := executeLocalQuery(query, KADDHT.Host().ID())
+		if err != nil {
+			logger.Errorf("Error executing local query in %s: %v", KADDHT.Host().ID(), err)
+
+			//TODO: if the peer does not have database, forward the query to other peers
+			
+			// Send the error back to the client
+			queryState = &common.QueryState{
+				State: common.QueryState_FAILED,
 			}
+
+			// Create the error message
+			errorMsg := &common.QueryResult{
+				PeerId: KADDHT.Host().ID().String(),
+				QueryState: queryState,
+				Error: err.Error(),
+			}
+
+			// Marshal the error message
+			errorBytes, err := proto.Marshal(errorMsg)
+			if err != nil {
+				logger.Errorf("Error marshalling error message: %v", err)
+				continue
+			}
+
+			// Write the error message to the client
+			err = writeDelimitedMessage(conn, errorBytes)
+			if err != nil {
+				logger.Errorf("Error writing error message to client %s: %v", REMOTE_ADDRESS, err)
+				break
+			}
+			continue //TODO: Should we break here?
 		}
-		
-		channelSize := idssPeers
-		resultChan := make(chan QueryResult, channelSize)
 
-		// Execute the query locally and send the result to the channel
-		go func() {
-			localResult := executeLocalQuery(query, KADDHT.Host().ID())
-			//resultJSON, _ := json.Marshal(localResult.Rows())
-			resultChan <- QueryResult{
-				PeerID: KADDHT.Host().ID(),
-				Result: localResult}
-			log.Infof("Local result for query %s (UQI: %s): %s", query, uqi, localResult) // for logging
-			logWithFile.Infof("Local result for query %s (UQI: %s): %s", query, uqi, localResult)
-		}()
+		// Handle nil header
+		if header != nil {
+			logger.Info("Labels: ", header.Labels())
+			logger.Info("Peer: ", KADDHT.Host().ID())
+		}else{
+			logger.Warn("Header is nil")
+		}
 
-		// Broadcast the query to other peers
-		broadcastQuery(ctx, query, uqi, resultChan)
+		logger.Infof("Local result for peer %s (UQI: %s): %v", KADDHT.Host().ID(), uqi, localResult)
+
+		var wg sync.WaitGroup
+
+		if ttl > 0 {
+			broadcastQuery(queryCtx, &msg, conn, config, &wg)
+		}
+
+		// Wait for all goroutines to finish
+		wg.Wait()
+
+		logger.Infof("Now merging results for query %s (UQI: %s)", query, uqi)
 
 		// Wait for and merge results from all peers
-		mergedResult := mergeResults(resultChan)
-
-		// Convert the merged result to a string
-		formattedResult, err := json.Marshal(mergedResult)
+		mergedResult, err := receiveMergeResults(queryCtx, conn, localResult) 
 		if err != nil {
-			log.Errorf("Error marshalling merged result: %v", err)
+			if err == context.Canceled {
+				// Context cancelled, return partial results anyway
+				logger.Warnf("Context cancelled while merging results for query %s (UQI: %s)", query, uqi)
+
+				// Send the merged result back to the client
+				finalResult := &common.QueryResult{
+					PeerId: KADDHT.Host().ID().String(),
+					Result: covertResultToProtobufRows(mergedResult),
+					QueryState: queryState,
+				}
+
+				// Convert the merged result to a string
+				formattedResult, err := proto.Marshal(finalResult)
+				if err != nil {
+					logger.Errorf("Error marshalling merged result: %v", err)
+					continue
+				}
+
+				// Send the merged result back to the client
+				err = writeDelimitedMessage(conn, formattedResult)
+				if err != nil {
+					logger.Errorf("Error writing merged result to client %s: %v", REMOTE_ADDRESS, err)
+					break
+				}
+				return 
+			}
+			logger.Errorf("Error merging results for query %s (UQI: %s): %v", query, uqi, err)
 			continue
 		}
 
-		// Print the merged result
-		log.Infof("Merged result for query %s (UQI: %s): %s", query, uqi, mergedResult)
-		logWithFile.Infof("Merged result for query %s (UQI: %s): %s", query, uqi, mergedResult)
-
-		// Send the merged result back to the client
-		if _, err := conn.Write(append([]byte(formattedResult), []byte("\n")...)); err != nil {
-			log.Errorf("Error writing to client stream: %s", REMOTE_ADDRESS)
-			break
+		// Update the query state to completed
+		queryState = &common.QueryState{
+			State: common.QueryState_COMPLETED,
+			Result: covertResultToProtobufRows(mergedResult),
 		}
 
-		// Remove query from the cache
-		queryCache.Delete(uqi)
+		// log the merged result
+		logger.Infof("Merged results for query %s (UQI: %s): %v", query, uqi, mergedResult)
 
-		// Process the command (remove leading/trailing whitespace and newline)
-		//response := processCommand(context.Background(), strings.TrimSpace(command))
-	}
-}
-
-func supportsIDSSProtocol(peer peer.ID) bool {
-	supportedProtocols, err := KADDHT.Host().Peerstore().SupportsProtocols(peer, IDSS_PROTOCOL)
-	if err != nil {
-		log.Errorf("Error checking supported protocols for peer %v: %v", peer, err)
-		return false
-	}
-
-	// Check if the peer supports the IDSS protocol
-	for _, proto := range supportedProtocols {
-		if proto == IDSS_PROTOCOL {
-			return true
-		}
-	}
-	return false
-}
-
-func mergeResults(resultChan <-chan QueryResult) [][]interface{} {
-	logWithFile.Info("Merging results from peers...")
-	var mergedResult [][]interface{} // Store rows directly
-
-	// Keep track of unique rows seen across all results
-	uniqueRows := make(map[string]bool)
-
-	// Iterate over the results
-	for result := range resultChan {
-		if result.Error != nil {
-			//log.Errorf("Error fetching result from peer %s: %v", result.PeerID, result.Error)
-			logWithFile.Errorf("Error fetching result from peer %s: %v", result.PeerID, result.Error)
+		if len(mergedResult) == 0 {
+			logger.Warnf("No results found for query %s (UQI: %s)", query, uqi)
 			continue
 		}
 
-		// Unmarshal the result (which is now a JSON string) into a slice of interfaces
-		var rows []interface{}
+		if msg.GetTtl() == 0 {
+			logger.Warnf("TTL expired for query %s (UQI: %s)", query, uqi)
 
-		resultJSON, err := json.Marshal(result.Result)
-		if err != nil {
-			log.Error("Error marshalling result: ", err)
-			continue
-		}
+			// Convert the merged result to protobuf
+			finalResult := &common.QueryResult{
+				PeerId: KADDHT.Host().ID().String(),
+				Result: covertResultToProtobufRows(mergedResult),
+				QueryState: queryState,
+			}
 
-		// Unmarshal the result into a slice of interfaces
-		err = json.Unmarshal(resultJSON, &rows)
-		if err != nil {
-			log.Error("Error unmarshalling result: ", err)
-			continue
-		}
+			// Convert the merged result to a string
+			formattedResult, err := proto.Marshal(finalResult)
+			if err != nil {
+				logger.Errorf("Error marshalling merged result: %v", err)
+				continue
+			}
 
-
-		// Iterate over the rows and add unique ones to mergedResult
-		for _, row := range rows {
-			rawJSON, _ := json.Marshal(row)
-			if _, exists := uniqueRows[string(rawJSON)]; !exists {
-				uniqueRows[string(rawJSON)] = true
-				mergedResult = append(mergedResult, row.([]interface{}))
+			// Send the merged result back to the client
+			err = writeDelimitedMessage(conn, formattedResult)
+			if err != nil {
+				logger.Errorf("Error writing merged result to client %s: %v", REMOTE_ADDRESS, err)
+				break
 			}
 		}
+		queryCache.Delete(peerQueryCacheKey)
 	}
-	log.Info("Results merged successfully")
-	return mergedResult
 }
 
-// Function to broadcast the query to peers in an overlay network
-func broadcastQuery(ctx context.Context, query string, uqi string, resultChan chan QueryResult) {
-	log.Info("Broadcasting query to peers...")
-	logWithFile.Info("Broadcasting query to peers...")
-	for _, peerID := range KADDHT.RoutingTable().ListPeers() {
-		if peerID != KADDHT.Host().ID() && supportsIDSSProtocol(peerID) { // Skip self and filter by protocol
-			go func(p peer.ID) {
-				defer func() {
-					if r := recover(); r != nil {
-						log.Errorf("Recovered from panic: %v", r)
-					}
-				}()
+// Function to broadcast the query to connected peers. This function also filters out the originating peer because it is already queried
+func broadcastQuery(ctx context.Context, msg *common.QueryMessage, parentStream network.Stream, config Config, wg *sync.WaitGroup) {
+	logger.Info("Broadcasting query from peer: ", KADDHT.Host().ID())
 
-				select{
-				case <-ctx.Done():
-					resultChan <- QueryResult{
-						PeerID: p,
-						Result: nil,
-						Error: ctx.Err(),
-					}
-				default:
-					result, err := queryPeer(ctx, p, QueryMessage{Query: query, UQI: uqi, Hop: 0}, nil)
-					resultChan <- QueryResult{
-						PeerID: p,
-						Result: result,
-						Error:  err,
-					}
-				}
-			}(peerID)
+	connectedPeers := KADDHT.Host().Network().Peers()
+
+	// Filter peers to exclude the originating peer and the parent stream peer
+	var eligiblePeers []peer.ID
+	for _, peerID := range connectedPeers {
+		if peerID != KADDHT.Host().ID() && (parentStream == nil || parentStream.Conn().RemotePeer() != peerID) { // Skip self
+			eligiblePeers = append(eligiblePeers, peerID)
 		}
 	}
+
+	if parentStream == nil {
+		logger.Error("parentStream is nil in broadcastQuery") // we cant proceed without the parent stream, TODO: right?
+		return
+	}
+
+	if len(eligiblePeers) == 0 {
+		logger.Warn("No eligible peer to broadcast query to")
+		return
+	}else{
+		logger.Infof("Broadcasting query to %d peers", len(eligiblePeers)) // For debugging
+	}
+
+	for _, peerID := range eligiblePeers {
+		wg.Add(1)
+		go func (p peer.ID)  {
+			// p has to a local peer not the parent stream peer
+			defer wg.Done()
+			// Execute the query on the peer and send the result back to the channel
+			// Do not query to the kademlia peer
+			if p == KADDHT.Host().ID() {
+				logger.Infof("Skipping query to self: %s", p)
+				return
+			}
+			queryPeer(ctx, p, msg, parentStream, config, wg) 
+		}(peerID)
+	}
 }
 
-// Function to query a single peer, after querying the originating/parent peer
-func queryPeer(ctx context.Context, peer peer.ID, msg QueryMessage, parentStream network.Stream) ([][]interface{}, error) {
-	// Create a null variable of type [][]interface{}
-	var nullResult [][]interface{}
-	//log.Info("Querying peer: ", peer)
-	logWithFile.Info("Querying peer: ", peer)
-	// Check if KADDHT is initialised and has a host
+// Function to query a single peer
+func queryPeer(ctx context.Context, peerChild peer.ID, msg *common.QueryMessage, parentStream network.Stream, config Config, wg *sync.WaitGroup) {
+	logger.Infof("Entering queryPeer for peer %s", peerChild)
+	// Are the DHT and host are initialised?
 	if KADDHT == nil || KADDHT.Host() == nil {
-		// stop the execution
-		return nullResult, fmt.Errorf("DHT or its host is not initialised")
+		logger.Errorf("DHT or its host is not initialised")
 	}
 
-	// Increment the hop count
-	msg.Hop++
-
-	// Check if the hop count exceeds the maximum
-	if msg.Hop >= MAX_HOPS {
-		log.Warnf("Query reached maximum hops: %s (UQI: %s)", msg.Query, msg.UQI)
-		localRes := executeLocalQuery(msg.Query, peer)
-		//resultJSON, _ := json.Marshal(localRes.Rows())
-		return localRes, nil
+	if parentStream == nil {
+		logger.Error("parentStream is nil in broadcastQuery")
+		logger.Errorf("parentStream is nil")
 	}
+
+	// Print the ttl
+	logger.Infof("TTL in %v before decrement: %d", peerChild, msg.Ttl)
+
+	// Decrease the TTL
+	msg.Ttl--
+	var stream network.Stream
+    var err error
+
+	// Update context with new deadline
+	deadline := time.Now().Add(time.Duration(msg.GetTtl()) * time.Second)
+	queryCtx, cancel := context.WithDeadline(ctx, deadline)
+	defer cancel()
 
 	// Create new stream to the peer
-	stream, err := KADDHT.Host().NewStream(ctx, peer, IDSS_PROTOCOL)
+	stream, err = KADDHT.Host().NewStream(queryCtx, peerChild, protocol.ID(config.ProtocolID))
 	if err != nil {
 		// skip to the next peer
-		return nullResult, fmt.Errorf("error opening stream to peer: %v", err)
-	}
-	defer stream.Close() // Always close the stream
-
-	log.Info("Stream opened to peer: ", peer)         // For logging
-	logWithFile.Info("Stream opened to peer: ", peer) // For logging
-
-	_, err = stream.Write([]byte(fmt.Sprintf("%s:%s", msg.Query, msg.UQI))) // Send the query and UQI
-	if err != nil {
-		log.Errorf("Error writing to stream of %v: %v", peer, err)
-		logWithFile.Errorf("Error writing to stream of %v: %v", peer, err)
-		return nullResult, err
+		logger.Errorf("error opening stream to peer: %v", err)
 	}
 
-	// Check if query has been executed in this peer
-	if _, loaded := queryCache.LoadOrStore(msg.UQI, struct{}{}); loaded {
-		log.Infof("Duplicate query received: %s (UQI: %s)", msg.Query, msg.UQI)
-		return nullResult, fmt.Errorf("duplicate query received: %s", msg.Query)
+	logger.Info("Stream opened to peer: ", peerChild)
+
+	// Control duplicate queries (per-peer query cache)
+	peerQueryCacheKey := fmt.Sprintf("%s-%s", peerChild, msg.Uqi)
+	if _, loaded := queryCache.LoadOrStore(peerQueryCacheKey, struct{}{}); loaded {
+		logger.Infof("Duplicate query received: Peer: %s %s (UQI: %s)", peerChild, msg.Query, msg.Uqi)
+		logger.Errorf("duplicate query received: %s", msg.Query)
 	}
 
 	// Run the query on the peer
-	localRes := executeLocalQuery(msg.Query, peer)
-	resultJSON, _ := json.Marshal(localRes)
-	log.Print("Local result: ", localRes) // For logging
-
-	// Send the local result to the peer as JSON
-	err = writeQueryMessage(stream, msg, resultJSON)
-	//resultJSON, err := json.Marshal(localRes.Rows()) // Marshal only the rows
+	localResults, header, err := executeLocalQuery(msg.Query, peerChild) 
 	if err != nil {
-		log.Errorf("Error marshalling local result: %v", err)
-		return nullResult, err
+		logger.Errorf("error executing local query: %v", err)
 	}
 
-	// Read the response as string from the stream
-	//TODO: Why read response as string? Can we read as JSON? or eql.SearchResult?
-	reader := bufio.NewReader(stream)
-	remoteResultStr, err := reader.ReadSlice('\n')
-	if err != nil && err != io.EOF {
-		log.Errorf("Error reading response from %v: %v", peer, err)
-		return nullResult, err
+	// Handle nil header
+	//var labels []string
+	if header != nil {
+		logger.Info("Labels: ", header.Labels())
+		//labels := header.Labels()
+	}else{
+		logger.Warn("Header is nil")
+		//labels = []string{}
 	}
 
-	// Send the remote result back up the chain if this is not the originating peer
-	if parentStream != nil {
-		if _, err = parentStream.Write([]byte(remoteResultStr)); err != nil {
-			log.Errorf("Error sending remote result back to parent peer %s: %v", peer, err)
+	logger.Infof("Local result for peer %s: %v", peerChild, localResults)
+
+	// Initiating query state for the peer
+	queryState := &common.QueryState{
+		State: common.QueryState_LOCALLY_EXECUTED,
+		Result: covertResultToProtobufRows(localResults),
+	}
+
+	// Print ttl and query state
+	logger.Infof("TTL: %d, Peer: %v", msg.GetTtl(), peerChild)
+
+	// Broadcast the query to other peers if TTL is greater than 0
+	if msg.GetTtl() > 0 {
+		logger.Infof("Peer %v broadcasting to its space", peerChild)
+		broadcastQuery(queryCtx, msg, stream, config, wg)
+	}
+
+	// Wait for TTL to reach 0 or context to be done
+	<-queryCtx.Done()
+
+	mergedChildResults, err := receiveMergeResults(queryCtx, stream, localResults)
+	if err != nil {
+		if err == context.DeadlineExceeded{
+			logger.Info("Timeout reading response from peer : %v", peerChild)
+
+			// Update state
+			queryState.State = common.QueryState_COMPLETED
+			queryState.Result = covertResultToProtobufRows(mergedChildResults)
+
+			// Create results message
+			resultMsg := &common.QueryResult{
+				PeerId: peerChild.String(),
+				Result: covertResultToProtobufRows(mergedChildResults),
+				Labels: header.Labels(),
+				QueryState: queryState,
+			}
+
+			// Marshal the QueryResult message
+			resultBytes, err := proto.Marshal(resultMsg)
+			if err != nil {
+				logger.Errorf("Error marshalling result: %v", err)
+			}
+
+			// Write the result to the parent stream
+			err = writeDelimitedMessage(parentStream, resultBytes)
+			if err != nil {
+				logger.Errorf("Error writing remote result to parent peer %s: %v", parentStream.Conn().RemotePeer(), err)
+			}
+
+			// Change the state to SENT_BACK
+			queryState.State = common.QueryState_SENT_BACK
+
+			// Log the merged result and query state
+			logger.Infof("Merged results for peer %s: %v", peerChild, mergedChildResults)
+			logger.Infof("Query state for peer %s: %v", peerChild, queryState)
+
+			// Close the stream if its its not the parent stream and if TTL has reached 0 and the query has been sent back
+			if parentStream.Conn().RemotePeer() != peerChild && queryState.State == common.QueryState_SENT_BACK && msg.GetTtl() == 0 {
+				stream.Close()
+			}
+			
+		}else{
+			logger.Errorf("Error merging results from peer %s: %v", peerChild, err)
+			queryState.State = common.QueryState_FAILED
+			
+			// proceed to the next peer
+			return
 		}
 	}
 
-	logWithFile.Info("Response from peer: ", remoteResultStr)
-	// Convert the response from []byte to [][]interface{}
-	var remoteResult [][]interface{}
-	err = json.Unmarshal(remoteResultStr, &remoteResult)
-	if err != nil {
-		log.Errorf("Error unmarshalling remote result: %v", err)
-		return nullResult, err
+	// update state
+	queryState.State = common.QueryState_SENT_BACK
+
+	// Create results message
+	resultMsg := &common.QueryResult{
+		PeerId: peerChild.String(),
+		Result: covertResultToProtobufRows(mergedChildResults),
+		Labels: header.Labels(),
+		QueryState: queryState,
 	}
-	
-	// Return the response
-	return remoteResult, nil
+
+	// Marshal the QueryResult message
+	resultBytes, err := proto.Marshal(resultMsg)
+	if err != nil {
+		logger.Errorf("Error marshalling result: %v", err)
+	}
+
+	// Write the result to the parent stream
+	err = writeDelimitedMessage(parentStream, resultBytes)
+	if err != nil {
+		logger.Errorf("Error writing remote result to parent peer %s: %v", parentStream.Conn().RemotePeer(), err)
+	}
+
+	// Close the stream if its its not the parent stream
+	if parentStream.Conn().RemotePeer() != peerChild && queryState.State == common.QueryState_SENT_BACK && msg.GetTtl() == 0 {
+		stream.Close()
+	}
+	//return mergedChildResults, nil
 }
 
-// Function to write the query message to the stream
-func writeQueryMessage(stream network.Stream, msg QueryMessage, localResults []byte) error {
-	msgJSON, err := json.Marshal(msg)
-	if err != nil {
-		return err
+
+func receiveMergeResults(ctx context.Context, stream network.Stream, localResults [][]interface{}) ([][]interface{}, error) {
+	mergedResults := localResults
+	for{
+		select{
+			case <-ctx.Done():
+				return mergedResults, ctx.Err()
+			default:
+				resBytes, err := readDelimitedMessageWithContext(stream, ctx)
+				if err != nil {
+					if err == io.EOF {
+						logger.Warn("Connection closed by peer")
+						return mergedResults, nil
+					}
+					return nil, err
+				}
+
+				var res common.QueryResult
+				err = proto.Unmarshal(resBytes, &res)
+				if err != nil {
+					return nil, fmt.Errorf("error unmarshalling remote result: %v", err)
+				}
+
+				// Merge received results with local results
+				receivedResults := convertProtobufRowsToResult(res.Result)
+				mergedResults = mergeTwoResults(mergedResults, receivedResults)
+
+				// Log the merged results
+				logger.Infof("Merged results from peer %s: %v", res.PeerId, mergedResults)
+				return mergedResults, nil
+		}
+	}
+}
+
+func mergeTwoResults(result1, result2 [][]interface{}) [][]interface{} {
+	combinedResults := append(result1, result2...)
+    return combinedResults
+}
+
+func readDelimitedMessageWithContext(r io.Reader, queryCtx context.Context) ([]byte, error) {
+	// Read the message size (varint encoded)
+	logger.Info("Reading message size...", queryCtx)
+    size, err := binary.ReadUvarint(bufio.NewReader(r))
+    if err != nil {
+        return nil, err
+    }
+
+	// Check if size is zero-length
+	if size == 0 {
+		return nil, fmt.Errorf("zero-length message received")
 	}
 
-	_, err = stream.Write(msgJSON)
-	if err != nil {
-		return err
+    // Read the message data
+	buf := make([]byte, size)
+    done := make(chan struct{})
+    go func() {
+        _, err = io.ReadFull(r, buf)
+        close(done)
+    }()
+
+	select {
+	case <-done:
+
+	case <-queryCtx.Done():
+		return nil, queryCtx.Err()
 	}
 
-	_, err = stream.Write([]byte("\n"))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = stream.Write(localResults)
-	if err != nil {
-		return err
-	}
+    return buf, nil
+}
 
-	_, err = stream.Write([]byte("\n"))
-	return err
+func convertProtobufRowsToResult(rows []*common.Row) [][]interface{}{
+	var result [][]interface{}
+	for _, row := range rows {
+		convertedData := make([]interface{}, len(row.Data))
+		for i, value := range row.Data {
+			convertedData[i] = value
+		}
+		result = append(result, convertedData)
+	}
+	return result
+}
+
+// Function to convert EliasDB query results to Protobuf rows
+func covertResultToProtobufRows(result [][]interface{}) []*common.Row {
+    var rows []*common.Row
+    for _, row := range result {
+        var values []string
+        for _, value := range row {
+            values = append(values, fmt.Sprintf("%v", value))
+        }
+		rows = append(rows, &common.Row{Data: values})
+    }
+    return rows
+}
+
+// Function to read a delimited message from the stream
+func readDelimitedMessage(r io.Reader, _ context.Context) ([]byte, error) {
+	// Read the message size (varint encoded)
+	size, err := binary.ReadUvarint(bufio.NewReader(r))
+    if err != nil {
+        return nil, err
+    }
+
+    // Read the message data
+    buf := make([]byte, size)
+    _, err = io.ReadFull(r, buf)
+    if err != nil {
+        return nil, err
+    }
+
+    return buf, nil
+}
+
+func writeDelimitedMessage(w io.Writer, data []byte)error{
+	// Write the message size (varint encoded)
+    sizeBuf := make([]byte, binary.MaxVarintLen64)
+    n := binary.PutUvarint(sizeBuf, uint64(len(data)))
+
+    _, err := w.Write(sizeBuf[:n])
+    if err != nil {
+        return err
+    }
+
+    // Write the message data
+    _, err = w.Write(data)
+    return err
 }
 
 // Function to execute local query
-func executeLocalQuery(command string, peer peer.ID) [][]interface{} {
-	logWithFile.Info("Executing query locally in ", peer)
-	log.Printf("Executing %v in %v: ", command, peer)
+func executeLocalQuery(command string, peer peer.ID) ([][]interface{}, eql.SearchResultHeader, error) {
+	logger.Infof("Executing %s locally in %s", command, peer)
 	result, err := eql.RunQuery("myQuery", "main", command, GRAPH_MANAGER)
 	if err != nil {
-		log.Error("Error querying data: ", err)
-		logWithFile.Error("Error querying data: ", err)
-	} else {
-		log.Info("Query processed locally in ", peer)
-		logWithFile.Info("Query processed locally in ", peer)
-	}
-
-	// Create a new search result to hold the full data
-	//TODO: There is a task to do
-	//fullResult := eql.SearchResult{}
-	//fullResult.SetLabels(result.Labels())
-
-	// Iterate through rows and add full data
-    for _, row := range result.Rows() {
-        rowData := make([]interface{}, len(row))
-		copy(rowData, row)
-        //fullResult.AddRow(rowData)
-    }
-	
-	return result.Rows()
-}
-
-// Function to initialise the database instance
-func initDBIntance(peer peer.AddrInfo, filename string) {
-	log.Info("Initialising the database instance...")
-	// Create a peer-specific database directory
-	dbPath := fmt.Sprintf("%s/%s", DB_PATH, peer.ID.String())
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		os.MkdirAll(dbPath, 0755)
-	}
-
-	graphDB, err := graphstorage.NewDiskGraphStorage(dbPath, false)
-	CheckError(err, "Error creating graph database")
-	defer graphDB.Close()
-	GRAPH_MANAGER = eliasdb.NewGraphManager(graphDB)
-
-	// Initialize the database only if the filename is provided
-	if filename != "" {
-		Database_init(filename, dbPath)
-	}
-	log.Printf("Graph DB instance created at peer: %s (path: %s)", peer.ID, dbPath)
-	logWithFile.Info("Graph DB instance created successfully")
+		logger.Error("Error querying data: ", err)
+		return nil, nil, err
+	} 
+	return result.Rows(), result.Header(), err
 }
 
 // Function to check for errors
 func CheckError(err error, message ...string) {
 	if err != nil {
-		log.Fatalf("Error during operation '%s': %v", message, err)
+		logger.Fatalf("Error during operation '%s': %v", message, err)
 	}
 }
