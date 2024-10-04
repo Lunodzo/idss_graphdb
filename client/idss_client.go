@@ -54,7 +54,6 @@ import (
 	"github.com/libp2p/go-libp2p/core/protocol"
 	"google.golang.org/protobuf/proto"
 
-	//"github.com/gogo/protobuf/proto"
 	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	"github.com/multiformats/go-multiaddr"
@@ -164,12 +163,14 @@ func main() {
 
 		// Define UQI
         uqi := fmt.Sprintf("%s-%d", host.ID(), time.Now().UnixNano())
-
+		
 		// Create the QueryMassage
 		msg := common.QueryMessage{
 			Uqi: uqi,
 			Query: query,
-			Ttl: 10,
+			Ttl: 5,
+			Originator: addrInfo.ID.String(),
+			Type: common.MessageType_QUERY,
 		}
 		
 		// Open stream 
@@ -203,7 +204,7 @@ func main() {
 			continue
 		}
 
-		var response common.QueryResult
+		var response common.QueryMessage
 		err = proto.Unmarshal(responseBytes, &response)
 		if err != nil {
 			log.Error("Error unmarshalling response:", err)
@@ -265,7 +266,7 @@ func handleTerminationSignals(host host.Host) {
 
 	go func() {
 		sig := <-c
-		log.Printf("Received signal: %s. Peer exiting the network: %s", sig, host.ID().String())
+		log.Warnf("Received signal: %s. Peer exiting the network: %s", sig, host.ID().String())
 
 		// Clean up
 		if err := host.Close(); err != nil {

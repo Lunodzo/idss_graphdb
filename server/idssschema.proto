@@ -4,29 +4,32 @@ package common;
 
 option go_package = "idss/graphdb/common";
 
-// QueryMessage represents a query being propagated in the network
-message QueryMessage {
-    string query = 1;
-    string uqi = 2;
-    int32 ttl = 3;
+enum MessageType {
+    QUERY = 0;
+    RESULT = 1;
 }
 
-// QueryResult represents the result of a query
-message QueryResult {
-    string peer_id = 1;
-    repeated Row result = 2;
-    repeated string labels = 3;
-    string error = 4;
-    QueryState query_state = 5;
+// QueryMessage represents a query being propagated in the network
+message QueryMessage {
+    MessageType type = 1;  // To distinguish between QUERY and RESULT.
+    string query = 2; // The query to be executed
+    string uqi = 3; // Unique Query Identifier
+    float ttl = 4; // Time to live
+    string sender = 5; // The peer_id of the sender
+    string originator = 6; // The peer_id of the originator
+    QueryState state = 7; // The state of the query
+    repeated string labels = 8; // The labels of the query
+    repeated Row result = 9; // The result of the query
+    string error = 10; // Error message if any
 }
 
 message QueryState {
     enum State {
-        QUEUED = 0;
-        LOCALLY_EXECUTED = 1;
-        COMPLETED = 2;
-        SENT_BACK = 3;
-        FAILED = 4;
+        QUEUED = 0; // The query is in the queue
+        LOCALLY_EXECUTED = 1; // The query is executed locally
+        COMPLETED = 2; // The query is completed
+        SENT_BACK = 3; // Query result is sent back to the parent node
+        FAILED = 4; // The query failed
     }
 
     State state = 1;

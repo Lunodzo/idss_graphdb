@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"time"
 
 	eliasdb "github.com/krotik/eliasdb/graph"
 	"github.com/krotik/eliasdb/graph/data"
@@ -11,7 +12,7 @@ import (
 
 // Function to initialise the database
 func Database_init(filename string, DB_PATH string, GRAPH_DB graphstorage.Storage, GRAPH_MANAGER *eliasdb.Manager) {
-	logger.Info("Entering the database initialisation function...")
+	logger.Info("Entering the data loading function...")
 
 	type Node struct {
 		Kind           string `json:"kind"`
@@ -47,7 +48,14 @@ func Database_init(filename string, DB_PATH string, GRAPH_DB graphstorage.Storag
 	myData, err := os.ReadFile(filename)
 
 	if err != nil {
-		logger.Fatal(err)
+		// if there is an empty file, return
+		if os.IsNotExist(err) {
+			logger.Info("No data file found, peer will start with empty graph")
+			//myData = []byte(`{"nodes":[],"edges":[]}`)
+			return
+		}else{
+			logger.Fatal(err)
+		}
 	}
 
 	// Unmarshal the json data
@@ -110,4 +118,34 @@ func Database_init(filename string, DB_PATH string, GRAPH_DB graphstorage.Storag
 		logger.Fatal(err)
 	}
 	logger.Info("Committed Node and Edge store transaction")
+}
+
+// Function to initialise the Query Manager node
+func QueryManager_init(GRAPH_MANAGER *eliasdb.Manager) {
+	logger.Info("Creating the Query Manager node...")
+
+	// Create a new transaction
+	trans := eliasdb.NewGraphTrans(GRAPH_MANAGER)
+
+	// Create the query node
+	queryNode := data.NewGraphNode()
+	queryNode.SetAttr("key", "sample")
+	queryNode.SetAttr("kind", "Query")
+	queryNode.SetAttr("name", "Query")
+	queryNode.SetAttr("query_string", "sample query")
+	queryNode.SetAttr("arrival_time", time.Now().Unix())
+	queryNode.SetAttr("ttl", 0)
+	queryNode.SetAttr("sender_address", "")
+	queryNode.SetAttr("state", "new")
+
+	// Store the query node
+	trans.StoreNode("main", queryNode)
+
+	// Commit the transaction
+	if err := trans.Commit(); err != nil {
+		logger.Errorf("Error committing transaction: %v", err)
+		return
+	}
+
+	logger.Info("Committed Query Manager node store transaction")
 }
