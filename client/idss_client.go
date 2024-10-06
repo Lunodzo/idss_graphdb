@@ -171,6 +171,7 @@ func main() {
 			Ttl: 5,
 			Originator: addrInfo.ID.String(),
 			Type: common.MessageType_QUERY,
+			Sender: host.ID().String(),
 		}
 		
 		// Open stream 
