@@ -60,12 +60,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const(
+const (
 	IDSS_PROTOCOL       = protocol.ID("/idss/1.0.0") // The protocol string for the IDSS protocol
-	discoveryServiceTag = "kadProtocol" // The tag used to advertise and discover the IDSS service
+	discoveryServiceTag = "kadProtocol"              // The tag used to advertise and discover the IDSS service
 )
 
-var(
+var (
 	log = logrus.New()
 )
 
@@ -88,7 +88,7 @@ func main() {
 		log.Fatal("Error generating RSA key pair:", err)
 	}
 
-	// Dynamic port allocation 
+	// Dynamic port allocation
 	listenAddr, err := multiaddr.NewMultiaddr("/ip4/127.0.0.1/tcp/0")
 	if err != nil {
 		log.Fatal("Error creating listening address:", err)
@@ -111,18 +111,18 @@ func main() {
 	}
 
 	// Initialize the DHT
-    kademliaDHT, err := dht.New(ctx, host) // can be set to client mode, however, it comes with limitations
-    if err != nil {
-        log.Fatal("Error creating DHT:", err)
-    }
+	kademliaDHT, err := dht.New(ctx, host) // can be set to client mode, however, it comes with limitations
+	if err != nil {
+		log.Fatal("Error creating DHT:", err)
+	}
 
-    // Bootstrapping the DHT on the client is important for it to participate in the network
-    if err := kademliaDHT.Bootstrap(ctx); err != nil {
-        log.Fatal("Error bootstrapping DHT:", err)
-    }
+	// Bootstrapping the DHT on the client is important for it to participate in the network
+	if err := kademliaDHT.Bootstrap(ctx); err != nil {
+		log.Fatal("Error bootstrapping DHT:", err)
+	}
 
 	// Handle termination signals
-    handleTerminationSignals(host)
+	handleTerminationSignals(host)
 	reader := bufio.NewReader(os.Stdin)
 
 	// Extract the peer ID from the server multiaddress
@@ -132,50 +132,50 @@ func main() {
 		log.Error("Error creating multiaddress:", err)
 	}
 	// Split the multiaddress to find the peer ID component
-    _, peerID := peer.SplitAddr(serverPeer) 
+	_, peerID := peer.SplitAddr(serverPeer)
 	addrInfo := peer.AddrInfo{
-		ID: peerID,
+		ID:    peerID,
 		Addrs: []multiaddr.Multiaddr{serverPeer},
 	}
 
 	if peerID == "" {
-        log.Fatal("No peer ID found in the multiaddress")
-    }
+		log.Fatal("No peer ID found in the multiaddress")
+	}
 	// A go routine to refresh the routing table and periodically find and connect to peers
 	discoverAndConnectPeers(ctx, host, kademliaDHT, addrInfo)
 
 	// get server peer info
 	serverPeerInfo, err := peer.AddrInfoFromP2pAddr(multiaddr.StringCast(*serverAddrFlag))
-    CheckError(err, "Error creating multiaddress") // Handle potential errors
+	CheckError(err, "Error creating multiaddress") // Handle potential errors
 
 	// Loop to continouesly accept queries from the user or exit command
-	for{
+	for {
 		fmt.Println("Enter your query or 'exit' to quit: ")
 		query, err := reader.ReadString('\n')
 		if err != nil {
 			log.Error("Error reading query from user:", err)
 			continue
 		}
-        if strings.TrimSpace(query) == "exit" {
-            log.Warning("Client exiting...")
-            break
-        }
+		if strings.TrimSpace(query) == "exit" {
+			log.Warning("Client exiting...")
+			break
+		}
 
 		// Define UQI
-        uqi := fmt.Sprintf("%s-%d", host.ID(), time.Now().UnixNano())
-		
+		uqi := fmt.Sprintf("%s-%d", host.ID(), time.Now().UnixNano())
+
 		// Create the QueryMassage
 		msg := common.QueryMessage{
-			Uqi: uqi,
-			Query: query,
-			Ttl: 5,
+			Uqi:        uqi,
+			Query:      query,
+			Ttl:        1,
 			Originator: addrInfo.ID.String(),
-			Type: common.MessageType_QUERY,
-			Sender: host.ID().String(),
+			Type:       common.MessageType_QUERY,
+			Sender:     host.ID().String(),
 		}
-		
-		// Open stream 
-		stream , err := host.NewStream(ctx, serverPeerInfo.ID, IDSS_PROTOCOL)
+
+		// Open stream
+		stream, err := host.NewStream(ctx, serverPeerInfo.ID, IDSS_PROTOCOL)
 		if err != nil {
 			log.Error("Error opening stream:", err)
 			continue
@@ -184,21 +184,21 @@ func main() {
 		log.Info("Stream opened.")
 
 		// Marshal and send the QueryMessage using Protobuf
-        msgBytes, err := proto.Marshal(&msg)
-        if err != nil {
-            log.Error("Error marshalling query message:", err)
-            continue
-        }
+		msgBytes, err := proto.Marshal(&msg)
+		if err != nil {
+			log.Error("Error marshalling query message:", err)
+			continue
+		}
 
 		err = writeDelimitedMessage(stream, msgBytes)
-        if err != nil {
-            log.Errorf("Error writing to stream: %s", err)
-            continue
-        }
+		if err != nil {
+			log.Errorf("Error writing to stream: %s", err)
+			continue
+		}
 
 		log.Info("Query sent to server.")
 
-        // Read and print response using Protobuf
+		// Read and print response using Protobuf
 		responseBytes, err := readDelimitedMessage(stream)
 		if err != nil {
 			log.Error("Error reading response from server:", err)
@@ -217,7 +217,7 @@ func main() {
 			log.Error("Error in response:", response.Error)
 		} else {
 			log.Info("The response:")
-			log.Infof("%+v", &response)
+			//log.Infof("%+v", &response)
 			for _, result := range response.Result {
 				fmt.Println(result)
 			}
@@ -297,15 +297,14 @@ func discoverAndConnectPeers(ctx context.Context, host host.Host, kademliaDHT *d
 		return
 	}
 
-
 	// Only attempt to connect to the serverPeer
-	err = host.Connect(ctx, addrInfo) 
+	err = host.Connect(ctx, addrInfo)
 	if err != nil {
 		log.Error("Error connecting to peer:", err)
 		return
-	} else{
+	} else {
 		log.Info("Connected to peer:", addrInfo.ID.String())
-	} 
+	}
 
 	log.Info("Client has joined the network, now can send queries to the server.")
 }
