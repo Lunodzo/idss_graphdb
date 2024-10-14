@@ -53,6 +53,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
@@ -107,7 +108,7 @@ func main() {
 	// Print the host's listening addresses
 	for _, addr := range host.Addrs() {
 		completePeerAddr := addr.Encapsulate(multiaddr.StringCast("/p2p/" + host.ID().String()))
-		log.Info("Client listening on:", completePeerAddr)
+		log.Info("Client listening on: \n", completePeerAddr)
 	}
 
 	// Initialize the DHT
@@ -125,12 +126,14 @@ func main() {
 	handleTerminationSignals(host)
 	reader := bufio.NewReader(os.Stdin)
 
-	// Extract the peer ID from the server multiaddress
+	// Extract the peer ID from the server multiaddress 
+	// Server address must be supplied as a flag during client startup
 	serverMultiaddr := *serverAddrFlag
 	serverPeer, err := multiaddr.NewMultiaddr(serverMultiaddr)
 	if err != nil {
-		log.Error("Error creating multiaddress:", err)
+		log.Error("Error creating server multiaddress:", err)
 	}
+
 	// Split the multiaddress to find the peer ID component
 	_, peerID := peer.SplitAddr(serverPeer)
 	addrInfo := peer.AddrInfo{
@@ -166,9 +169,10 @@ func main() {
 
 		// Create the QueryMassage
 		msg := common.QueryMessage{
-			Uqi:        uqi,
+			Uqid:        uqi,
 			Query:      query,
-			Ttl:        1,
+			Ttl:        2,
+			Timestamp: 	timestamppb.New(time.Now()).String(),
 			Originator: addrInfo.ID.String(),
 			Type:       common.MessageType_QUERY,
 			Sender:     host.ID().String(),
@@ -216,11 +220,11 @@ func main() {
 		if response.Error != "" {
 			log.Error("Error in response:", response.Error)
 		} else {
-			log.Info("The response:")
-			//log.Infof("%+v", &response)
+			log.Infof("Got %d records", response.RecordCount)
 			for _, result := range response.Result {
-				fmt.Println(result)
+				fmt.Println(result) // Results can be formatted as needed
 			}
+			log.Infof("Got %d records", response.RecordCount)
 		}
 	}
 }
@@ -280,7 +284,7 @@ func handleTerminationSignals(host host.Host) {
 }
 
 func discoverAndConnectPeers(ctx context.Context, host host.Host, kademliaDHT *dht.IpfsDHT, addrInfo peer.AddrInfo) {
-	log.Info("Client is discovering and connecting to peers...")
+	log.Info("Client is discovering and connecting peers...")
 
 	routingDiscovery := drouting.NewRoutingDiscovery(kademliaDHT)
 	dutil.Advertise(ctx, routingDiscovery, discoveryServiceTag)
@@ -303,10 +307,10 @@ func discoverAndConnectPeers(ctx context.Context, host host.Host, kademliaDHT *d
 		log.Error("Error connecting to peer:", err)
 		return
 	} else {
-		log.Info("Connected to peer:", addrInfo.ID.String())
+		log.Info("Connected to peer: ", addrInfo.ID.String())
 	}
 
-	log.Info("Client has joined the network, now can send queries to the server.")
+	log.Info("You have joined an overlay, now can send queries to the server.")
 }
 
 // Function to check for errors

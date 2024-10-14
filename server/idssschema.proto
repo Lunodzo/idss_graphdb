@@ -1,4 +1,4 @@
-syntax = "proto3"; 
+syntax = "proto3";
 
 package common;
 
@@ -13,7 +13,8 @@ enum MessageType {
 message QueryMessage {
     MessageType type = 1;  // To distinguish between QUERY and RESULT.
     string query = 2; // The query to be executed
-    string uqi = 3; // Unique Query Identifier
+    string uqid = 3; // Unique query identifier
+    string timestamp = 11; // Timestamp of the query
     float ttl = 4; // Time to live
     string sender = 5; // The peer_id of the sender
     string originator = 6; // The peer_id of the originator
@@ -21,6 +22,7 @@ message QueryMessage {
     repeated string labels = 8; // The labels of the query
     repeated Row result = 9; // The result of the query
     string error = 10; // Error message if any
+    int32 record_count = 12; // Number of records in the result
 }
 
 message QueryState {
