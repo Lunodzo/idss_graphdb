@@ -1,0 +1,120 @@
+2024-10-20T22:02:26.206+0200	INFO	IDSS	server/idss_main.go:168	Listening on peer Address: /ip4/127.0.0.1/tcp/33219/p2p/QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH
+
+2024-10-20T22:02:26.207+0200	INFO	IDSS	server/idss_main.go:201	Loading data from file: ./idss_graph_db/QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH/QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH_data.json
+2024-10-20T22:02:26.463+0200	INFO	IDSS	server/idss_db_init.go:76	Creating the Query Manager node...
+2024-10-20T22:02:26.494+0200	INFO	IDSS	server/idss_db_init.go:101	Committed Query Manager node store transaction
+2024-10-20T22:02:26.494+0200	INFO	IDSS	server/idss_main.go:379	Initialising the DHT...
+2024-10-20T22:02:26.494+0200	INFO	IDSS	server/idss_main.go:397	Bootstrapped the DHT
+2024-10-20T22:02:27.235+0200	INFO	IDSS	server/idss_main.go:408	Connected to bootstrap peer: QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ
+2024/10/20 22:02:27 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 7168 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes for details.
+2024-10-20T22:02:28.090+0200	INFO	IDSS	server/idss_main.go:408	Connected to bootstrap peer: QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa
+2024-10-20T22:02:37.573+0200	WARN	IDSS	server/idss_main.go:406	Error connecting to bootstrap peer QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt: failed to dial: failed to dial QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt: no good addresses
+2024-10-20T22:02:37.573+0200	INFO	IDSS	server/idss_main.go:408	Connected to bootstrap peer: QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt
+2024-10-20T22:02:37.573+0200	WARN	IDSS	server/idss_main.go:406	Error connecting to bootstrap peer QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN: failed to dial: failed to dial QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN: no good addresses
+2024-10-20T22:02:37.573+0200	INFO	IDSS	server/idss_main.go:408	Connected to bootstrap peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN
+2024-10-20T22:02:37.573+0200	WARN	IDSS	server/idss_main.go:406	Error connecting to bootstrap peer QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb: failed to dial: failed to dial QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb: no good addresses
+2024-10-20T22:02:37.573+0200	INFO	IDSS	server/idss_main.go:408	Connected to bootstrap peer: QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb
+2024-10-20T22:02:37.574+0200	INFO	IDSS	server/idss_main.go:282	Starting peer discovery...
+2024-10-20T22:02:37.574+0200	INFO	IDSS	server/idss_main.go:291	Searching for other peers...
+...
+2024-10-20T22:02:37.925+0200	INFO	IDSS	server/idss_main.go:312	Successfully connected to peer QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:02:39.399+0200	INFO	IDSS	server/idss_main.go:319	Num of found peers in the Routing Table: 110
+2024-10-20T22:02:39.399+0200	INFO	IDSS	server/idss_main.go:322	Time taken to find peers: 1.825541572s
+2024-10-20T22:03:08.455+0200	INFO	IDSS	server/idss_main.go:418	Received incoming from QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:03:08.456+0200	INFO	IDSS	server/idss_main.go:448	Received a message: Type=QUERY, Uqid=QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245, Query=get Client
+, Timestamp=seconds:1729454588  nanos:409834345, Ttl=48.75, Originator=QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9, Sender=QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9, State=state:LOCALLY_EXECUTED, Result=[data:"1" data:"248" data:"Joseph Munoz" data:"161" data:"4" data:"892" data:"Louis Hayes" data:"109" data:"3" data:"522" data:"Julia Stein DDS" data:"136" data:"2" data:"727" data:"Michele Fletcher" data:"115" data:"5" data:"786" data:"Adam Riley" data:"182"], RecordCount=0
+2024-10-20T22:03:08.456+0200	INFO	IDSS	server/idss_main.go:458	Query received on peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245) (TTL: 48.750000), (From: QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9)
+2024-10-20T22:03:08.499+0200	INFO	IDSS	server/idss_main.go:476	Query state for query get Client
+: State=QUEUED, CurrentState=QUEUED
+2024-10-20T22:03:08.499+0200	INFO	IDSS	server/idss_main.go:478	This is a new query on Peer: QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH get Client
+ (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245)
+2024-10-20T22:03:08.499+0200	INFO	IDSS	server/idss_main.go:962	Executing get Client
+ locally in QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH
+2024-10-20T22:03:08.499+0200	INFO	IDSS	server/idss_main.go:502	Labels: [Client Key Contract Number Client Name Power]
+2024-10-20T22:03:08.539+0200	INFO	IDSS	server/idss_main.go:512	Local result for peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245):  
+
+2024-10-20T22:03:08.539+0200	INFO	IDSS	server/idss_main.go:513	[[4 750 William Cole 189] [1 124 Francisco Jackson 124] [5 630 Tracy Warren 176] [2 754 Catherine Dickerson 150] [3 923 Angela Gonzalez 127]]
+
+2024-10-20T22:03:08.539+0200	INFO	IDSS	server/idss_main.go:528	Broadcasting query to connected peers...
+2024-10-20T22:03:08.540+0200	INFO	IDSS	server/idss_main.go:535	Sender address updated to: QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH
+2024-10-20T22:03:08.540+0200	INFO	IDSS	server/idss_main.go:590	Broadcasting query in peer: QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH, Parent peer QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9 
+2024-10-20T22:03:08.540+0200	INFO	IDSS	server/idss_main.go:624	TTL in QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH after decrement: 36.562500
+2024-10-20T22:03:08.540+0200	INFO	IDSS	server/idss_main.go:739	Waiting for overlay peers results...
+2024-10-20T22:03:08.540+0200	INFO	IDSS	server/idss_main.go:744	Overlay peers peer results collected
+2024-10-20T22:03:08.544+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmYzNPt1gaB42kFZccvcRDzCYdoSgdhL4aPGwGWDLn3Rss, awaiting for response
+2024-10-20T22:03:08.544+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmYzNPt1gaB42kFZccvcRDzCYdoSgdhL4aPGwGWDLn3Rss
+2024-10-20T22:03:08.545+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmSN38r5HXJjkAXRKt2qx96DraAdapJnzDVsjnijttYCcX, awaiting for response
+2024-10-20T22:03:08.545+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmSN38r5HXJjkAXRKt2qx96DraAdapJnzDVsjnijttYCcX
+2024-10-20T22:03:08.545+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmcHoRs55fwKvvrYWT8E1NDKwPoykmQUw2ZLucnddLk99C, awaiting for response
+2024-10-20T22:03:08.545+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmcHoRs55fwKvvrYWT8E1NDKwPoykmQUw2ZLucnddLk99C
+2024-10-20T22:03:08.548+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmYAFeMDrMkAbq1Qr3HsumGPvB8FNH5Bjhci9gFzXGvHUZ, awaiting for response
+2024-10-20T22:03:08.548+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmYAFeMDrMkAbq1Qr3HsumGPvB8FNH5Bjhci9gFzXGvHUZ
+2024-10-20T22:03:08.548+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmWuPeHD3vBrCd4uLLVDLwCyJ36UbJvy3b5KmERDUCbeUA, awaiting for response
+2024-10-20T22:03:08.548+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmWuPeHD3vBrCd4uLLVDLwCyJ36UbJvy3b5KmERDUCbeUA
+2024-10-20T22:03:08.550+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmTX5p5x1xquwy7Samm34nCGkLNCFbWS7QRKBWDU9WHnnf, awaiting for response
+2024-10-20T22:03:08.550+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmafDqWa6qgVBt3UccMZXSuxz3AtP4Y5PXaAuaptwNqkCH, awaiting for response
+2024-10-20T22:03:08.570+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmafDqWa6qgVBt3UccMZXSuxz3AtP4Y5PXaAuaptwNqkCH
+2024-10-20T22:03:08.559+0200	INFO	IDSS	server/idss_main.go:418	Received incoming from QmTX5p5x1xquwy7Samm34nCGkLNCFbWS7QRKBWDU9WHnnf
+2024-10-20T22:03:08.563+0200	INFO	IDSS	server/idss_main.go:418	Received incoming from QmYAFeMDrMkAbq1Qr3HsumGPvB8FNH5Bjhci9gFzXGvHUZ
+2024-10-20T22:03:08.570+0200	INFO	IDSS	server/idss_main.go:448	Received a message: Type=QUERY, Uqid=QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245, Query=get Client
+, Timestamp=seconds:1729454588  nanos:409834345, Ttl=36.5625, Originator=QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9, Sender=QmTX5p5x1xquwy7Samm34nCGkLNCFbWS7QRKBWDU9WHnnf, State=state:LOCALLY_EXECUTED, Result=[data:"1" data:"319" data:"Joseph Ochoa" data:"148" data:"5" data:"864" data:"Shane Miller" data:"163" data:"4" data:"202" data:"Robin Andersen" data:"128" data:"2" data:"996" data:"Lauren Weaver" data:"194" data:"3" data:"498" data:"Rachel Flynn" data:"135"], RecordCount=0
+2024-10-20T22:03:08.570+0200	INFO	IDSS	server/idss_main.go:458	Query received on peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245) (TTL: 36.562500), (From: QmTX5p5x1xquwy7Samm34nCGkLNCFbWS7QRKBWDU9WHnnf)
+2024-10-20T22:03:08.570+0200	INFO	IDSS	server/idss_main.go:448	Received a message: Type=QUERY, Uqid=QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245, Query=get Client
+, Timestamp=seconds:1729454588  nanos:409834345, Ttl=36.5625, Originator=QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9, Sender=QmYAFeMDrMkAbq1Qr3HsumGPvB8FNH5Bjhci9gFzXGvHUZ, State=state:LOCALLY_EXECUTED, Result=[data:"3" data:"732" data:"Theodore Johnston" data:"195" data:"2" data:"996" data:"Jonathan Ross" data:"102" data:"1" data:"664" data:"Benjamin Chambers" data:"137" data:"5" data:"554" data:"Kelly Richards" data:"111" data:"4" data:"457" data:"Nancy Richardson" data:"112"], RecordCount=0
+2024-10-20T22:03:08.570+0200	INFO	IDSS	server/idss_main.go:458	Query received on peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245) (TTL: 36.562500), (From: QmYAFeMDrMkAbq1Qr3HsumGPvB8FNH5Bjhci9gFzXGvHUZ)
+2024-10-20T22:03:08.569+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmTX5p5x1xquwy7Samm34nCGkLNCFbWS7QRKBWDU9WHnnf
+2024-10-20T22:03:08.570+0200	WARN	IDSS	server/idss_main.go:467	Duplicate query received on Peer: QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH get Client
+ (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245)
+2024-10-20T22:03:08.570+0200	INFO	IDSS	server/idss_main.go:418	Received incoming from QmafDqWa6qgVBt3UccMZXSuxz3AtP4Y5PXaAuaptwNqkCH
+2024-10-20T22:03:08.570+0200	INFO	IDSS	server/idss_main.go:448	Received a message: Type=QUERY, Uqid=QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245, Query=get Client
+, Timestamp=seconds:1729454588  nanos:409834345, Ttl=36.5625, Originator=QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9, Sender=QmafDqWa6qgVBt3UccMZXSuxz3AtP4Y5PXaAuaptwNqkCH, State=state:LOCALLY_EXECUTED, Result=[data:"3" data:"750" data:"Valerie Patterson" data:"104" data:"4" data:"391" data:"Emily Beasley" data:"129" data:"1" data:"459" data:"Mark Jones" data:"101" data:"2" data:"961" data:"Stephen Hill" data:"195" data:"5" data:"356" data:"Andrew Sandoval" data:"138"], RecordCount=0
+2024-10-20T22:03:08.570+0200	INFO	IDSS	server/idss_main.go:458	Query received on peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245) (TTL: 36.562500), (From: QmafDqWa6qgVBt3UccMZXSuxz3AtP4Y5PXaAuaptwNqkCH)
+2024-10-20T22:03:08.570+0200	WARN	IDSS	server/idss_main.go:467	Duplicate query received on Peer: QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH get Client
+ (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245)
+2024-10-20T22:03:08.571+0200	WARN	IDSS	server/idss_main.go:467	Duplicate query received on Peer: QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH get Client
+ (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245)
+2024-10-20T22:03:08.571+0200	INFO	IDSS	server/idss_main.go:418	Received incoming from QmcHoRs55fwKvvrYWT8E1NDKwPoykmQUw2ZLucnddLk99C
+2024-10-20T22:03:08.571+0200	INFO	IDSS	server/idss_main.go:448	Received a message: Type=QUERY, Uqid=QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245, Query=get Client
+, Timestamp=seconds:1729454588  nanos:409834345, Ttl=36.5625, Originator=QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9, Sender=QmcHoRs55fwKvvrYWT8E1NDKwPoykmQUw2ZLucnddLk99C, State=state:LOCALLY_EXECUTED, Result=[data:"5" data:"200" data:"Megan Collins" data:"147" data:"3" data:"880" data:"Margaret Taylor" data:"116" data:"2" data:"388" data:"Brittany Benitez" data:"179" data:"1" data:"617" data:"Jennifer Hawkins" data:"114" data:"4" data:"969" data:"Sonia Cook MD" data:"163"], RecordCount=0
+2024-10-20T22:03:08.571+0200	INFO	IDSS	server/idss_main.go:458	Query received on peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245) (TTL: 36.562500), (From: QmcHoRs55fwKvvrYWT8E1NDKwPoykmQUw2ZLucnddLk99C)
+2024-10-20T22:03:08.572+0200	WARN	IDSS	server/idss_main.go:467	Duplicate query received on Peer: QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH get Client
+ (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245)
+2024-10-20T22:03:08.572+0200	INFO	IDSS	server/idss_main.go:418	Received incoming from QmYzNPt1gaB42kFZccvcRDzCYdoSgdhL4aPGwGWDLn3Rss
+2024-10-20T22:03:08.572+0200	INFO	IDSS	server/idss_main.go:448	Received a message: Type=QUERY, Uqid=QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245, Query=get Client
+, Timestamp=seconds:1729454588  nanos:409834345, Ttl=36.5625, Originator=QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9, Sender=QmYzNPt1gaB42kFZccvcRDzCYdoSgdhL4aPGwGWDLn3Rss, State=state:LOCALLY_EXECUTED, Result=[data:"1" data:"297" data:"Jacqueline Travis" data:"162" data:"3" data:"775" data:"Hailey Little" data:"107" data:"4" data:"977" data:"Kevin Mitchell" data:"129" data:"5" data:"634" data:"Brett Smith" data:"126" data:"2" data:"777" data:"Cheryl Morse" data:"133"], RecordCount=0
+2024-10-20T22:03:08.573+0200	INFO	IDSS	server/idss_main.go:458	Query received on peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245) (TTL: 36.562500), (From: QmYzNPt1gaB42kFZccvcRDzCYdoSgdhL4aPGwGWDLn3Rss)
+2024-10-20T22:03:08.573+0200	WARN	IDSS	server/idss_main.go:467	Duplicate query received on Peer: QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH get Client
+ (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245)
+2024-10-20T22:03:08.582+0200	INFO	IDSS	server/idss_main.go:418	Received incoming from QmWuPeHD3vBrCd4uLLVDLwCyJ36UbJvy3b5KmERDUCbeUA
+2024-10-20T22:03:08.582+0200	INFO	IDSS	server/idss_main.go:448	Received a message: Type=QUERY, Uqid=QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245, Query=get Client
+, Timestamp=seconds:1729454588  nanos:409834345, Ttl=36.5625, Originator=QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9, Sender=QmWuPeHD3vBrCd4uLLVDLwCyJ36UbJvy3b5KmERDUCbeUA, State=state:LOCALLY_EXECUTED, Result=[data:"2" data:"957" data:"Melanie Parker" data:"148" data:"5" data:"908" data:"Brian Mendoza" data:"129" data:"1" data:"991" data:"Kimberly Thompson" data:"150" data:"4" data:"810" data:"Colleen Andrews" data:"113" data:"3" data:"821" data:"Devin Barnes" data:"180"], RecordCount=0
+2024-10-20T22:03:08.582+0200	INFO	IDSS	server/idss_main.go:458	Query received on peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245) (TTL: 36.562500), (From: QmWuPeHD3vBrCd4uLLVDLwCyJ36UbJvy3b5KmERDUCbeUA)
+2024-10-20T22:03:08.583+0200	WARN	IDSS	server/idss_main.go:467	Duplicate query received on Peer: QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH get Client
+ (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245)
+2024-10-20T22:03:08.598+0200	INFO	IDSS	server/idss_main.go:418	Received incoming from QmSN38r5HXJjkAXRKt2qx96DraAdapJnzDVsjnijttYCcX
+2024-10-20T22:03:08.598+0200	INFO	IDSS	server/idss_main.go:448	Received a message: Type=QUERY, Uqid=QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245, Query=get Client
+, Timestamp=seconds:1729454588  nanos:409834345, Ttl=36.5625, Originator=QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9, Sender=QmSN38r5HXJjkAXRKt2qx96DraAdapJnzDVsjnijttYCcX, State=state:LOCALLY_EXECUTED, Result=[data:"5" data:"692" data:"David Jacobson" data:"155" data:"2" data:"372" data:"Bryan Mason" data:"124" data:"3" data:"850" data:"Keith Smith" data:"178" data:"4" data:"992" data:"Roger Austin" data:"119" data:"1" data:"991" data:"James Vargas" data:"185"], RecordCount=0
+2024-10-20T22:03:08.598+0200	INFO	IDSS	server/idss_main.go:458	Query received on peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245) (TTL: 36.562500), (From: QmSN38r5HXJjkAXRKt2qx96DraAdapJnzDVsjnijttYCcX)
+2024-10-20T22:03:08.598+0200	WARN	IDSS	server/idss_main.go:467	Duplicate query received on Peer: QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH get Client
+ (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245)
+2024-10-20T22:03:45.103+0200	WARN	IDSS	server/idss_main.go:690	Response timeout from peer QmYzNPt1gaB42kFZccvcRDzCYdoSgdhL4aPGwGWDLn3Rss
+2024-10-20T22:03:45.103+0200	WARN	IDSS	server/idss_main.go:690	Response timeout from peer QmSN38r5HXJjkAXRKt2qx96DraAdapJnzDVsjnijttYCcX
+2024-10-20T22:03:45.103+0200	WARN	IDSS	server/idss_main.go:690	Response timeout from peer QmYAFeMDrMkAbq1Qr3HsumGPvB8FNH5Bjhci9gFzXGvHUZ
+2024-10-20T22:03:45.105+0200	WARN	IDSS	server/idss_main.go:690	Response timeout from peer QmWuPeHD3vBrCd4uLLVDLwCyJ36UbJvy3b5KmERDUCbeUA
+2024-10-20T22:03:45.105+0200	WARN	IDSS	server/idss_main.go:690	Response timeout from peer QmafDqWa6qgVBt3UccMZXSuxz3AtP4Y5PXaAuaptwNqkCH
+2024-10-20T22:03:45.105+0200	WARN	IDSS	server/idss_main.go:690	Response timeout from peer QmcHoRs55fwKvvrYWT8E1NDKwPoykmQUw2ZLucnddLk99C
+2024-10-20T22:03:45.107+0200	WARN	IDSS	server/idss_main.go:690	Response timeout from peer QmTX5p5x1xquwy7Samm34nCGkLNCFbWS7QRKBWDU9WHnnf
+2024-10-20T22:03:45.107+0200	INFO	IDSS	server/idss_main.go:752	Total merged remote results: [] 
+
+2024-10-20T22:03:45.107+0200	INFO	IDSS	server/idss_main.go:753	Local results: [[4 750 William Cole 189] [1 124 Francisco Jackson 124] [5 630 Tracy Warren 176] [2 754 Catherine Dickerson 150] [3 923 Angela Gonzalez 127]]
+
+
+2024-10-20T22:03:45.107+0200	INFO	IDSS	server/idss_main.go:755	Merging local and remote results...
+2024-10-20T22:03:45.107+0200	INFO	IDSS	server/idss_main.go:758	DONE merging local and remote results: [[4 750 William Cole 189] [1 124 Francisco Jackson 124] [5 630 Tracy Warren 176] [2 754 Catherine Dickerson 150] [3 923 Angela Gonzalez 127]]
+2024-10-20T22:03:45.130+0200	INFO	IDSS	server/idss_main.go:795	This is an intermediate peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH. Merging results to send to parent peer QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:03:45.130+0200	INFO	IDSS	server/idss_main.go:809	Sending merged result to peer QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:03:45.130+0200	INFO	IDSS	server/idss_main.go:813	Merged results: [[4 750 William Cole 189] [1 124 Francisco Jackson 124] [5 630 Tracy Warren 176] [2 754 Catherine Dickerson 150] [3 923 Angela Gonzalez 127]]
+2024-10-20T22:03:45.130+0200	INFO	IDSS	server/idss_main.go:814	Record count: 5
+2024-10-20T22:03:45.130+0200	INFO	IDSS	server/idss_main.go:816	Originating peer ID: QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:03:45.130+0200	INFO	IDSS	server/idss_main.go:834	Successfully sent merged result to peer QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:03:45.130+0200	ERROR	IDSS	server/idss_main.go:434	Error reading from stream:%!(EXTRA *errors.errorString=stream reset)

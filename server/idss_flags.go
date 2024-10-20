@@ -1,12 +1,42 @@
 package main
 
 import (
+	"crypto/rand"
 	"flag"
+	"math/big"
 	"strings"
 
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	maddr "github.com/multiformats/go-multiaddr"
 )
+
+// GenerateRandomString generates a random string of the specified length
+func GenerateRandomString(length int) (string, error) {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    result := make([]byte, length)
+    for i := range result {
+        num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+        if err != nil {
+            return "", err
+        }
+        result[i] = charset[num.Int64()]
+    }
+    return string(result), nil
+}
+
+// GenerateIDSSString generates a random string containing the keyword "idss"
+func GenerateIDSSString() (string, error) {
+    randomStr, err := GenerateRandomString(5) // Generate a random string of length 10
+    if err != nil {
+        return "", err
+    }
+    keyword := "idss"
+    position, err := rand.Int(rand.Reader, big.NewInt(int64(len(randomStr)+1)))
+    if err != nil {
+        return "", err
+    }
+    return randomStr[:position.Int64()] + keyword + randomStr[position.Int64():], nil
+}
 
 type addrList []maddr.Multiaddr
 
@@ -48,7 +78,11 @@ type Config struct {
 
 func ParseFlags(peerID string) (Config, error) {
 	config := Config{}
-	flag.StringVar(&config.IDSSString, "IDSS", "idss service",
+	/* idssStr, err := GenerateIDSSString()
+	if err != nil {
+		return config, err
+	} */
+	flag.StringVar(&config.IDSSString, "IDSS", "idssservice",
 		"Unique string to identify group of nodes. Share this with peers to let them connect.")
 	flag.Var(&config.BootstrapPeers, "peer", "Adds a peer multiaddress to the bootstrap list.")
 	flag.Var(&config.ListenAddresses, "listen", "Adds a multiaddress to the listen list.")

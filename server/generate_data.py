@@ -13,7 +13,7 @@ output_file = sys.argv[1]
 
 # Generate clients data
 clients = []
-for i in range(1, 11):
+for i in range(1, 6): # Adjust the number of clients here
     clients.append({
         "kind": "Client",
         "key": i,
@@ -21,21 +21,25 @@ for i in range(1, 11):
         "contract_number": fake.unique.random_int(min=100, max=999),
         "power": random.randint(100, 200)
     })
+    
+print("Stored a total of %d clients", len(clients))
 
 # Generate consumption records data
 consumptions = []
-for i in range(1, 101):
+for i in range(1, 101): # Adjust the number of consumption records here
     consumptions.append({
         "kind": "Consumption",
         "key": i,
         "timestamp": fake.unix_time(),
         "measurement": random.randint(200, 1000)
     })
+    
+print("Stored a total of %d consumption records", len(consumptions))
 
 # Generate relationships (edges) between clients and consumption records
 edges = []
 for client in clients:
-    consumption_keys = random.sample(range(1, 101), 10)  # Each client has 10 consumption records
+    consumption_keys = random.sample(range(1, 10), 2)  # Each client has 100 consumption records
     for consumption_key in consumption_keys:
         edges.append({
             "key": f"e{len(edges) + 1}",
@@ -49,6 +53,8 @@ for client in clients:
             "end2role": "usage",
             "end2cascading": True
         })
+        
+print("Stored a total of %d edges", len(edges))
 
 # Combine all data into one dictionary
 data = {

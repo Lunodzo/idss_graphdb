@@ -1,0 +1,116 @@
+2024-10-20T22:02:25.232+0200	INFO	IDSS	server/idss_main.go:168	Listening on peer Address: /ip4/127.0.0.1/tcp/43587/p2p/QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+
+2024-10-20T22:02:25.232+0200	INFO	IDSS	server/idss_main.go:201	Loading data from file: ./idss_graph_db/QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9/QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9_data.json
+2024-10-20T22:02:25.485+0200	INFO	IDSS	server/idss_db_init.go:76	Creating the Query Manager node...
+2024-10-20T22:02:25.513+0200	INFO	IDSS	server/idss_db_init.go:101	Committed Query Manager node store transaction
+2024-10-20T22:02:25.513+0200	INFO	IDSS	server/idss_main.go:379	Initialising the DHT...
+2024-10-20T22:02:25.514+0200	INFO	IDSS	server/idss_main.go:397	Bootstrapped the DHT
+2024/10/20 22:02:25 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 7168 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes for details.
+2024-10-20T22:02:25.806+0200	INFO	IDSS	server/idss_main.go:408	Connected to bootstrap peer: QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa
+2024-10-20T22:02:26.434+0200	INFO	IDSS	server/idss_main.go:408	Connected to bootstrap peer: QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ
+2024-10-20T22:02:27.039+0200	INFO	IDSS	server/idss_main.go:408	Connected to bootstrap peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN
+2024-10-20T22:02:35.537+0200	WARN	IDSS	server/idss_main.go:406	Error connecting to bootstrap peer QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb: failed to dial: failed to dial QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb: no good addresses
+2024-10-20T22:02:35.537+0200	INFO	IDSS	server/idss_main.go:408	Connected to bootstrap peer: QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb
+2024-10-20T22:02:35.537+0200	WARN	IDSS	server/idss_main.go:406	Error connecting to bootstrap peer QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt: failed to dial: failed to dial QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt: no good addresses
+2024-10-20T22:02:35.537+0200	INFO	IDSS	server/idss_main.go:408	Connected to bootstrap peer: QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt
+2024-10-20T22:02:35.537+0200	INFO	IDSS	server/idss_main.go:282	Starting peer discovery...
+2024-10-20T22:02:35.537+0200	INFO	IDSS	server/idss_main.go:291	Searching for other peers...
+...
+2024-10-20T22:02:38.099+0200	INFO	IDSS	server/idss_main.go:305	Found self: QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:02:38.463+0200	INFO	IDSS	server/idss_main.go:305	Found self: QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:02:38.898+0200	INFO	IDSS	server/idss_main.go:305	Found self: QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:02:39.335+0200	INFO	IDSS	server/idss_main.go:305	Found self: QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:02:39.815+0200	INFO	IDSS	server/idss_main.go:305	Found self: QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:02:39.861+0200	INFO	IDSS	server/idss_main.go:312	Successfully connected to peer QmYaDGj4Wx4sbr75DhaaWBzNAsuaVUw8uFANP4UxceRzC5
+2024-10-20T22:02:40.052+0200	INFO	IDSS	server/idss_main.go:312	Successfully connected to peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH
+2024-10-20T22:02:40.293+0200	INFO	IDSS	server/idss_main.go:319	Num of found peers in the Routing Table: 46
+2024-10-20T22:02:40.293+0200	INFO	IDSS	server/idss_main.go:322	Time taken to find peers: 4.756098128s
+2024-10-20T22:03:08.410+0200	INFO	IDSS	server/idss_main.go:418	Received incoming from QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL
+2024-10-20T22:03:08.411+0200	INFO	IDSS	server/idss_main.go:448	Received a message: Type=QUERY, Uqid=QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245, Query=get Client
+, Timestamp=seconds:1729454588  nanos:409834345, Ttl=65, Originator=QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9, Sender=QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL, State=<nil>, Result=[], RecordCount=0
+2024-10-20T22:03:08.411+0200	INFO	IDSS	server/idss_main.go:458	Query received on peer QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9 (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245) (TTL: 65.000000), (From: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL)
+2024-10-20T22:03:08.434+0200	INFO	IDSS	server/idss_main.go:476	Query state for query get Client
+: State=QUEUED, CurrentState=QUEUED
+2024-10-20T22:03:08.434+0200	INFO	IDSS	server/idss_main.go:478	This is a new query on Peer: QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9 get Client
+ (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245)
+2024-10-20T22:03:08.434+0200	INFO	IDSS	server/idss_main.go:962	Executing get Client
+ locally in QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:03:08.434+0200	INFO	IDSS	server/idss_main.go:502	Labels: [Client Key Contract Number Client Name Power]
+2024-10-20T22:03:08.453+0200	INFO	IDSS	server/idss_main.go:512	Local result for peer QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9 (UQI: QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL-1729454588409770245):  
+
+2024-10-20T22:03:08.453+0200	INFO	IDSS	server/idss_main.go:513	[[1 248 Joseph Munoz 161] [4 892 Louis Hayes 109] [3 522 Julia Stein DDS 136] [2 727 Michele Fletcher 115] [5 786 Adam Riley 182]]
+
+2024-10-20T22:03:08.453+0200	INFO	IDSS	server/idss_main.go:528	Broadcasting query to connected peers...
+2024-10-20T22:03:08.453+0200	INFO	IDSS	server/idss_main.go:535	Sender address updated to: QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:03:08.453+0200	INFO	IDSS	server/idss_main.go:590	Broadcasting query in peer: QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9, Parent peer QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL 
+2024-10-20T22:03:08.453+0200	INFO	IDSS	server/idss_main.go:624	TTL in QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9 after decrement: 48.750000
+2024-10-20T22:03:08.453+0200	INFO	IDSS	server/idss_main.go:739	Waiting for overlay peers results...
+2024-10-20T22:03:08.453+0200	INFO	IDSS	server/idss_main.go:744	Overlay peers peer results collected
+2024-10-20T22:03:08.454+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmafDqWa6qgVBt3UccMZXSuxz3AtP4Y5PXaAuaptwNqkCH, awaiting for response
+2024-10-20T22:03:08.454+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmafDqWa6qgVBt3UccMZXSuxz3AtP4Y5PXaAuaptwNqkCH
+2024-10-20T22:03:08.454+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmTX5p5x1xquwy7Samm34nCGkLNCFbWS7QRKBWDU9WHnnf, awaiting for response
+2024-10-20T22:03:08.454+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmTX5p5x1xquwy7Samm34nCGkLNCFbWS7QRKBWDU9WHnnf
+2024-10-20T22:03:08.455+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH, awaiting for response
+2024-10-20T22:03:08.455+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH
+2024-10-20T22:03:08.455+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmYaDGj4Wx4sbr75DhaaWBzNAsuaVUw8uFANP4UxceRzC5, awaiting for response
+2024-10-20T22:03:08.455+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmYaDGj4Wx4sbr75DhaaWBzNAsuaVUw8uFANP4UxceRzC5
+2024-10-20T22:03:08.458+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmcHoRs55fwKvvrYWT8E1NDKwPoykmQUw2ZLucnddLk99C, awaiting for response
+2024-10-20T22:03:08.458+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmcHoRs55fwKvvrYWT8E1NDKwPoykmQUw2ZLucnddLk99C
+2024-10-20T22:03:08.462+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmYAFeMDrMkAbq1Qr3HsumGPvB8FNH5Bjhci9gFzXGvHUZ, awaiting for response
+2024-10-20T22:03:08.462+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmYAFeMDrMkAbq1Qr3HsumGPvB8FNH5Bjhci9gFzXGvHUZ
+2024-10-20T22:03:08.463+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmYzNPt1gaB42kFZccvcRDzCYdoSgdhL4aPGwGWDLn3Rss, awaiting for response
+2024-10-20T22:03:08.463+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmYzNPt1gaB42kFZccvcRDzCYdoSgdhL4aPGwGWDLn3Rss
+2024-10-20T22:03:08.463+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmSN38r5HXJjkAXRKt2qx96DraAdapJnzDVsjnijttYCcX, awaiting for response
+2024-10-20T22:03:08.463+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmSN38r5HXJjkAXRKt2qx96DraAdapJnzDVsjnijttYCcX
+2024-10-20T22:03:08.463+0200	INFO	IDSS	server/idss_main.go:684	Query sent to peer QmWuPeHD3vBrCd4uLLVDLwCyJ36UbJvy3b5KmERDUCbeUA, awaiting for response
+2024-10-20T22:03:08.463+0200	INFO	IDSS	server/idss_main.go:686	Waiting for response from peer QmWuPeHD3vBrCd4uLLVDLwCyJ36UbJvy3b5KmERDUCbeUA
+2024-10-20T22:03:45.126+0200	INFO	IDSS	server/idss_main.go:717	Received results from peer QmTX5p5x1xquwy7Samm34nCGkLNCFbWS7QRKBWDU9WHnnf
+2024-10-20T22:03:45.126+0200	INFO	IDSS	server/idss_main.go:731	Results: [[1 319 Joseph Ochoa 148] [5 864 Shane Miller 163] [4 202 Robin Andersen 128] [2 996 Lauren Weaver 194] [3 498 Rachel Flynn 135]]
+2024-10-20T22:03:45.126+0200	INFO	IDSS	server/idss_main.go:748	Merging remote results item: 
+[[1 319 Joseph Ochoa 148] [5 864 Shane Miller 163] [4 202 Robin Andersen 128] [2 996 Lauren Weaver 194] [3 498 Rachel Flynn 135]]
+2024-10-20T22:03:45.127+0200	INFO	IDSS	server/idss_main.go:717	Received results from peer QmYaDGj4Wx4sbr75DhaaWBzNAsuaVUw8uFANP4UxceRzC5
+2024-10-20T22:03:45.127+0200	INFO	IDSS	server/idss_main.go:731	Results: [[1 841 Kevin Dean 145] [4 695 Thomas Long 122] [5 657 Aaron Lane 154] [2 429 Krista Bautista 134] [3 447 Adam Jackson 136]]
+2024-10-20T22:03:45.127+0200	INFO	IDSS	server/idss_main.go:748	Merging remote results item: 
+[[1 841 Kevin Dean 145] [4 695 Thomas Long 122] [5 657 Aaron Lane 154] [2 429 Krista Bautista 134] [3 447 Adam Jackson 136]]
+2024-10-20T22:03:45.130+0200	INFO	IDSS	server/idss_main.go:717	Received results from peer QmSZ8mW6zT36UvFCXvgFwX3uWX4wHiqvhBEaNgmRi8nRKH
+2024-10-20T22:03:45.131+0200	INFO	IDSS	server/idss_main.go:731	Results: [[4 750 William Cole 189] [1 124 Francisco Jackson 124] [5 630 Tracy Warren 176] [2 754 Catherine Dickerson 150] [3 923 Angela Gonzalez 127]]
+2024-10-20T22:03:45.131+0200	INFO	IDSS	server/idss_main.go:748	Merging remote results item: 
+[[4 750 William Cole 189] [1 124 Francisco Jackson 124] [5 630 Tracy Warren 176] [2 754 Catherine Dickerson 150] [3 923 Angela Gonzalez 127]]
+2024-10-20T22:03:45.139+0200	INFO	IDSS	server/idss_main.go:717	Received results from peer QmafDqWa6qgVBt3UccMZXSuxz3AtP4Y5PXaAuaptwNqkCH
+2024-10-20T22:03:45.139+0200	INFO	IDSS	server/idss_main.go:731	Results: [[3 750 Valerie Patterson 104] [4 391 Emily Beasley 129] [1 459 Mark Jones 101] [2 961 Stephen Hill 195] [5 356 Andrew Sandoval 138]]
+2024-10-20T22:03:45.139+0200	INFO	IDSS	server/idss_main.go:748	Merging remote results item: 
+[[3 750 Valerie Patterson 104] [4 391 Emily Beasley 129] [1 459 Mark Jones 101] [2 961 Stephen Hill 195] [5 356 Andrew Sandoval 138]]
+2024-10-20T22:03:45.152+0200	INFO	IDSS	server/idss_main.go:717	Received results from peer QmYAFeMDrMkAbq1Qr3HsumGPvB8FNH5Bjhci9gFzXGvHUZ
+2024-10-20T22:03:45.152+0200	INFO	IDSS	server/idss_main.go:731	Results: [[3 732 Theodore Johnston 195] [2 996 Jonathan Ross 102] [1 664 Benjamin Chambers 137] [5 554 Kelly Richards 111] [4 457 Nancy Richardson 112]]
+2024-10-20T22:03:45.152+0200	INFO	IDSS	server/idss_main.go:717	Received results from peer QmcHoRs55fwKvvrYWT8E1NDKwPoykmQUw2ZLucnddLk99C
+2024-10-20T22:03:45.152+0200	INFO	IDSS	server/idss_main.go:748	Merging remote results item: 
+[[3 732 Theodore Johnston 195] [2 996 Jonathan Ross 102] [1 664 Benjamin Chambers 137] [5 554 Kelly Richards 111] [4 457 Nancy Richardson 112]]
+2024-10-20T22:03:45.152+0200	INFO	IDSS	server/idss_main.go:731	Results: [[5 200 Megan Collins 147] [3 880 Margaret Taylor 116] [2 388 Brittany Benitez 179] [1 617 Jennifer Hawkins 114] [4 969 Sonia Cook MD 163]]
+2024-10-20T22:03:45.152+0200	INFO	IDSS	server/idss_main.go:748	Merging remote results item: 
+[[5 200 Megan Collins 147] [3 880 Margaret Taylor 116] [2 388 Brittany Benitez 179] [1 617 Jennifer Hawkins 114] [4 969 Sonia Cook MD 163]]
+2024-10-20T22:03:45.156+0200	INFO	IDSS	server/idss_main.go:717	Received results from peer QmYzNPt1gaB42kFZccvcRDzCYdoSgdhL4aPGwGWDLn3Rss
+2024-10-20T22:03:45.156+0200	INFO	IDSS	server/idss_main.go:731	Results: [[1 297 Jacqueline Travis 162] [3 775 Hailey Little 107] [4 977 Kevin Mitchell 129] [5 634 Brett Smith 126] [2 777 Cheryl Morse 133]]
+2024-10-20T22:03:45.156+0200	INFO	IDSS	server/idss_main.go:748	Merging remote results item: 
+[[1 297 Jacqueline Travis 162] [3 775 Hailey Little 107] [4 977 Kevin Mitchell 129] [5 634 Brett Smith 126] [2 777 Cheryl Morse 133]]
+2024-10-20T22:03:45.161+0200	INFO	IDSS	server/idss_main.go:717	Received results from peer QmWuPeHD3vBrCd4uLLVDLwCyJ36UbJvy3b5KmERDUCbeUA
+2024-10-20T22:03:45.161+0200	INFO	IDSS	server/idss_main.go:731	Results: [[2 957 Melanie Parker 148] [5 908 Brian Mendoza 129] [1 991 Kimberly Thompson 150] [4 810 Colleen Andrews 113] [3 821 Devin Barnes 180]]
+2024-10-20T22:03:45.161+0200	INFO	IDSS	server/idss_main.go:748	Merging remote results item: 
+[[2 957 Melanie Parker 148] [5 908 Brian Mendoza 129] [1 991 Kimberly Thompson 150] [4 810 Colleen Andrews 113] [3 821 Devin Barnes 180]]
+2024-10-20T22:03:45.169+0200	INFO	IDSS	server/idss_main.go:717	Received results from peer QmSN38r5HXJjkAXRKt2qx96DraAdapJnzDVsjnijttYCcX
+2024-10-20T22:03:45.169+0200	INFO	IDSS	server/idss_main.go:731	Results: [[5 692 David Jacobson 155] [2 372 Bryan Mason 124] [3 850 Keith Smith 178] [4 992 Roger Austin 119] [1 991 James Vargas 185]]
+2024-10-20T22:03:45.170+0200	INFO	IDSS	server/idss_main.go:748	Merging remote results item: 
+[[5 692 David Jacobson 155] [2 372 Bryan Mason 124] [3 850 Keith Smith 178] [4 992 Roger Austin 119] [1 991 James Vargas 185]]
+2024-10-20T22:03:57.204+0200	INFO	IDSS	server/idss_main.go:752	Total merged remote results: [[1 319 Joseph Ochoa 148] [5 864 Shane Miller 163] [4 202 Robin Andersen 128] [2 996 Lauren Weaver 194] [3 498 Rachel Flynn 135] [1 841 Kevin Dean 145] [4 695 Thomas Long 122] [5 657 Aaron Lane 154] [2 429 Krista Bautista 134] [3 447 Adam Jackson 136] [4 750 William Cole 189] [1 124 Francisco Jackson 124] [5 630 Tracy Warren 176] [2 754 Catherine Dickerson 150] [3 923 Angela Gonzalez 127] [3 750 Valerie Patterson 104] [4 391 Emily Beasley 129] [1 459 Mark Jones 101] [2 961 Stephen Hill 195] [5 356 Andrew Sandoval 138] [3 732 Theodore Johnston 195] [2 996 Jonathan Ross 102] [1 664 Benjamin Chambers 137] [5 554 Kelly Richards 111] [4 457 Nancy Richardson 112] [5 200 Megan Collins 147] [3 880 Margaret Taylor 116] [2 388 Brittany Benitez 179] [1 617 Jennifer Hawkins 114] [4 969 Sonia Cook MD 163] [1 297 Jacqueline Travis 162] [3 775 Hailey Little 107] [4 977 Kevin Mitchell 129] [5 634 Brett Smith 126] [2 777 Cheryl Morse 133] [2 957 Melanie Parker 148] [5 908 Brian Mendoza 129] [1 991 Kimberly Thompson 150] [4 810 Colleen Andrews 113] [3 821 Devin Barnes 180] [5 692 David Jacobson 155] [2 372 Bryan Mason 124] [3 850 Keith Smith 178] [4 992 Roger Austin 119] [1 991 James Vargas 185]] 
+
+2024-10-20T22:03:57.204+0200	INFO	IDSS	server/idss_main.go:753	Local results: [[1 248 Joseph Munoz 161] [4 892 Louis Hayes 109] [3 522 Julia Stein DDS 136] [2 727 Michele Fletcher 115] [5 786 Adam Riley 182]]
+
+
+2024-10-20T22:03:57.204+0200	INFO	IDSS	server/idss_main.go:755	Merging local and remote results...
+2024-10-20T22:03:57.204+0200	INFO	IDSS	server/idss_main.go:758	DONE merging local and remote results: [[1 248 Joseph Munoz 161] [4 892 Louis Hayes 109] [3 522 Julia Stein DDS 136] [2 727 Michele Fletcher 115] [5 786 Adam Riley 182] [1 319 Joseph Ochoa 148] [5 864 Shane Miller 163] [4 202 Robin Andersen 128] [2 996 Lauren Weaver 194] [3 498 Rachel Flynn 135] [1 841 Kevin Dean 145] [4 695 Thomas Long 122] [5 657 Aaron Lane 154] [2 429 Krista Bautista 134] [3 447 Adam Jackson 136] [4 750 William Cole 189] [1 124 Francisco Jackson 124] [5 630 Tracy Warren 176] [2 754 Catherine Dickerson 150] [3 923 Angela Gonzalez 127] [3 750 Valerie Patterson 104] [4 391 Emily Beasley 129] [1 459 Mark Jones 101] [2 961 Stephen Hill 195] [5 356 Andrew Sandoval 138] [3 732 Theodore Johnston 195] [2 996 Jonathan Ross 102] [1 664 Benjamin Chambers 137] [5 554 Kelly Richards 111] [4 457 Nancy Richardson 112] [5 200 Megan Collins 147] [3 880 Margaret Taylor 116] [2 388 Brittany Benitez 179] [1 617 Jennifer Hawkins 114] [4 969 Sonia Cook MD 163] [1 297 Jacqueline Travis 162] [3 775 Hailey Little 107] [4 977 Kevin Mitchell 129] [5 634 Brett Smith 126] [2 777 Cheryl Morse 133] [2 957 Melanie Parker 148] [5 908 Brian Mendoza 129] [1 991 Kimberly Thompson 150] [4 810 Colleen Andrews 113] [3 821 Devin Barnes 180] [5 692 David Jacobson 155] [2 372 Bryan Mason 124] [3 850 Keith Smith 178] [4 992 Roger Austin 119] [1 991 James Vargas 185]]
+2024-10-20T22:03:57.204+0200	INFO	IDSS	server/idss_main.go:768	This is the originating peer QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9. Merging results locally
+2024-10-20T22:03:57.219+0200	INFO	IDSS	server/idss_main.go:809	Sending merged result to peer QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL
+2024-10-20T22:03:57.219+0200	INFO	IDSS	server/idss_main.go:813	Merged results: [[1 248 Joseph Munoz 161] [4 892 Louis Hayes 109] [3 522 Julia Stein DDS 136] [2 727 Michele Fletcher 115] [5 786 Adam Riley 182] [1 319 Joseph Ochoa 148] [5 864 Shane Miller 163] [4 202 Robin Andersen 128] [2 996 Lauren Weaver 194] [3 498 Rachel Flynn 135] [1 841 Kevin Dean 145] [4 695 Thomas Long 122] [5 657 Aaron Lane 154] [2 429 Krista Bautista 134] [3 447 Adam Jackson 136] [4 750 William Cole 189] [1 124 Francisco Jackson 124] [5 630 Tracy Warren 176] [2 754 Catherine Dickerson 150] [3 923 Angela Gonzalez 127] [3 750 Valerie Patterson 104] [4 391 Emily Beasley 129] [1 459 Mark Jones 101] [2 961 Stephen Hill 195] [5 356 Andrew Sandoval 138] [3 732 Theodore Johnston 195] [2 996 Jonathan Ross 102] [1 664 Benjamin Chambers 137] [5 554 Kelly Richards 111] [4 457 Nancy Richardson 112] [5 200 Megan Collins 147] [3 880 Margaret Taylor 116] [2 388 Brittany Benitez 179] [1 617 Jennifer Hawkins 114] [4 969 Sonia Cook MD 163] [1 297 Jacqueline Travis 162] [3 775 Hailey Little 107] [4 977 Kevin Mitchell 129] [5 634 Brett Smith 126] [2 777 Cheryl Morse 133] [2 957 Melanie Parker 148] [5 908 Brian Mendoza 129] [1 991 Kimberly Thompson 150] [4 810 Colleen Andrews 113] [3 821 Devin Barnes 180] [5 692 David Jacobson 155] [2 372 Bryan Mason 124] [3 850 Keith Smith 178] [4 992 Roger Austin 119] [1 991 James Vargas 185]]
+2024-10-20T22:03:57.219+0200	INFO	IDSS	server/idss_main.go:814	Record count: 50
+2024-10-20T22:03:57.220+0200	INFO	IDSS	server/idss_main.go:816	Originating peer ID: QmXZyjCswc4SYUEs9xJrrNqnQTtym3AmEgucHK5WnJXHW9
+2024-10-20T22:03:57.220+0200	INFO	IDSS	server/idss_main.go:834	Successfully sent merged result to peer QmTKP9iFZEksbwhGj6KMtfUyG9DYmNCGNHwR1aQWjembXL
+2024-10-20T22:03:57.220+0200	ERROR	IDSS	server/idss_main.go:434	Error reading from stream:%!(EXTRA *errors.errorString=stream reset)

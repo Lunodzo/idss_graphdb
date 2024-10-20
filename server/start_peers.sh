@@ -42,10 +42,17 @@ launch_peer() {
   PIDS+=($!)
 
   # Sleep for a short time to allow peer to start and log its address
-  sleep 2
+  sleep 1
 
   # Extract the peer ID from the log file
-  local PEER_ID=$(grep "Listening on peer Address" "${LOG_FILE}" | head -n 1 | awk -F "/p2p/" '{print $2}')
+  local PEER_ID
+  for i in {1..5}; do # Try 5 times. We have to ensure that address is avalable because we need it to create a directory for the peer's graph database
+    PEER_ID=$(grep "Listening on peer Address" "${LOG_FILE}" | head -n 1 | awk -F "/p2p/" '{print $2}')
+    if [ ! -z "$PEER_ID" ]; then
+      break
+    fi
+    sleep 2
+  done
 
   if [ -z "$PEER_ID" ]; then
     echo "Failed to retrieve peer ID for peer ${PEER_INDEX}"

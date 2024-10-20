@@ -1,0 +1,761 @@
+{
+    "nodes": [
+        {
+            "kind": "Client",
+            "key": 1,
+            "name": "Mark Jones",
+            "contract_number": 459,
+            "power": 101
+        },
+        {
+            "kind": "Client",
+            "key": 2,
+            "name": "Stephen Hill",
+            "contract_number": 961,
+            "power": 195
+        },
+        {
+            "kind": "Client",
+            "key": 3,
+            "name": "Valerie Patterson",
+            "contract_number": 750,
+            "power": 104
+        },
+        {
+            "kind": "Client",
+            "key": 4,
+            "name": "Emily Beasley",
+            "contract_number": 391,
+            "power": 129
+        },
+        {
+            "kind": "Client",
+            "key": 5,
+            "name": "Andrew Sandoval",
+            "contract_number": 356,
+            "power": 138
+        },
+        {
+            "kind": "Consumption",
+            "key": 1,
+            "timestamp": 1519400938.5417778,
+            "measurement": 746
+        },
+        {
+            "kind": "Consumption",
+            "key": 2,
+            "timestamp": 1198435753.1040037,
+            "measurement": 382
+        },
+        {
+            "kind": "Consumption",
+            "key": 3,
+            "timestamp": 1390373224.6047444,
+            "measurement": 517
+        },
+        {
+            "kind": "Consumption",
+            "key": 4,
+            "timestamp": 1333602712.4470322,
+            "measurement": 842
+        },
+        {
+            "kind": "Consumption",
+            "key": 5,
+            "timestamp": 1349812655.5002825,
+            "measurement": 596
+        },
+        {
+            "kind": "Consumption",
+            "key": 6,
+            "timestamp": 635604651.0059589,
+            "measurement": 454
+        },
+        {
+            "kind": "Consumption",
+            "key": 7,
+            "timestamp": 847153195.7077849,
+            "measurement": 360
+        },
+        {
+            "kind": "Consumption",
+            "key": 8,
+            "timestamp": 1513922912.6965847,
+            "measurement": 961
+        },
+        {
+            "kind": "Consumption",
+            "key": 9,
+            "timestamp": 971943045.9401727,
+            "measurement": 497
+        },
+        {
+            "kind": "Consumption",
+            "key": 10,
+            "timestamp": 1712679914.9369347,
+            "measurement": 825
+        },
+        {
+            "kind": "Consumption",
+            "key": 11,
+            "timestamp": 1054383212.8763809,
+            "measurement": 925
+        },
+        {
+            "kind": "Consumption",
+            "key": 12,
+            "timestamp": 665574572.7704278,
+            "measurement": 888
+        },
+        {
+            "kind": "Consumption",
+            "key": 13,
+            "timestamp": 1507097629.1352785,
+            "measurement": 675
+        },
+        {
+            "kind": "Consumption",
+            "key": 14,
+            "timestamp": 1240655449.8125708,
+            "measurement": 602
+        },
+        {
+            "kind": "Consumption",
+            "key": 15,
+            "timestamp": 319994749.2307541,
+            "measurement": 309
+        },
+        {
+            "kind": "Consumption",
+            "key": 16,
+            "timestamp": 1573716263.0964403,
+            "measurement": 311
+        },
+        {
+            "kind": "Consumption",
+            "key": 17,
+            "timestamp": 1453260233.5796778,
+            "measurement": 424
+        },
+        {
+            "kind": "Consumption",
+            "key": 18,
+            "timestamp": 673814245.0527792,
+            "measurement": 608
+        },
+        {
+            "kind": "Consumption",
+            "key": 19,
+            "timestamp": 1186896550.168522,
+            "measurement": 655
+        },
+        {
+            "kind": "Consumption",
+            "key": 20,
+            "timestamp": 965928240.4525493,
+            "measurement": 988
+        },
+        {
+            "kind": "Consumption",
+            "key": 21,
+            "timestamp": 1172289690.4868991,
+            "measurement": 733
+        },
+        {
+            "kind": "Consumption",
+            "key": 22,
+            "timestamp": 1523587842.6453333,
+            "measurement": 391
+        },
+        {
+            "kind": "Consumption",
+            "key": 23,
+            "timestamp": 246639050.3388982,
+            "measurement": 279
+        },
+        {
+            "kind": "Consumption",
+            "key": 24,
+            "timestamp": 1490649783.655979,
+            "measurement": 892
+        },
+        {
+            "kind": "Consumption",
+            "key": 25,
+            "timestamp": 1086540600.377196,
+            "measurement": 559
+        },
+        {
+            "kind": "Consumption",
+            "key": 26,
+            "timestamp": 463813542.76230395,
+            "measurement": 353
+        },
+        {
+            "kind": "Consumption",
+            "key": 27,
+            "timestamp": 251631480.15828755,
+            "measurement": 688
+        },
+        {
+            "kind": "Consumption",
+            "key": 28,
+            "timestamp": 400859512.7279094,
+            "measurement": 945
+        },
+        {
+            "kind": "Consumption",
+            "key": 29,
+            "timestamp": 806902334.2310119,
+            "measurement": 433
+        },
+        {
+            "kind": "Consumption",
+            "key": 30,
+            "timestamp": 627760767.8715956,
+            "measurement": 408
+        },
+        {
+            "kind": "Consumption",
+            "key": 31,
+            "timestamp": 208535495.25735098,
+            "measurement": 559
+        },
+        {
+            "kind": "Consumption",
+            "key": 32,
+            "timestamp": 1294862689.1716805,
+            "measurement": 537
+        },
+        {
+            "kind": "Consumption",
+            "key": 33,
+            "timestamp": 1431650786.411967,
+            "measurement": 572
+        },
+        {
+            "kind": "Consumption",
+            "key": 34,
+            "timestamp": 447674276.76119643,
+            "measurement": 757
+        },
+        {
+            "kind": "Consumption",
+            "key": 35,
+            "timestamp": 1296435000.6788218,
+            "measurement": 966
+        },
+        {
+            "kind": "Consumption",
+            "key": 36,
+            "timestamp": 140459262.22128376,
+            "measurement": 405
+        },
+        {
+            "kind": "Consumption",
+            "key": 37,
+            "timestamp": 988175065.1287944,
+            "measurement": 948
+        },
+        {
+            "kind": "Consumption",
+            "key": 38,
+            "timestamp": 467989479.9983905,
+            "measurement": 324
+        },
+        {
+            "kind": "Consumption",
+            "key": 39,
+            "timestamp": 274846408.61289984,
+            "measurement": 708
+        },
+        {
+            "kind": "Consumption",
+            "key": 40,
+            "timestamp": 560835503.0027056,
+            "measurement": 404
+        },
+        {
+            "kind": "Consumption",
+            "key": 41,
+            "timestamp": 1064949706.6938645,
+            "measurement": 968
+        },
+        {
+            "kind": "Consumption",
+            "key": 42,
+            "timestamp": 1335743320.828587,
+            "measurement": 277
+        },
+        {
+            "kind": "Consumption",
+            "key": 43,
+            "timestamp": 1658048837.1745436,
+            "measurement": 916
+        },
+        {
+            "kind": "Consumption",
+            "key": 44,
+            "timestamp": 871008919.6203157,
+            "measurement": 658
+        },
+        {
+            "kind": "Consumption",
+            "key": 45,
+            "timestamp": 244088136.09112564,
+            "measurement": 483
+        },
+        {
+            "kind": "Consumption",
+            "key": 46,
+            "timestamp": 1697156602.8748744,
+            "measurement": 998
+        },
+        {
+            "kind": "Consumption",
+            "key": 47,
+            "timestamp": 1428018034.4265714,
+            "measurement": 587
+        },
+        {
+            "kind": "Consumption",
+            "key": 48,
+            "timestamp": 131070810.39651592,
+            "measurement": 254
+        },
+        {
+            "kind": "Consumption",
+            "key": 49,
+            "timestamp": 785019292.3808576,
+            "measurement": 297
+        },
+        {
+            "kind": "Consumption",
+            "key": 50,
+            "timestamp": 505039148.9585998,
+            "measurement": 914
+        },
+        {
+            "kind": "Consumption",
+            "key": 51,
+            "timestamp": 587161621.4162475,
+            "measurement": 457
+        },
+        {
+            "kind": "Consumption",
+            "key": 52,
+            "timestamp": 1421427774.9371576,
+            "measurement": 482
+        },
+        {
+            "kind": "Consumption",
+            "key": 53,
+            "timestamp": 1603004854.0919409,
+            "measurement": 310
+        },
+        {
+            "kind": "Consumption",
+            "key": 54,
+            "timestamp": 1258049425.8849485,
+            "measurement": 353
+        },
+        {
+            "kind": "Consumption",
+            "key": 55,
+            "timestamp": 218202088.9512023,
+            "measurement": 255
+        },
+        {
+            "kind": "Consumption",
+            "key": 56,
+            "timestamp": 917933080.3520232,
+            "measurement": 216
+        },
+        {
+            "kind": "Consumption",
+            "key": 57,
+            "timestamp": 745223718.1750977,
+            "measurement": 595
+        },
+        {
+            "kind": "Consumption",
+            "key": 58,
+            "timestamp": 1564177502.7158673,
+            "measurement": 361
+        },
+        {
+            "kind": "Consumption",
+            "key": 59,
+            "timestamp": 1559587697.3070977,
+            "measurement": 309
+        },
+        {
+            "kind": "Consumption",
+            "key": 60,
+            "timestamp": 1442300970.0688279,
+            "measurement": 512
+        },
+        {
+            "kind": "Consumption",
+            "key": 61,
+            "timestamp": 1688865377.6409478,
+            "measurement": 691
+        },
+        {
+            "kind": "Consumption",
+            "key": 62,
+            "timestamp": 516137645.19184303,
+            "measurement": 670
+        },
+        {
+            "kind": "Consumption",
+            "key": 63,
+            "timestamp": 18725803.90739597,
+            "measurement": 757
+        },
+        {
+            "kind": "Consumption",
+            "key": 64,
+            "timestamp": 368702155.3069846,
+            "measurement": 289
+        },
+        {
+            "kind": "Consumption",
+            "key": 65,
+            "timestamp": 1121502582.3222501,
+            "measurement": 485
+        },
+        {
+            "kind": "Consumption",
+            "key": 66,
+            "timestamp": 636714662.5487363,
+            "measurement": 418
+        },
+        {
+            "kind": "Consumption",
+            "key": 67,
+            "timestamp": 1074994674.2413146,
+            "measurement": 564
+        },
+        {
+            "kind": "Consumption",
+            "key": 68,
+            "timestamp": 1276078089.538012,
+            "measurement": 972
+        },
+        {
+            "kind": "Consumption",
+            "key": 69,
+            "timestamp": 74221191.92367823,
+            "measurement": 626
+        },
+        {
+            "kind": "Consumption",
+            "key": 70,
+            "timestamp": 1060194237.0114403,
+            "measurement": 432
+        },
+        {
+            "kind": "Consumption",
+            "key": 71,
+            "timestamp": 877061607.9627196,
+            "measurement": 514
+        },
+        {
+            "kind": "Consumption",
+            "key": 72,
+            "timestamp": 844803106.9879647,
+            "measurement": 552
+        },
+        {
+            "kind": "Consumption",
+            "key": 73,
+            "timestamp": 1027555798.8791178,
+            "measurement": 544
+        },
+        {
+            "kind": "Consumption",
+            "key": 74,
+            "timestamp": 900308190.8326288,
+            "measurement": 836
+        },
+        {
+            "kind": "Consumption",
+            "key": 75,
+            "timestamp": 899664772.7841549,
+            "measurement": 531
+        },
+        {
+            "kind": "Consumption",
+            "key": 76,
+            "timestamp": 1122282408.425437,
+            "measurement": 912
+        },
+        {
+            "kind": "Consumption",
+            "key": 77,
+            "timestamp": 1058349312.2845368,
+            "measurement": 671
+        },
+        {
+            "kind": "Consumption",
+            "key": 78,
+            "timestamp": 35308028.925905146,
+            "measurement": 366
+        },
+        {
+            "kind": "Consumption",
+            "key": 79,
+            "timestamp": 512666141.26750076,
+            "measurement": 421
+        },
+        {
+            "kind": "Consumption",
+            "key": 80,
+            "timestamp": 1505986204.6089823,
+            "measurement": 938
+        },
+        {
+            "kind": "Consumption",
+            "key": 81,
+            "timestamp": 64520334.27575387,
+            "measurement": 528
+        },
+        {
+            "kind": "Consumption",
+            "key": 82,
+            "timestamp": 1346514362.4212756,
+            "measurement": 493
+        },
+        {
+            "kind": "Consumption",
+            "key": 83,
+            "timestamp": 1473480415.8813045,
+            "measurement": 255
+        },
+        {
+            "kind": "Consumption",
+            "key": 84,
+            "timestamp": 1286120613.395767,
+            "measurement": 606
+        },
+        {
+            "kind": "Consumption",
+            "key": 85,
+            "timestamp": 1583315859.515854,
+            "measurement": 333
+        },
+        {
+            "kind": "Consumption",
+            "key": 86,
+            "timestamp": 1099828041.2697008,
+            "measurement": 976
+        },
+        {
+            "kind": "Consumption",
+            "key": 87,
+            "timestamp": 827109010.0403491,
+            "measurement": 805
+        },
+        {
+            "kind": "Consumption",
+            "key": 88,
+            "timestamp": 7122706.186028476,
+            "measurement": 455
+        },
+        {
+            "kind": "Consumption",
+            "key": 89,
+            "timestamp": 680287002.1020739,
+            "measurement": 278
+        },
+        {
+            "kind": "Consumption",
+            "key": 90,
+            "timestamp": 47262671.220410235,
+            "measurement": 962
+        },
+        {
+            "kind": "Consumption",
+            "key": 91,
+            "timestamp": 375123709.3893935,
+            "measurement": 566
+        },
+        {
+            "kind": "Consumption",
+            "key": 92,
+            "timestamp": 858520259.2296131,
+            "measurement": 390
+        },
+        {
+            "kind": "Consumption",
+            "key": 93,
+            "timestamp": 706199887.5133266,
+            "measurement": 467
+        },
+        {
+            "kind": "Consumption",
+            "key": 94,
+            "timestamp": 382074518.12018937,
+            "measurement": 954
+        },
+        {
+            "kind": "Consumption",
+            "key": 95,
+            "timestamp": 135940809.6806071,
+            "measurement": 461
+        },
+        {
+            "kind": "Consumption",
+            "key": 96,
+            "timestamp": 1090875690.5831232,
+            "measurement": 562
+        },
+        {
+            "kind": "Consumption",
+            "key": 97,
+            "timestamp": 1707438180.168656,
+            "measurement": 498
+        },
+        {
+            "kind": "Consumption",
+            "key": 98,
+            "timestamp": 1409509628.4313219,
+            "measurement": 403
+        },
+        {
+            "kind": "Consumption",
+            "key": 99,
+            "timestamp": 83739614.99299018,
+            "measurement": 444
+        },
+        {
+            "kind": "Consumption",
+            "key": 100,
+            "timestamp": 1328555290.2382767,
+            "measurement": 724
+        }
+    ],
+    "edges": [
+        {
+            "key": "e1",
+            "kind": "belongs_to",
+            "end1key": 1,
+            "end1kind": "Client",
+            "end1role": "owner",
+            "end1cascading": true,
+            "end2key": 7,
+            "end2kind": "Consumption",
+            "end2role": "usage",
+            "end2cascading": true
+        },
+        {
+            "key": "e2",
+            "kind": "belongs_to",
+            "end1key": 1,
+            "end1kind": "Client",
+            "end1role": "owner",
+            "end1cascading": true,
+            "end2key": 4,
+            "end2kind": "Consumption",
+            "end2role": "usage",
+            "end2cascading": true
+        },
+        {
+            "key": "e3",
+            "kind": "belongs_to",
+            "end1key": 2,
+            "end1kind": "Client",
+            "end1role": "owner",
+            "end1cascading": true,
+            "end2key": 3,
+            "end2kind": "Consumption",
+            "end2role": "usage",
+            "end2cascading": true
+        },
+        {
+            "key": "e4",
+            "kind": "belongs_to",
+            "end1key": 2,
+            "end1kind": "Client",
+            "end1role": "owner",
+            "end1cascading": false,
+            "end2key": 9,
+            "end2kind": "Consumption",
+            "end2role": "usage",
+            "end2cascading": true
+        },
+        {
+            "key": "e5",
+            "kind": "belongs_to",
+            "end1key": 3,
+            "end1kind": "Client",
+            "end1role": "owner",
+            "end1cascading": true,
+            "end2key": 4,
+            "end2kind": "Consumption",
+            "end2role": "usage",
+            "end2cascading": true
+        },
+        {
+            "key": "e6",
+            "kind": "belongs_to",
+            "end1key": 3,
+            "end1kind": "Client",
+            "end1role": "owner",
+            "end1cascading": false,
+            "end2key": 1,
+            "end2kind": "Consumption",
+            "end2role": "usage",
+            "end2cascading": true
+        },
+        {
+            "key": "e7",
+            "kind": "belongs_to",
+            "end1key": 4,
+            "end1kind": "Client",
+            "end1role": "owner",
+            "end1cascading": false,
+            "end2key": 5,
+            "end2kind": "Consumption",
+            "end2role": "usage",
+            "end2cascading": true
+        },
+        {
+            "key": "e8",
+            "kind": "belongs_to",
+            "end1key": 4,
+            "end1kind": "Client",
+            "end1role": "owner",
+            "end1cascading": false,
+            "end2key": 6,
+            "end2kind": "Consumption",
+            "end2role": "usage",
+            "end2cascading": true
+        },
+        {
+            "key": "e9",
+            "kind": "belongs_to",
+            "end1key": 5,
+            "end1kind": "Client",
+            "end1role": "owner",
+            "end1cascading": false,
+            "end2key": 8,
+            "end2kind": "Consumption",
+            "end2role": "usage",
+            "end2cascading": true
+        },
+        {
+            "key": "e10",
+            "kind": "belongs_to",
+            "end1key": 5,
+            "end1kind": "Client",
+            "end1role": "owner",
+            "end1cascading": true,
+            "end2key": 3,
+            "end2kind": "Consumption",
+            "end2role": "usage",
+            "end2cascading": true
+        }
+    ]
+}

@@ -169,13 +169,13 @@ func main() {
 
 		// Create the QueryMassage
 		msg := common.QueryMessage{
-			Uqid:        uqi,
+			Uqid:       uqi,
 			Query:      query,
-			Ttl:        2,
+			Ttl:        5,
 			Timestamp: 	timestamppb.New(time.Now()).String(),
 			Originator: addrInfo.ID.String(),
 			Type:       common.MessageType_QUERY,
-			Sender:     host.ID().String(),
+			Sender:     host.ID().String(), // has to be updated in each hop at the server to allow results merging
 		}
 
 		// Open stream
@@ -221,8 +221,10 @@ func main() {
 			log.Error("Error in response:", response.Error)
 		} else {
 			log.Infof("Got %d records", response.RecordCount)
+			//header := response.Result[0].Data
+			//fmt.Println(header) // Print the header
 			for _, result := range response.Result {
-				fmt.Println(result) // Results can be formatted as needed
+				fmt.Println(result.Data) // Results can be formatted as needed
 			}
 			log.Infof("Got %d records", response.RecordCount)
 		}
