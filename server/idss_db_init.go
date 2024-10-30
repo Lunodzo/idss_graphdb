@@ -88,6 +88,7 @@ func QueryManager_init(GRAPH_MANAGER *eliasdb.Manager) {
 	queryNode.SetAttr("originator", "sample") // holds a peer ID of the peer that received the query from client
 	queryNode.SetAttr("sender_address", "") // holds the address of the peer that sent the query. This will be changing as a query is being propagated
 	queryNode.SetAttr("state", "new") // holds the state of the query. We have QUEUED, LOCALLY_EXECUTED, SENT_BACK, COMPLETED and FAILED
+	queryNode.SetAttr("result", "") // holds the response to the query
 
 	// Store the query node
 	trans.StoreNode("main", queryNode)

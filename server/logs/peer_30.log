@@ -1,0 +1,787 @@
+2024-10-30T16:31:58.972+0100	INFO	IDSS	server/idss_main.go:168	Listening on peer Address: /ip4/127.0.0.1/tcp/36563/p2p/QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+
+2024-10-30T16:31:58.974+0100	INFO	IDSS	server/idss_main.go:201	Loading data from file: ./idss_graph_db/QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b/QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b_data.json
+2024-10-30T16:32:00.854+0100	INFO	IDSS	server/idss_db_init.go:76	Creating the Query Manager node...
+2024-10-30T16:32:00.912+0100	INFO	IDSS	server/idss_db_init.go:102	Committed Query Manager node store transaction
+2024-10-30T16:32:00.912+0100	INFO	IDSS	server/idss_main.go:341	Bootstrapped the DHT
+2024/10/30 16:32:00 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 7168 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes for details.
+2024-10-30T16:32:01.052+0100	INFO	IDSS	server/idss_main.go:352	Connected to bootstrap peer: QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb
+2024-10-30T16:32:01.191+0100	INFO	IDSS	server/idss_main.go:352	Connected to bootstrap peer: QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa
+2024-10-30T16:32:01.330+0100	INFO	IDSS	server/idss_main.go:352	Connected to bootstrap peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN
+2024-10-30T16:32:01.493+0100	INFO	IDSS	server/idss_main.go:352	Connected to bootstrap peer: QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt
+2024-10-30T16:32:01.665+0100	INFO	IDSS	server/idss_main.go:352	Connected to bootstrap peer: QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ
+2024-10-30T16:32:01.666+0100	INFO	IDSS	server/idss_main.go:282	Starting peer discovery...
+2024-10-30T16:32:01.666+0100	INFO	IDSS	server/idss_main.go:291	Searching for other peers...
+...
+2024-10-30T16:32:03.560+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:32:03.565+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:32:03.571+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:32:03.576+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:32:03.581+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:32:03.586+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:32:03.593+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:32:03.598+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:32:03.603+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:32:03.607+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:32:03.612+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:32:03.616+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:32:03.621+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:32:05.196+0100	INFO	IDSS	server/idss_main.go:309	Connected to peer QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:32:09.908+0100	INFO	IDSS	server/idss_main.go:316	Num of found peers in the Routing Table: 22
+2024-10-30T16:32:09.908+0100	INFO	IDSS	server/idss_main.go:319	Time taken to find peers: 8.241887119s
+2024-10-30T16:32:09.908+0100	INFO	IDSS	server/idss_main.go:320	Peer discovery completed
+2024-10-30T16:32:22.707+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:32:22.707+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.500000 
+From: QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:32:22.770+0100	INFO	IDSS	server/idss_main.go:417	This is a new query on this peer
+2024-10-30T16:32:22.770+0100	INFO	IDSS	server/idss_main.go:423	Entering executeAndBroadcastQuery...
+2024-10-30T16:32:22.770+0100	INFO	IDSS	server/idss_main.go:857	Executing get Client
+ locally in QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:32:22.883+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:32:22.883+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:32:22.890+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:32:22.890+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:32:22.915+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:32:23.076+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:32:22.985+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:32:23.076+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:32:22.992+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:32:23.077+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:32:23.050+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:32:23.077+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:32:23.053+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:32:23.077+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:32:23.070+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:32:23.078+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:32:23.094+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:32:23.094+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:32:23.098+0100	INFO	IDSS	server/idss_main.go:449	Local query executed successfully
+2024-10-30T16:32:23.099+0100	INFO	IDSS	server/idss_main.go:463	Sender address updated to: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:32:23.099+0100	INFO	IDSS	server/idss_main.go:513	Broadcasting query in peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b, Parent peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4 
+2024-10-30T16:32:23.099+0100	INFO	IDSS	server/idss_main.go:545	TTL in QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b after decrement: 1.125000
+2024-10-30T16:32:23.099+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.099+0100	INFO	IDSS	server/idss_main.go:644	Peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b waiting for overlay peers results...
+2024-10-30T16:32:23.099+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.100+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.100+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.104+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k, awaiting for response
+2024-10-30T16:32:23.108+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4, awaiting for response
+2024-10-30T16:32:23.099+0100	INFO	IDSS	server/idss_main.go:651	Overlay peers peer results collected, start merging...
+2024-10-30T16:32:23.117+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr, awaiting for response
+2024-10-30T16:32:23.121+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.121+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.122+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.123+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.126+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep, awaiting for response
+2024-10-30T16:32:23.126+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx, awaiting for response
+2024-10-30T16:32:23.128+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A, awaiting for response
+2024-10-30T16:32:23.149+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.188+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8, awaiting for response
+2024-10-30T16:32:23.188+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ, awaiting for response
+2024-10-30T16:32:23.188+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke, awaiting for response
+2024-10-30T16:32:23.188+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f, awaiting for response
+2024-10-30T16:32:23.194+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977, awaiting for response
+2024-10-30T16:32:23.218+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG, awaiting for response
+2024-10-30T16:32:23.232+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx, awaiting for response
+2024-10-30T16:32:23.246+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:32:23.247+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:32:23.257+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.270+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:32:23.270+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:32:23.270+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:32:23.270+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.272+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:32:23.272+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:23.335+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:32:23.335+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708
+TTL: 1.125000 
+From: QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:32:23.336+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302342626177708)
+2024-10-30T16:32:24.230+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:32:24.230+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:32:24.230+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:32:24.231+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:32:24.231+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:32:24.232+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:32:24.232+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:32:24.240+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:32:24.240+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:32:24.240+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:32:24.242+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:32:24.243+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:32:24.243+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:32:24.243+0100	INFO	IDSS	server/idss_main.go:658	DONE merging local and remote results
+2024-10-30T16:32:24.278+0100	INFO	IDSS	server/idss_main.go:695	This is an intermediate peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b. Merging results to send to parent peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:32:24.278+0100	INFO	IDSS	server/idss_main.go:710	Sending merged result to peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:32:24.278+0100	INFO	IDSS	server/idss_main.go:712	Record count: 100
+2024-10-30T16:32:24.279+0100	INFO	IDSS	server/idss_main.go:731	Successfully sent merged result to peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:32:49.127+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:32:49.128+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.500000 
+From: QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:32:49.205+0100	INFO	IDSS	server/idss_main.go:417	This is a new query on this peer
+2024-10-30T16:32:49.205+0100	INFO	IDSS	server/idss_main.go:423	Entering executeAndBroadcastQuery...
+2024-10-30T16:32:49.205+0100	INFO	IDSS	server/idss_main.go:857	Executing get Client
+ locally in QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:32:49.277+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:32:49.277+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:32:49.277+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:32:49.278+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:32:49.278+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:32:49.278+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:32:49.285+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:32:49.285+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:32:49.292+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.292+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.292+0100	INFO	IDSS	server/idss_main.go:449	Local query executed successfully
+2024-10-30T16:32:49.293+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.293+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.294+0100	INFO	IDSS	server/idss_main.go:463	Sender address updated to: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:32:49.294+0100	INFO	IDSS	server/idss_main.go:513	Broadcasting query in peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b, Parent peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4 
+2024-10-30T16:32:49.294+0100	INFO	IDSS	server/idss_main.go:545	TTL in QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b after decrement: 1.125000
+2024-10-30T16:32:49.296+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ, awaiting for response
+2024-10-30T16:32:49.296+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke, awaiting for response
+2024-10-30T16:32:49.303+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:32:49.303+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:32:49.303+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.303+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8, awaiting for response
+2024-10-30T16:32:49.304+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx, awaiting for response
+2024-10-30T16:32:49.304+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f, awaiting for response
+2024-10-30T16:32:49.304+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:32:49.304+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:32:49.304+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4, awaiting for response
+2024-10-30T16:32:49.305+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.305+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG, awaiting for response
+2024-10-30T16:32:49.307+0100	INFO	IDSS	server/idss_main.go:644	Peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b waiting for overlay peers results...
+2024-10-30T16:32:49.307+0100	INFO	IDSS	server/idss_main.go:651	Overlay peers peer results collected, start merging...
+2024-10-30T16:32:49.309+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:32:49.336+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:32:49.337+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.310+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977, awaiting for response
+2024-10-30T16:32:49.310+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A, awaiting for response
+2024-10-30T16:32:49.311+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx, awaiting for response
+2024-10-30T16:32:49.321+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k, awaiting for response
+2024-10-30T16:32:49.322+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep, awaiting for response
+2024-10-30T16:32:49.323+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:32:49.337+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:32:49.337+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.323+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr, awaiting for response
+2024-10-30T16:32:49.364+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:32:49.364+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:32:49.365+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.376+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:32:49.376+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:32:49.388+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:32:49.388+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.392+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:32:49.394+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.430+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:32:49.431+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:32:49.433+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:49.502+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:32:49.503+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629
+TTL: 1.125000 
+From: QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:32:49.504+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302369075974629)
+2024-10-30T16:32:50.421+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:32:50.421+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:32:50.429+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:32:50.429+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:32:50.429+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:32:50.429+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:32:50.431+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:32:50.434+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:32:50.434+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:32:50.434+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:32:50.434+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:32:50.434+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:32:50.434+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:32:50.434+0100	INFO	IDSS	server/idss_main.go:658	DONE merging local and remote results
+2024-10-30T16:32:50.468+0100	INFO	IDSS	server/idss_main.go:695	This is an intermediate peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b. Merging results to send to parent peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:32:50.468+0100	INFO	IDSS	server/idss_main.go:710	Sending merged result to peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:32:50.468+0100	INFO	IDSS	server/idss_main.go:712	Record count: 100
+2024-10-30T16:32:50.469+0100	INFO	IDSS	server/idss_main.go:731	Successfully sent merged result to peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:03.293+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:03.293+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.500000 
+From: QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:03.377+0100	INFO	IDSS	server/idss_main.go:417	This is a new query on this peer
+2024-10-30T16:33:03.377+0100	INFO	IDSS	server/idss_main.go:423	Entering executeAndBroadcastQuery...
+2024-10-30T16:33:03.377+0100	INFO	IDSS	server/idss_main.go:857	Executing get Client
+ locally in QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:33:03.460+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:33:03.461+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:33:03.461+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:33:03.461+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:33:03.461+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:33:03.461+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:33:03.469+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.468+0100	INFO	IDSS	server/idss_main.go:449	Local query executed successfully
+2024-10-30T16:33:03.505+0100	INFO	IDSS	server/idss_main.go:463	Sender address updated to: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:33:03.505+0100	INFO	IDSS	server/idss_main.go:513	Broadcasting query in peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b, Parent peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4 
+2024-10-30T16:33:03.506+0100	INFO	IDSS	server/idss_main.go:545	TTL in QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b after decrement: 1.125000
+2024-10-30T16:33:03.506+0100	INFO	IDSS	server/idss_main.go:644	Peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b waiting for overlay peers results...
+2024-10-30T16:33:03.506+0100	INFO	IDSS	server/idss_main.go:651	Overlay peers peer results collected, start merging...
+2024-10-30T16:33:03.470+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.471+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.475+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:33:03.491+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:33:03.491+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:33:03.497+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:33:03.499+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:33:03.507+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4, awaiting for response
+2024-10-30T16:33:03.509+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:33:03.509+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:33:03.510+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.510+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:33:03.511+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.511+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:33:03.512+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:33:03.512+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:33:03.512+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.513+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ, awaiting for response
+2024-10-30T16:33:03.515+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:33:03.520+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.520+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.524+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.536+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8, awaiting for response
+2024-10-30T16:33:03.539+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx, awaiting for response
+2024-10-30T16:33:03.539+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG, awaiting for response
+2024-10-30T16:33:03.540+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:33:03.540+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f, awaiting for response
+2024-10-30T16:33:03.541+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:33:03.541+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.545+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep, awaiting for response
+2024-10-30T16:33:03.546+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke, awaiting for response
+2024-10-30T16:33:03.548+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k, awaiting for response
+2024-10-30T16:33:03.551+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977, awaiting for response
+2024-10-30T16:33:03.552+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A, awaiting for response
+2024-10-30T16:33:03.554+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx, awaiting for response
+2024-10-30T16:33:03.558+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr, awaiting for response
+2024-10-30T16:33:03.563+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:33:03.563+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:33:03.564+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.616+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:33:03.616+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:33:03.617+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:03.660+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:33:03.661+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570
+TTL: 1.125000 
+From: QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:33:03.661+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302383238050570)
+2024-10-30T16:33:04.632+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:33:04.635+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:33:04.638+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:33:04.638+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:33:04.639+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:33:04.640+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:33:04.640+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:33:04.640+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:33:04.640+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:33:04.640+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:33:04.640+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:33:04.641+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:33:04.641+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:33:04.641+0100	INFO	IDSS	server/idss_main.go:658	DONE merging local and remote results
+2024-10-30T16:33:04.668+0100	INFO	IDSS	server/idss_main.go:695	This is an intermediate peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b. Merging results to send to parent peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:33:04.668+0100	INFO	IDSS	server/idss_main.go:710	Sending merged result to peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:04.668+0100	INFO	IDSS	server/idss_main.go:712	Record count: 100
+2024-10-30T16:33:04.668+0100	INFO	IDSS	server/idss_main.go:731	Successfully sent merged result to peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:26.090+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:26.090+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.500000 
+From: QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:26.257+0100	INFO	IDSS	server/idss_main.go:417	This is a new query on this peer
+2024-10-30T16:33:26.258+0100	INFO	IDSS	server/idss_main.go:423	Entering executeAndBroadcastQuery...
+2024-10-30T16:33:26.258+0100	INFO	IDSS	server/idss_main.go:857	Executing get Client
+ locally in QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:33:26.309+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:33:26.309+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:33:26.309+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:33:26.310+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:33:26.310+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:33:26.310+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:33:26.320+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:33:26.320+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:33:26.330+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:33:26.330+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:33:26.330+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:33:26.330+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:33:26.352+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:33:26.353+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:33:26.356+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:33:26.356+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:33:26.369+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:33:26.370+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:33:26.374+0100	INFO	IDSS	server/idss_main.go:449	Local query executed successfully
+2024-10-30T16:33:26.375+0100	INFO	IDSS	server/idss_main.go:463	Sender address updated to: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:33:26.375+0100	INFO	IDSS	server/idss_main.go:513	Broadcasting query in peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b, Parent peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4 
+2024-10-30T16:33:26.375+0100	INFO	IDSS	server/idss_main.go:545	TTL in QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b after decrement: 1.125000
+2024-10-30T16:33:26.375+0100	INFO	IDSS	server/idss_main.go:644	Peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b waiting for overlay peers results...
+2024-10-30T16:33:26.375+0100	INFO	IDSS	server/idss_main.go:651	Overlay peers peer results collected, start merging...
+2024-10-30T16:33:26.379+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx, awaiting for response
+2024-10-30T16:33:26.379+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k, awaiting for response
+2024-10-30T16:33:26.379+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f, awaiting for response
+2024-10-30T16:33:26.380+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.385+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.386+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.386+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.386+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.390+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.391+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.391+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.391+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.394+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977, awaiting for response
+2024-10-30T16:33:26.396+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:33:26.396+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:33:26.397+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.397+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4, awaiting for response
+2024-10-30T16:33:26.400+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr, awaiting for response
+2024-10-30T16:33:26.404+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A, awaiting for response
+2024-10-30T16:33:26.409+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ, awaiting for response
+2024-10-30T16:33:26.409+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke, awaiting for response
+2024-10-30T16:33:26.411+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep, awaiting for response
+2024-10-30T16:33:26.412+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8, awaiting for response
+2024-10-30T16:33:26.414+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:33:26.415+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:33:26.415+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.416+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG, awaiting for response
+2024-10-30T16:33:26.419+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx, awaiting for response
+2024-10-30T16:33:26.425+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:33:26.425+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:33:26.426+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:26.458+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:33:26.458+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947
+TTL: 1.125000 
+From: QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:33:26.459+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302406007796947)
+2024-10-30T16:33:27.504+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:33:27.504+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:33:27.504+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:33:27.504+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:33:27.508+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:33:27.510+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:33:27.510+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:33:27.510+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:33:27.510+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:33:27.510+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:33:27.510+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:33:27.510+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:33:27.510+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:33:27.510+0100	INFO	IDSS	server/idss_main.go:658	DONE merging local and remote results
+2024-10-30T16:33:27.542+0100	INFO	IDSS	server/idss_main.go:695	This is an intermediate peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b. Merging results to send to parent peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:33:27.542+0100	INFO	IDSS	server/idss_main.go:710	Sending merged result to peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:27.542+0100	INFO	IDSS	server/idss_main.go:712	Record count: 100
+2024-10-30T16:33:27.542+0100	INFO	IDSS	server/idss_main.go:731	Successfully sent merged result to peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:33.573+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:33.573+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.500000 
+From: QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:33.657+0100	INFO	IDSS	server/idss_main.go:417	This is a new query on this peer
+2024-10-30T16:33:33.657+0100	INFO	IDSS	server/idss_main.go:423	Entering executeAndBroadcastQuery...
+2024-10-30T16:33:33.657+0100	INFO	IDSS	server/idss_main.go:857	Executing get Client
+ locally in QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:33:33.776+0100	INFO	IDSS	server/idss_main.go:449	Local query executed successfully
+2024-10-30T16:33:33.777+0100	INFO	IDSS	server/idss_main.go:463	Sender address updated to: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:33:33.777+0100	INFO	IDSS	server/idss_main.go:513	Broadcasting query in peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b, Parent peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4 
+2024-10-30T16:33:33.777+0100	INFO	IDSS	server/idss_main.go:545	TTL in QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b after decrement: 1.125000
+2024-10-30T16:33:33.777+0100	INFO	IDSS	server/idss_main.go:644	Peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b waiting for overlay peers results...
+2024-10-30T16:33:33.777+0100	INFO	IDSS	server/idss_main.go:651	Overlay peers peer results collected, start merging...
+2024-10-30T16:33:33.832+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4, awaiting for response
+2024-10-30T16:33:33.833+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:33:33.833+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:33:33.834+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:33.835+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:33:33.835+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:33:33.836+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:33.837+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:33:33.837+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:33:33.837+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:33.839+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:33:33.840+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:33:33.841+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:33.842+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8, awaiting for response
+2024-10-30T16:33:33.850+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep, awaiting for response
+2024-10-30T16:33:33.896+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:33:33.906+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:33:33.907+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:33.900+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG, awaiting for response
+2024-10-30T16:33:33.902+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx, awaiting for response
+2024-10-30T16:33:33.908+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:33:33.909+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:33:33.909+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:33.931+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ, awaiting for response
+2024-10-30T16:33:33.932+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke, awaiting for response
+2024-10-30T16:33:33.935+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx, awaiting for response
+2024-10-30T16:33:33.935+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:33:33.935+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:33:33.936+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:33.936+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr, awaiting for response
+2024-10-30T16:33:33.939+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A, awaiting for response
+2024-10-30T16:33:33.940+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k, awaiting for response
+2024-10-30T16:33:33.940+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977, awaiting for response
+2024-10-30T16:33:33.940+0100	INFO	IDSS	server/idss_main.go:598	Query sent to peer QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f, awaiting for response
+2024-10-30T16:33:33.943+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:33:33.944+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:33:33.945+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:33.946+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:33:33.946+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:33:33.947+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:33.962+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:33:33.963+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:33:33.963+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:33.964+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:33:33.964+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:33:33.964+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:33.965+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:33:33.965+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:33:33.966+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:34.016+0100	INFO	IDSS	server/idss_main.go:364	Received incoming from QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:33:34.019+0100	INFO	IDSS	server/idss_main.go:400	Query received:
+On peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b 
+UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887
+TTL: 1.125000 
+From: QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:33:34.032+0100	WARN	IDSS	server/idss_main.go:409	Duplicate query received on Peer: QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b get Client
+ (UQI: QmVT4nXkCcghnSgaxCMuF3seddRXZCZSajtdrfGJXDxmZB-1730302413518736887)
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmaUyzWdNRMfEHLTVieiUysBr8vC2N3VUexp92Jcjdi4QZ
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmX87h1VTfYQK5n2DCVHzHua6YV21QVTxtn6JQD4P6Up3k
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmaCZ6PGzv7TqjNbcyVqzfH5KsuX5YE4AE1QYDCDcK49Ep
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmTjaGMytF5yVvUt7xwPyQMMdaxK53sBp8mnWAFQb4RVg8
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmZajqudreu5rkvjDADMY7g16UitD7RkWSQpr7cBaf5R8f
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmQgd2SGH3tGMf4Au184f2euzY4RoDshacFDnDLJUH5Bke
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer Qmcq2Fi6i1ufA6cWD5PhHCbDcLbXz3zr43gmqZD7auG977
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmY3KziLnhU6RCNc9uSgBaP6CZFwSUUMij2XXcNYC6mUX4
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmbvLEyecLKJzWEaF1DwJjSpjjFZhytBLyvaLPyV6JB5Jx
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmTS2oW64P5TvNk61d5Hj9P4AFim7J9Dtp9sNQ14mdrhqx
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmdgFQSQ2ACicLGHWqoohKnPPLVJaQiNKsmoHNXA6MVTXr
+2024-10-30T16:33:34.928+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmQpQXB1b7TmgWsv6pvRMqwMMPyn1sJ7SbjuhdK6r5daQG
+2024-10-30T16:33:34.929+0100	WARN	IDSS	server/idss_main.go:604	Response timeout from peer QmZV3TbhWtfrDkYAnFJVMYUZUU9fMYp7UJzjfCHDv9qr5A
+2024-10-30T16:33:34.929+0100	INFO	IDSS	server/idss_main.go:658	DONE merging local and remote results
+2024-10-30T16:33:34.958+0100	INFO	IDSS	server/idss_main.go:695	This is an intermediate peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b. Merging results to send to parent peer QmX2cttFzbE4uF1L6pd9zZj1d9epBy9Pp1Rc2ZTRGPkw5b
+2024-10-30T16:33:34.958+0100	INFO	IDSS	server/idss_main.go:710	Sending merged result to peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4
+2024-10-30T16:33:34.958+0100	INFO	IDSS	server/idss_main.go:712	Record count: 100
+2024-10-30T16:33:34.958+0100	INFO	IDSS	server/idss_main.go:731	Successfully sent merged result to peer QmYzmFZrD7oeB5Ln2Qkz4FKJ6X5amj7quked8RJUHQGty4

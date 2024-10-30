@@ -25,8 +25,9 @@ fi
 # Create the log directory if it doesn't exist
 mkdir -p "${LOG_DIR}"
 
-# Array to store process IDs
+# Array to store process IDs and discovery completion status
 PIDS=()
+DISCOVERY_COMPLETED=()
 
 # Function to launch a peer
 launch_peer() {
@@ -40,9 +41,10 @@ launch_peer() {
 
   # Save the process ID
   PIDS+=($!)
+  DISCOVERY_COMPLETED+=("0")  # Initialize discovery status to not completed
 
   # Sleep for a short time to allow peer to start and log its address
-  sleep 1
+  sleep 2
 
   # Extract the peer ID from the log file
   local PEER_ID
@@ -51,7 +53,7 @@ launch_peer() {
     if [ ! -z "$PEER_ID" ]; then
       break
     fi
-    sleep 2
+    sleep 1
   done
 
   if [ -z "$PEER_ID" ]; then
@@ -73,6 +75,27 @@ launch_peer() {
     PEER_ADDRESS=$(grep "Listening on peer Address" "${LOG_FILE}" | head -n 1 | awk '{print $NF}')
     echo "Peer 1 is running at address: ${PEER_ADDRESS}"
   fi
+}
+
+# Function to check if all peers have completed DHT discovery
+check_all_peers_discovered() {
+  for ((i = 1; i <= NUM_PEERS; i++)); do
+    local LOG_FILE="${LOG_DIR}/peer_${i}.log"
+
+    if grep -q "Peer discovery completed" "${LOG_FILE}"; then
+      DISCOVERY_COMPLETED[$((i - 1))]="1"
+    else
+      DISCOVERY_COMPLETED[$((i - 1))]="0"
+    fi
+  done
+
+  # Check if all elements in DISCOVERY_COMPLETED are "1"
+  for status in "${DISCOVERY_COMPLETED[@]}"; do
+    if [ "$status" -eq 0 ]; then
+      return 1  # Not all peers have completed discovery
+    fi
+  done
+  return 0  # All peers have completed discovery
 }
 
 # Function to clean up log files, graph database directories, and stop peers
@@ -110,10 +133,12 @@ for i in $(seq 1 $NUM_PEERS); do
   launch_peer $i
 done
 
-# Wait for 10 seconds for the peers to start
-sleep 10
 
-echo "All peers launched."
+# Wait for all peers to complete discovery
+while ! check_all_peers_discovered; do
+  sleep 2  # Wait and recheck every 2 seconds
+done
+echo "Peers have joined the overlay."
 
 # Wait for all peers to exit (or stop when interrupted)
 wait

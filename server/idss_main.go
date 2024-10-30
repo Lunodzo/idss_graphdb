@@ -292,7 +292,6 @@ func discoverAndConnectPeers(ctx context.Context, host host.Host, config Config,
 	fmt.Println("...")
 
 	for !anyConnected {
-		//logger.Info("No connection to service, starting FindPeers()..")
 		peerChan, err := routingDiscovery.FindPeers(ctx, config.IDSSString)
 		if err != nil {
 			logger.Errorf("Error finding peers: %v", err)
@@ -302,15 +301,13 @@ func discoverAndConnectPeers(ctx context.Context, host host.Host, config Config,
 
 		for peerInfo := range peerChan {
 			if peerInfo.ID == host.ID() {
-				logger.Infof("Found self: %s", peerInfo.ID)
 				continue // Skip self
 			}
 			if err := host.Connect(ctx, peerInfo); err != nil {
-				//logger.Warnf("Failed to connect to peer %s: %v", peerInfo.ID, err)
 				continue
 			} else {
-				logger.Infof("Successfully connected to peer %s", peerInfo.ID)
-				kadDHT.RoutingTable().PeerAdded(peerInfo.ID) // Add the peer to the routing table
+				logger.Infof("Connected to peer %s", peerInfo.ID)
+				//kadDHT.RoutingTable().PeerAdded(peerInfo.ID) // Add the peer to the routing table
 				anyConnected = true
 			}
 		}
@@ -320,63 +317,11 @@ func discoverAndConnectPeers(ctx context.Context, host host.Host, config Config,
 
 	// Print time taken to find peers
 	logger.Info("Time taken to find peers: ", time.Since(startTime))
-	//logger.Info("Peer discovery completed") 
+	logger.Info("Peer discovery completed") 
 }
-
-/* func readData(rw *bufio.ReadWriter) {
-	for {
-		str, err := rw.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				return
-			} else {
-				//logger.Error("Error reading from stream:", err)
-			}
-		}
-
-		if str == "exit" {
-			logger.Warn("Closing connection due to 'exit' command")
-			return
-		}
-
-		if str == "" {
-			logger.Warn("Closing connection due to empty string")
-			return
-		}
-
-		if str != "\n" {
-			// Green console colour: 	\x1b[32m
-			// Reset console colour: 	\x1b[0m
-			//fmt.Printf("\x1b[32m%s\x1b[0m> ", str)
-		}
-	}
-}
-
-func writeData(rw *bufio.ReadWriter) {
-	stdReader := bufio.NewReader(os.Stdin)
-
-	for {
-		sendData, err := stdReader.ReadString('\n')
-		if err != nil {
-			continue
-		}
-
-		_, err = rw.WriteString(fmt.Sprintf("%s\n", sendData))
-		if err != nil {
-			continue
-		}
-
-		err = rw.Flush()
-		if err != nil {
-			continue
-		}
-	}
-} */
 
 // Function to initialise the DHT and bootstrap the peer with default bootstrap nodes
 func initialiseDHT(ctx context.Context, host host.Host, config Config) *dht.IpfsDHT {
-	//startTime := time.Now()
-	logger.Info("Initialising the DHT...")
 	bootstrapPeers := make([]peer.AddrInfo, len(config.BootstrapPeers))
 
 	if len(config.BootstrapPeers) == 0 {
@@ -388,7 +333,6 @@ func initialiseDHT(ctx context.Context, host host.Host, config Config) *dht.Ipfs
 		logger.Fatal("Error creating DHT", err)
 	}
 
-	logger.Debug("Bootstrapping the DHT")
 	if err := kadDHT.Bootstrap(ctx); err != nil {
 		logger.Fatalf("Error bootstrapping the DHT: %v", err)
 		os.Exit(1)
@@ -404,12 +348,14 @@ func initialiseDHT(ctx context.Context, host host.Host, config Config) *dht.Ipfs
 			defer wg.Done()
 			if err := host.Connect(ctx, *peerinfo); err != nil {
 				logger.Warnf("Error connecting to bootstrap peer %s: %v", peerinfo.ID, err)
+			}else{
+				logger.Infof("Connected to bootstrap peer: %s", peerinfo.ID)
+				return // We dont want to wait for the rest of the peers
 			}
 			logger.Info("Connected to bootstrap peer: ", peerinfo.ID)
 		}()
-		//bootstrapPeers[i] = *peerinfo
 	}
-	wg.Wait()
+	wg.Wait() 
 	return kadDHT
 }
 
@@ -418,10 +364,10 @@ func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx
 	logger.Infof("Received incoming from %s", remotePeerID)
 	defer conn.Close()
 
+	
 	// For any connected peer, add to the routing table
 	host.Network().Notify(&network.NotifyBundle{
 		ConnectedF: func(net network.Network, conn network.Conn) {
-			//logger.Infof("Peer connected: %s", conn.RemotePeer())
 			kadDHT.RoutingTable().PeerAdded(conn.RemotePeer()) // Add to routing table
 		},
 	})
@@ -431,7 +377,7 @@ func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx
 		msgBytes, err := readDelimitedMessage(conn, ctx)
 		if err != nil {
 			if err != io.EOF {
-				logger.Errorf("Error reading from stream:", err)
+				logger.Errorf("%v", err)
 			}
 			return
 		}
@@ -444,10 +390,6 @@ func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx
 			return
 		}
 
-		// Confirm the query details
-		logger.Infof("Received a message: Type=%v, Uqid=%v, Query=%v, Timestamp=%v, Ttl=%v, Originator=%v, Sender=%v, State=%v, Result=%v, RecordCount=%v",
-			msg.Type, msg.Uqid, msg.Query, msg.Timestamp, msg.Ttl, msg.Originator, msg.Sender, msg.State, msg.Result, msg.RecordCount)
-
 		if msg.Type == common.MessageType_QUERY{
 			handleQuery(conn, &msg, remotePeerID, config, gm, kadDHT)
 		}
@@ -455,7 +397,7 @@ func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx
 }
 
 func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID string, config Config, gm *eliasdb.Manager, kadDHT *dht.IpfsDHT) {
-	logger.Infof("Query received on peer %s (UQI: %s) (TTL: %f), (From: %s)", kadDHT.Host().ID(), msg.Uqid, msg.Ttl, remotePeerID)
+	logger.Infof("Query received:\nOn peer %s \nUQI: %s\nTTL: %f \nFrom: %s", kadDHT.Host().ID(), msg.Uqid, msg.Ttl, remotePeerID)
 
 	duplicateQuery, err := checkDuplicateQuery(msg.Uqid, gm)
 	if err != nil {
@@ -472,18 +414,15 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	msg.State = &common.QueryState{State: common.QueryState_QUEUED}
 	storeQueryInfo(msg, gm, remotePeerID)
 
-	// print query state
-	logger.Infof("Query state for query %s: State=%s, CurrentState=%s", msg.Query, msg.State.State.String(), msg.State.State.String()) // for debugging
-
-	logger.Infof("This is a new query on Peer: %s %s (UQI: %s)", kadDHT.Host().ID(), msg.Query, msg.Uqid)
+	logger.Infof("This is a new query on this peer")
 
 	executeAndBroadcastQuery(conn, msg, config, gm, kadDHT)
 }
 
 func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, config Config, gm *eliasdb.Manager, kadDHT *dht.IpfsDHT) {
+	logger.Info("Entering executeAndBroadcastQuery...")
 	var wg sync.WaitGroup
-	localResultChan := make(chan [][]interface{}, 1) // Channel to receive local results 
-	var holdHere [][]interface{}
+	var localResHolder [][]interface{}
 
 	// Run local query 
 	wg.Add(1)
@@ -491,7 +430,6 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 		defer wg.Done()
 		result, header, err := runQuery(msg.Query, kadDHT.Host().ID(), gm)
 		if err != nil {
-			localResultChan <- nil
 			logger.Errorf("Error executing local query: %v", err)
 			return
 		}
@@ -499,33 +437,23 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 		// Handle nil header (for debugging or metadata) 
 		if header != nil {
 			labels := header.Labels()
-			logger.Info("Labels: ", labels)
+			logger.Debug("Labels: ", labels)
 		} else {
 			labels := []string{}
-			logger.Info("Labels: ", labels)
+			logger.Debug("Labels: ", labels)
 		}
 
+		localResHolder = result
 		msg.State = &common.QueryState{State: common.QueryState_LOCALLY_EXECUTED}
-
 		storeQueryInfo(msg, gm, conn.Conn().RemotePeer().String())
-
-		logger.Infof("Local result for peer %s (UQI: %s):  \n", kadDHT.Host().ID(), msg.Uqid)
-		logger.Infof("%v\n", result)
-
-		// Send the results to the channel
-		localResultChan <- result
+		logger.Info("Local query executed successfully")
 	}()
 
-	defer wg.Done()
-	// Wait for the local query to complete
-	holdHere = <-localResultChan
-	// Convert results to protobuf rows
-	localResults := covertResultToProtobufRows(holdHere, nil)
-	// Store the local results in the query message
+	wg.Wait() // proceed to convert results after local query is done
+	localResults := covertResultToProtobufRows(localResHolder, nil)
 	msg.Result = localResults
 
 	// Run broacastquery in a goroutine
-	logger.Infof("Broadcasting query to connected peers...")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -533,17 +461,12 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 		// Mow update sender address
 		msg.Sender = kadDHT.Host().ID().String() // So that the overlay peers identify this as parent peer
 		logger.Info("Sender address updated to: ", msg.Sender)
-		
-		convertedResults := convertProtobufRowsToResult(msg.Result)
-		broadcastQuery(msg, conn, config, convertedResults, gm, kadDHT) //TODO: Do we have to broadcast localResults??
+	
+		broadcastQuery(msg, conn, config, localResHolder, gm, kadDHT)
 	}()
 	
-
-	// Wait for all goroutines to complete
-	go func ()  {
-		wg.Wait()
-		close(localResultChan)
-	}()
+	wg.Wait() // Ensure all operations are completed before closing the stream
+	logger.Infof("FINISHED!!!")
 }
 
 // Checks if the query is already in the graph database for the peer
@@ -557,7 +480,7 @@ func checkDuplicateQuery(uqi string, gm *eliasdb.Manager) ([][]interface{}, erro
 	return checkQuery.Rows(), nil
 }
 
-// Function to store query information in the graph database
+// Function to store query information in the graph database using msg contents
 func storeQueryInfo(msg *common.QueryMessage, graphManager *eliasdb.Manager, remotePeerID string) {
 
 	// Create a new transaction
@@ -589,18 +512,18 @@ func storeQueryInfo(msg *common.QueryMessage, graphManager *eliasdb.Manager, rem
 func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, config Config, localResults [][]interface{}, gm *eliasdb.Manager, kadDHT *dht.IpfsDHT) {
 	logger.Infof("Broadcasting query in peer: %v, Parent peer %v ", kadDHT.Host().ID(), parentStream.Conn().RemotePeer())
 
-	var mergedResults [][]interface{}
-	//parentPeerID := parentStream.Conn().RemotePeer()
-	parentPeerID, err := peer.Decode(msg.Sender)
-	if err != nil {
-		logger.Errorf("Error decoding parent peer ID: %v", err)
-	}
+	var mergedResults [][]interface{} // To hold the merged results from all peers
+	processedQueries := make(map[string]bool) // In-memory tracking of processed UQIs
+	parentPeerID := parentStream.Conn().RemotePeer() // Parent peer ID
+
+	// Check if this query has already been processed to avoid redundant work
+    if processedQueries[msg.Uqid] {
+        logger.Infof("Query %s has already been processed on this peer %s. Skipping broadcast.", msg.Uqid, kadDHT.Host().ID())
+        return
+    }
+    processedQueries[msg.Uqid] = true // Mark this query as processed
 
 	connectedPeers := kadDHT.Host().Network().Peers() // Connected peers are the peers in the routing table
-	//peersInRoutingTable := kadDHT.RoutingTable().ListPeers() // Peers in the routing table
-
-	//logger.Infof("Routing table peers: %v\n", peersInRoutingTable)
-	//logger.Infof("Connected peers: %v\n", connectedPeers)
 
 	// Filter peers to exclude the originating peer and the parent stream peer
 	var eligiblePeers []peer.ID
@@ -608,9 +531,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 		if peerID != kadDHT.Host().ID() && (parentStream == nil || parentStream.Conn().RemotePeer() != peerID) {
 			// Ensure that we don't query self, the parent stream peer or the peer that sent the query
 			// Check if there is an active connection to the peer
-			
 			eligiblePeers = append(eligiblePeers, peerID)
-			
 		}
 	}
 
@@ -628,26 +549,20 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 		// If the TTL has expired. Means this is the last peer in the overlay network, 
 		// no merging needed, just send the local results back to the parent
 		logger.Warn("TTL expired, not broadcasting query")
-		// extract originator peer from the query message
-		originatingPeerID, err := peer.Decode(msg.GetOriginator())
-		if err != nil {
-			logger.Errorf("Error decoding originating peer ID: %v", err)
-			return
-		}
-
 		msg.State = &common.QueryState{State: common.QueryState_SENT_BACK}
 		storeQueryInfo(msg, gm, parentStream.Conn().RemotePeer().String())
 		// Send just the local results because this is the last peer in the overlay network
-		sendMergedResult(parentStream, parentPeerID, originatingPeerID, localResults, kadDHT) 
+		sendMergedResult(parentStream, parentPeerID, localResults, kadDHT) 
 		return
 	}
 
 	// Else continue broadcasting the query, now with the new TTL
 	msg.Ttl = newTTL
 
-	// Prepare for concurrent broadcasting
+	// Prepare for concurrent broadcasting. We have to use concurrency to run the query 
+	// on all eligible peers without waiting for one to complete
 	var localWg sync.WaitGroup
-	remoteResultsChan := make(chan [][]interface{}, len(eligiblePeers))
+	remoteResultsChan := make(chan [][]interface{})
 
 	// Broadcast the query, and wait for results from the peers that have received a query from you
 	for _, peerID := range eligiblePeers {
@@ -668,7 +583,6 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 
 			// Change msg TYPE to QUERY
 			msg.Type = common.MessageType_QUERY
-			msg.Sender = kadDHT.Host().ID().String() // Update the sender address
 			msgBytes, err := proto.Marshal(msg)
 			if err != nil {
 				logger.Errorf("Error marshalling query message: %v", err)
@@ -683,23 +597,16 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 
 			logger.Infof("Query sent to peer %s, awaiting for response", p)
 
-			logger.Infof("Waiting for response from peer %s", p)
+			//logger.Infof("Waiting for response from peer %s", p)
 
 			select{
 				case <-responseTimeout: // If the response times out
 					logger.Warnf("Response timeout from peer %s", p)
-
-					/* // Update query state to SENT_BACK and store in the graph database
-					msg.State = &common.QueryState{State: common.QueryState_SENT_BACK}
-					storeQueryInfo(msg, gm, parentStream.Conn().RemotePeer().String())
-
-					// Send the local results back to the parent
-					sendMergedResult(parentStream, parentPeerID, peer.ID(msg.Originator), localResults, kadDHT)  */
 					return
 
-				case resultsByte := <-func() chan []byte { // Read the response from the peer
+				case resultsByte := <-func() chan []byte { // Wait for data t be received from the peer
 					ch := make(chan []byte, 1)
-					go func() {
+					go func() { // Separate goroutine to read the response to avoid blocking
 						data, err := readDelimitedMessage(stream, context.Background())
 						if err != nil {
 							ch <- nil
@@ -714,12 +621,11 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 						return
 					}
 
-					logger.Infof("Received results from peer %s", p)
+					logger.Infof("Received %d records from peer %s", len(resultsByte), p)
 
-					// Decode the incoming query message
 					var remoteResults common.QueryMessage
 					// Unmarshal the results
-					err = proto.Unmarshal(resultsByte, &remoteResults) //TODO: Confirm if you are actually getting remote results using this variable.
+					err = proto.Unmarshal(resultsByte, &remoteResults) 
 					if err != nil {
 						logger.Errorf("Error unmarshalling remote results: %v", err)
 						return
@@ -728,7 +634,6 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 					// Check if received message is of type RESULT
 					if remoteResults.Type == common.MessageType_RESULT {
 						remoteResult := convertProtobufRowsToResult(remoteResults.Result)
-						logger.Infof("Results: %s", remoteResult) //TODO: All results were correctly printed here
 						remoteResultsChan <- remoteResult
 					}
 			}
@@ -736,26 +641,21 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 	}
 
 	// Wait for all goroutines to complete
-	logger.Info("Waiting for overlay peers results...")
+	logger.Infof("Peer %v waiting for overlay peers results...", kadDHT.Host().ID())
+
 	go func(){
 		localWg.Wait() // Waits for all goroutines (all eligible peers) to complete
 		close(remoteResultsChan)
 	}()
-	logger.Info("Overlay peers peer results collected")
+
+	logger.Info("Overlay peers peer results collected, start merging...")
 
 	// Collect al remote results
 	for remoteResult := range remoteResultsChan {
-		logger.Info("Merging remote results item: \n", remoteResult) 
 		mergedResults = append(mergedResults, remoteResult...) 
 	}
-
-	logger.Infof("Total merged remote results: %v \n", mergedResults) 
-	logger.Infof("Local results: %v\n\n", localResults)
-
-	logger.Info("Merging local and remote results...") 
 	mergedResults = mergeTwoResults(localResults, mergedResults) 
-
-	logger.Infof("DONE merging local and remote results: %v", mergedResults)
+	logger.Infof("DONE merging local and remote results")
 
 	// extract originator peer from the query message
 	originatingPeerID, err := peer.Decode(msg.GetOriginator())
@@ -778,15 +678,15 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 			return
 		}
 
-		sendMergedResult(parentStream, clientPeerID, originatingPeerID, mergedResults, kadDHT)
+		sendMergedResult(parentStream, clientPeerID, mergedResults, kadDHT)
 	}else{
 
-		parentPeerID = parentStream.Conn().RemotePeer() //TODO: Holds an ID of originating, should we focus with msg.Sender?
-		/* parentPeerID, err := peer.Decode(msg.Sender)
+		//parentPeerID := parentStream.Conn().RemotePeer() //TODO: Holds an ID of originating, should we focus with msg.Sender?
+		parentPeerID, err := peer.Decode(msg.Sender)
 		if err != nil {
 			logger.Errorf("Error decoding parent peer ID: %v", err)
 			return
-		} */
+		}
 
 		// Update the query state to sent back
 		msg.State = &common.QueryState{State: common.QueryState_SENT_BACK}
@@ -794,26 +694,23 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 
 		logger.Infof("This is an intermediate peer %s. Merging results to send to parent peer %s", kadDHT.Host().ID(), parentPeerID)
 		// If time has elapsed and remote peer is the client then send the result to the client
-		sendMergedResult(parentStream, parentPeerID, originatingPeerID, mergedResults, kadDHT) 
+		sendMergedResult(parentStream, parentPeerID, mergedResults, kadDHT) 
 	}
 }
 
 // Function to send the merged result to the client
-func sendMergedResult(parentStream network.Stream, parentPeerD peer.ID, originatingPeerID peer.ID,  result [][]interface{}, kadDHT *dht.IpfsDHT) {
+func sendMergedResult(parentStream network.Stream, parentPeerD peer.ID,   result [][]interface{}, kadDHT *dht.IpfsDHT) {
 	var wg sync.WaitGroup
+	defer parentStream.Close()
 
 	wg.Add(1)
 	go func() {
-		defer parentStream.Close()
+		
 
-		logger.Infof("Sending merged result to peer %s", parentStream.Conn().RemotePeer()) //TODO: Check if this is the right address
-		// Count the number of rows in the result
+		logger.Infof("Sending merged result to peer %s", parentStream.Conn().RemotePeer()) 
 		recordCount := len(result)
-
-		logger.Info("Merged results: ", result)
 		logger.Info("Record count: ", recordCount)
 		resultRows := covertResultToProtobufRows(result, nil)
-		logger.Infof("Originating peer ID: %s", originatingPeerID)
 
 		resultMsg := &common.QueryMessage{
 			Type:       common.MessageType_RESULT,
@@ -831,7 +728,7 @@ func sendMergedResult(parentStream network.Stream, parentPeerD peer.ID, originat
 		if err := writeDelimitedMessage(parentStream, resultBytes); err != nil {
 			logger.Errorf("Error writing merged result to peer %s: %v", parentPeerD, err)
 		} else {
-			logger.Infof("Successfully sent merged result to peer %s", parentStream.Conn().RemotePeer()) // or stream.Conn().RemotePeer()
+			logger.Infof("Successfully sent merged result to peer %s", parentStream.Conn().RemotePeer()) 
 		}
 	}()
 
@@ -870,7 +767,6 @@ func mergeTwoResults(result1, result2 [][]interface{}) [][]interface{} {
         }
     }
 
-	//combinedResults := append(result1, result2...)
 	return mergedResults
 }
 
@@ -909,8 +805,7 @@ func covertResultToProtobufRows(result [][]interface{}, header []string) []*comm
 func readDelimitedMessage(r io.Reader, ctx context.Context) ([]byte, error) {
 	bufReader := bufio.NewReader(r)
 
-	// Set read timeout to avoing hanging over
-	//readTimeout := 200 * time.Second
+	// Set read timeout to avoing hanging over the stream
 	deadlineCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 

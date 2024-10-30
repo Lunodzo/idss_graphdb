@@ -36,12 +36,14 @@ import (
 	"bufio"
 	"context"
 	"encoding/binary"
+	"encoding/xml"
 	"flag"
 	"fmt"
 	"idss/graphdb/common"
 	"io"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -57,6 +59,8 @@ import (
 
 	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
+
+	//tls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/sirupsen/logrus"
 )
@@ -69,6 +73,17 @@ const (
 var (
 	log = logrus.New()
 )
+
+type Result struct {
+	XMLName xml.Name `xml:"result"`
+	Data    string   `xml:"data"`
+}
+
+type QueryResponse struct {
+	XMLName     xml.Name `xml:"response"`
+	ResultCount int      `xml:"resultCount"`
+	Results     []Result `xml:"results"`
+}
 
 func main() {
 	// Define flag
@@ -99,6 +114,7 @@ func main() {
 	host, err := libp2p.New(
 		libp2p.Identity(priv),
 		libp2p.ListenAddrs(listenAddr),
+		//libp2p.Security(tls.ID, tls.New), // Ensure secure communication
 	)
 	if err != nil {
 		panic(err)
@@ -171,7 +187,7 @@ func main() {
 		msg := common.QueryMessage{
 			Uqid:       uqi,
 			Query:      query,
-			Ttl:        5,
+			Ttl:        2,
 			Timestamp: 	timestamppb.New(time.Now()).String(),
 			Originator: addrInfo.ID.String(),
 			Type:       common.MessageType_QUERY,
@@ -221,12 +237,41 @@ func main() {
 			log.Error("Error in response:", response.Error)
 		} else {
 			log.Infof("Got %d records", response.RecordCount)
+			// Create the XML structure
+			queryResponse := QueryResponse{
+				ResultCount: int(response.RecordCount),
+			}
 			//header := response.Result[0].Data
 			//fmt.Println(header) // Print the header
 			for _, result := range response.Result {
-				fmt.Println(result.Data) // Results can be formatted as needed
+				queryResponse.Results = append(queryResponse.Results, Result{Data: strings.Join(result.Data, ",")})
+				//fmt.Println(result.Data) // Results can be formatted as needed
 			}
-			log.Infof("Got %d records", response.RecordCount)
+
+			// Marshal the XML structure
+			xmlResponse, err := xml.MarshalIndent(queryResponse, "", "    ")
+			if err != nil {
+				log.Error("Error marshalling XML response:", err)
+				return
+			}
+
+			// Ensure the results directory exists
+			resultsDir := "results"
+			err = os.MkdirAll(resultsDir, os.ModePerm)
+			if err != nil {
+				log.Fatal("Error creating results directory:", err)
+				return
+			}
+
+			// Save the XML data to a file 
+			filename := filepath.Join(resultsDir, fmt.Sprintf("%s.xml", uqi))
+			err = os.WriteFile(filename, xmlResponse, 0644)
+			if err != nil {
+				log.Error("Error writing XML response to file:", err)
+				return
+			}
+
+			log.Info("Response saved to file: ", filename)
 		}
 	}
 }
