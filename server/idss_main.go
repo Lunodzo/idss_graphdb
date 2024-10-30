@@ -54,7 +54,6 @@ import (
 	"bufio"
 	"context"
 
-	//"crypto/tls"
 	"encoding/binary"
 	"flag"
 	"fmt"
@@ -77,7 +76,6 @@ import (
 	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
 	"github.com/libp2p/go-libp2p/core/crypto"
-	//"github.com/libp2p/go-libp2p/core/discovery"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -85,7 +83,7 @@ import (
 	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 
-	//tls "github.com/libp2p/go-libp2p/p2p/security/tls"
+	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	"github.com/multiformats/go-multiaddr"
 	"google.golang.org/protobuf/proto"
 )
@@ -140,7 +138,7 @@ func main() {
 	host, err := libp2p.New(
 		libp2p.Identity(priv),
 		libp2p.ListenAddrs(listenAddr),
-		//libp2p.Security(tls.ID, tls.New), // Ensure secure communication
+		libp2p.Security(noise.ID, noise.New),// Ensure secure communication
 	)
 	if err != nil {
 		logger.Fatalf("Error creating libp2p host: %v", err)
@@ -162,7 +160,7 @@ func main() {
 		return
 	}
 
-	// Print a complete peer listening address. This helps the client to connect to the server
+	// Print a complete peer listening address for client to connect
 	for _, addr := range host.Addrs() {
 		completePeerAddr := addr.Encapsulate(multiaddr.StringCast("/p2p/" + host.ID().String()))
 		logger.Info("Listening on peer Address: ", completePeerAddr, "\n")
@@ -170,29 +168,29 @@ func main() {
 
 	/**********************
 
-		Graph database operations using EliasDB. This must be affected in all the connected peers.
+		Graph database operations using EliasDB. This must be affected in all the joining peers.
 		Calling functions from idss_db_init.go to create the database nodes and edges. Note that, this process 
 		involves generating random data using generate_data.py. This python script can be used to generate 
 		random data for the graph database. The data is stored in a JSON file which is then used to create 
 		the nodes and edges in the graph database.
 
-		Before generating the data, the graph database must be created. This is done by creating a new path, 
+		Before generating the data, the graph database env must be created. This is done by creating a path, 
 		storage instance and graph manager.
 
 	************************/
 
 	dbPath := fmt.Sprintf("%s/%s", DB_PATH, host.ID().String()) // Peer specific database path
 
-	graphDB, err := graphstorage.NewDiskGraphStorage(dbPath, false)
+	graphDB, err := graphstorage.NewDiskGraphStorage(dbPath, false) // Create a new disk graph storage
 	if err != nil {
 		logger.Fatalf("Error creating graph database: %v", err)
 		return
 	}
 	defer graphDB.Close()
 
-	graphManager := eliasdb.NewGraphManager(graphDB)
+	graphManager := eliasdb.NewGraphManager(graphDB) // Create a new graph manager
 
-	if graphManager == nil { // Check if the graph manager is created
+	if graphManager == nil { 
 		logger.Error("Graph manager not created")
 		os.Exit(1)
 	}
@@ -208,11 +206,11 @@ func main() {
 
 	kadDHT := initialiseDHT(ctx, host, config) // Pass conf for protocol ID
 
-	// A go routine to refresh the routing table and periodically find and connect to peers
+	// A go routine to refresh the DHT and periodically find and connect to peers
 	go discoverAndConnectPeers(ctx, host, config, kadDHT)
 
 	// Handle streams
-	host.SetStreamHandler(protocol.ID(config.ProtocolID), func(stream network.Stream) { // Only handle streams with the specified protocol ID
+	host.SetStreamHandler(protocol.ID(config.ProtocolID), func(stream network.Stream) { 
 		atomic.AddInt64(&activeConnections, 1)
 		defer atomic.AddInt64(&activeConnections, -1) // decrement when the handler exits
 		go handleRequest(host, stream, stream.Conn().RemotePeer().String(), ctx, config, graphManager, kadDHT)
@@ -259,12 +257,10 @@ func handleInterrupts(host host.Host, graphDB graphstorage.Storage, kadDHT *dht.
 }
 
 func cleanup(graphDB graphstorage.Storage, host host.Host) {
-	// Close the graph database
 	if err := graphDB.Close(); err != nil {
 		logger.Error("Error closing graph database: ", err)
 	}
 
-	// Delete the database
 	peerDir := filepath.Join(DB_PATH, host.ID().String())
 	if err := os.RemoveAll(peerDir); err != nil {
 		logger.Error("Error deleting database: ", err)
@@ -314,9 +310,7 @@ func discoverAndConnectPeers(ctx context.Context, host host.Host, config Config,
 	}
 
 	logger.Infof("Num of found peers in the Routing Table: %d", len(kadDHT.RoutingTable().GetPeerInfos()))
-
-	// Print time taken to find peers
-	logger.Info("Time taken to find peers: ", time.Since(startTime))
+	logger.Info("Time taken to find peers: ", time.Since(startTime)) //for debugging
 	logger.Info("Peer discovery completed") 
 }
 
@@ -350,7 +344,7 @@ func initialiseDHT(ctx context.Context, host host.Host, config Config) *dht.Ipfs
 				logger.Warnf("Error connecting to bootstrap peer %s: %v", peerinfo.ID, err)
 			}else{
 				logger.Infof("Connected to bootstrap peer: %s", peerinfo.ID)
-				return // We dont want to wait for the rest of the peers
+				return 
 			}
 			logger.Info("Connected to bootstrap peer: ", peerinfo.ID)
 		}()
@@ -364,7 +358,6 @@ func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx
 	logger.Infof("Received incoming from %s", remotePeerID)
 	defer conn.Close()
 
-	
 	// For any connected peer, add to the routing table
 	host.Network().Notify(&network.NotifyBundle{
 		ConnectedF: func(net network.Network, conn network.Conn) {
@@ -597,8 +590,6 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 
 			logger.Infof("Query sent to peer %s, awaiting for response", p)
 
-			//logger.Infof("Waiting for response from peer %s", p)
-
 			select{
 				case <-responseTimeout: // If the response times out
 					logger.Warnf("Response timeout from peer %s", p)
@@ -681,12 +672,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 		sendMergedResult(parentStream, clientPeerID, mergedResults, kadDHT)
 	}else{
 
-		//parentPeerID := parentStream.Conn().RemotePeer() //TODO: Holds an ID of originating, should we focus with msg.Sender?
-		parentPeerID, err := peer.Decode(msg.Sender)
-		if err != nil {
-			logger.Errorf("Error decoding parent peer ID: %v", err)
-			return
-		}
+		parentPeerID := parentStream.Conn().RemotePeer() //TODO: Holds an ID of originating, should we focus with msg.Sender?
 
 		// Update the query state to sent back
 		msg.State = &common.QueryState{State: common.QueryState_SENT_BACK}
@@ -705,8 +691,7 @@ func sendMergedResult(parentStream network.Stream, parentPeerD peer.ID,   result
 
 	wg.Add(1)
 	go func() {
-		
-
+		defer wg.Done()
 		logger.Infof("Sending merged result to peer %s", parentStream.Conn().RemotePeer()) 
 		recordCount := len(result)
 		logger.Info("Record count: ", recordCount)

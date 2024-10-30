@@ -82,7 +82,14 @@ func ParseFlags(peerID string) (Config, error) {
 	if err != nil {
 		return config, err
 	} */
-	flag.StringVar(&config.IDSSString, "IDSS", "idssservice",
+
+	// Generate random string with 5 characters
+	/* idssStr, err := GenerateRandomString(5)
+	if err != nil {
+		return config, err
+	} */
+
+	flag.StringVar(&config.IDSSString, "IDSS", "idssstr",
 		"Unique string to identify group of nodes. Share this with peers to let them connect.")
 	flag.Var(&config.BootstrapPeers, "peer", "Adds a peer multiaddress to the bootstrap list.")
 	flag.Var(&config.ListenAddresses, "listen", "Adds a multiaddress to the listen list.")

@@ -48,6 +48,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -59,8 +60,6 @@ import (
 
 	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
-
-	//tls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/sirupsen/logrus"
 )
@@ -114,7 +113,7 @@ func main() {
 	host, err := libp2p.New(
 		libp2p.Identity(priv),
 		libp2p.ListenAddrs(listenAddr),
-		//libp2p.Security(tls.ID, tls.New), // Ensure secure communication
+		libp2p.Security(noise.ID, noise.New), // Ensure secure communication
 	)
 	if err != nil {
 		panic(err)
@@ -187,11 +186,11 @@ func main() {
 		msg := common.QueryMessage{
 			Uqid:       uqi,
 			Query:      query,
-			Ttl:        2,
+			Ttl:        1,
 			Timestamp: 	timestamppb.New(time.Now()).String(),
 			Originator: addrInfo.ID.String(),
 			Type:       common.MessageType_QUERY,
-			Sender:     host.ID().String(), // has to be updated in each hop at the server to allow results merging
+			Sender:     host.ID().String(), // if used, it has to be updated in each hop at the server to allow results merging, or else, use streams.
 		}
 
 		// Open stream
@@ -245,7 +244,6 @@ func main() {
 			//fmt.Println(header) // Print the header
 			for _, result := range response.Result {
 				queryResponse.Results = append(queryResponse.Results, Result{Data: strings.Join(result.Data, ",")})
-				//fmt.Println(result.Data) // Results can be formatted as needed
 			}
 
 			// Marshal the XML structure
