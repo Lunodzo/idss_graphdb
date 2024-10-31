@@ -13,23 +13,23 @@ output_file = sys.argv[1]
 
 # Generate clients data
 clients = []
-for i in range(1, 101): # Adjust the number of clients here
+for i in range(1, 1001): # Adjust the number of clients here
     clients.append({
         "kind": "Client",
         "key": i,
         "name": fake.name(),
-        "contract_number": fake.unique.random_int(min=100, max=999),
-        "power": random.randint(100, 200)
+        "contract_number": fake.unique.random_int(min=100, max=9999),
+        "power": random.randint(100, 2000)
     })
 
 # Generate consumption records data
 consumptions = []
-for i in range(1, 1001): # Adjust the number of consumption records here
+for i in range(1, 10001): # Adjust the number of consumption records here
     consumptions.append({
         "kind": "Consumption",
         "key": i,
         "timestamp": fake.unix_time(),
-        "measurement": random.randint(200, 1000)
+        "measurement": random.randint(200, 10000)
     })
     
 print("Stored a total of %d consumption records", len(consumptions))

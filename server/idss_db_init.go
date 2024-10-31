@@ -14,11 +14,12 @@ import (
 // Function to generate fake data and initialize the graph database
 func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage.Storage, graphManager *eliasdb.Manager) error {
 	// Execute python script to generate fake data and store it in the peer-specific data file
-	cmd := exec.Command("python3", "generate_data.py", dataFilePath)
-	err := cmd.Run()
+	err := generateData(dataFilePath)
 	if err != nil {
-		return err
+		logger.Fatalf("Failed to generate data: %v", err)
 	}
+
+	logger.Infof("Data generation completed")
 
 	// Read the generated data from the JSON file specific to this peer
 	myData, err := os.ReadFile(dataFilePath)
@@ -27,6 +28,16 @@ func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage
 	}
 
 	return LoadGraphData(string(myData), dbPath, graphDB, graphManager)
+}
+
+func generateData(dataFilePath string) error {
+	cmd := exec.Command("python3", "generate_data.py", dataFilePath)
+	err := cmd.Run()
+	if err != nil {
+		logger.Fatalf("Command execution failed: %v", err)
+		return err
+	}
+	return nil
 }
 
 
@@ -38,7 +49,7 @@ func LoadGraphData(dataa string, dbPath string, graphDB graphstorage.Storage, gr
 	var myData map[string]interface{}
 	err := json.Unmarshal([]byte(dataa), &myData)
 	if err != nil {
-		return err
+		logger.Errorf("Error unmarshalling JSON data: %v", err)
 	}
 
 	// Process nodes and edges

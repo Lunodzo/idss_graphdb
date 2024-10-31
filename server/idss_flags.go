@@ -78,18 +78,8 @@ type Config struct {
 
 func ParseFlags(peerID string) (Config, error) {
 	config := Config{}
-	/* idssStr, err := GenerateIDSSString()
-	if err != nil {
-		return config, err
-	} */
 
-	// Generate random string with 5 characters
-	/* idssStr, err := GenerateRandomString(5)
-	if err != nil {
-		return config, err
-	} */
-
-	flag.StringVar(&config.IDSSString, "IDSS", "idssstr",
+	flag.StringVar(&config.IDSSString, "IDSS", "idssStrr",
 		"Unique string to identify group of nodes. Share this with peers to let them connect.")
 	flag.Var(&config.BootstrapPeers, "peer", "Adds a peer multiaddress to the bootstrap list.")
 	flag.Var(&config.ListenAddresses, "listen", "Adds a multiaddress to the listen list.")

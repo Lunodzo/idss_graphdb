@@ -186,11 +186,11 @@ func main() {
 		msg := common.QueryMessage{
 			Uqid:       uqi,
 			Query:      query,
-			Ttl:        1,
+			Ttl:        10,
 			Timestamp: 	timestamppb.New(time.Now()).String(),
 			Originator: addrInfo.ID.String(),
 			Type:       common.MessageType_QUERY,
-			Sender:     host.ID().String(), // if used, it has to be updated in each hop at the server to allow results merging, or else, use streams.
+			Sender:     host.ID().String(), // if used, it has to be updated in each hop at the server to allow results merging, or else, rely on streams.
 		}
 
 		// Open stream
@@ -270,6 +270,7 @@ func main() {
 			}
 
 			log.Info("Response saved to file: ", filename)
+			log.Info("Results will be deleted when the client exits.") // valid for simulation purposes
 		}
 	}
 }
@@ -316,20 +317,25 @@ func handleTerminationSignals(host host.Host) {
 
 	go func() {
 		sig := <-c
-		log.Warnf("Received signal: %s. Peer exiting the network: %s", sig, host.ID().String())
+		log.Warnf("Received signal: %s. You are exiting the network.", sig)
+
+		// Clean results directory
+		err := os.RemoveAll("results") // valid for simulation purposes
+		if err != nil {
+			log.Error("Error cleaning up results directory:", err)
+		}
 
 		// Clean up
 		if err := host.Close(); err != nil {
 			log.Error("Error shutting down IDSS: ", err)
-			os.Exit(1) // Different termination codes can be used
+			os.Exit(1) 
 		}
 		os.Exit(0) // normal termination
-
 	}()
 }
 
 func discoverAndConnectPeers(ctx context.Context, host host.Host, kademliaDHT *dht.IpfsDHT, addrInfo peer.AddrInfo) {
-	log.Info("Client is discovering and connecting peers...")
+	log.Info("Client is discovering and connecting to server...")
 
 	routingDiscovery := drouting.NewRoutingDiscovery(kademliaDHT)
 	dutil.Advertise(ctx, routingDiscovery, discoveryServiceTag)
@@ -352,10 +358,8 @@ func discoverAndConnectPeers(ctx context.Context, host host.Host, kademliaDHT *d
 		log.Error("Error connecting to peer:", err)
 		return
 	} else {
-		log.Info("Connected to peer: ", addrInfo.ID.String())
+		log.Info("Connected to server: ", addrInfo.ID.String())
 	}
-
-	log.Info("You have joined an overlay, now can send queries to the server.")
 }
 
 // Function to check for errors

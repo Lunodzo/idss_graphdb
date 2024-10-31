@@ -53,6 +53,9 @@ package main
 import (
 	"bufio"
 	"context"
+	"net/http"
+	_ "net/http/pprof"
+	"strings"
 
 	"encoding/binary"
 	"flag"
@@ -100,7 +103,17 @@ const (
 var (
 	activeConnections int64
 	logger            = log.Logger("IDSS")
+	mu sync.Mutex
+	msg common.QueryMessage 
 )
+
+func init() {
+    go func() {
+        logger.Info("Starting pprof server on :6060")
+        logger.Info(http.ListenAndServe("localhost:6060", nil))
+		//Visit http://localhost:6060/debug/pprof/ to view the pprof server
+    }()
+}
 
 /*=====================
 MAIN FUNCTION
@@ -376,7 +389,6 @@ func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx
 		}
 
 		// Decode the incoming query message
-		var msg common.QueryMessage 
 		err = proto.Unmarshal(msgBytes, &msg)
 		if err != nil {
 			logger.Errorf("Error unmarshalling query message: %v", err)
@@ -555,7 +567,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 	// Prepare for concurrent broadcasting. We have to use concurrency to run the query 
 	// on all eligible peers without waiting for one to complete
 	var localWg sync.WaitGroup
-	remoteResultsChan := make(chan [][]interface{})
+	remoteResultsChan := make(chan [][]interface{}, len(eligiblePeers)) // enough to accomodate involve peers
 
 	// Broadcast the query, and wait for results from the peers that have received a query from you
 	for _, peerID := range eligiblePeers {
@@ -598,7 +610,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 				case resultsByte := <-func() chan []byte { // Wait for data t be received from the peer
 					ch := make(chan []byte, 1)
 					go func() { // Separate goroutine to read the response to avoid blocking
-						data, err := readDelimitedMessage(stream, context.Background())
+						data, err := readDelimitedMessage(stream, streamCtx)
 						if err != nil {
 							ch <- nil
 						} else {
@@ -635,7 +647,9 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 	logger.Infof("Peer %v waiting for overlay peers results...", kadDHT.Host().ID())
 
 	go func(){
-		localWg.Wait() // Waits for all goroutines (all eligible peers) to complete
+		// Waits for all goroutines (all eligible peers) to complete. 
+		// To ensure that we do not bock indefinitely, TTL and timeout are used
+		localWg.Wait() 
 		close(remoteResultsChan)
 	}()
 
@@ -672,7 +686,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 		sendMergedResult(parentStream, clientPeerID, mergedResults, kadDHT)
 	}else{
 
-		parentPeerID := parentStream.Conn().RemotePeer() //TODO: Holds an ID of originating, should we focus with msg.Sender?
+		parentPeerID := parentStream.Conn().RemotePeer() // Parent peer ID
 
 		// Update the query state to sent back
 		msg.State = &common.QueryState{State: common.QueryState_SENT_BACK}
@@ -726,12 +740,19 @@ func sendMergedResult(parentStream network.Stream, parentPeerD peer.ID,   result
 
 func mergeTwoResults(result1, result2 [][]interface{}) [][]interface{} {
 	// Use a map to track unique entries
-	uniqueRecords := make(map[string]bool)
-	var mergedResults [][]interface{}
+	estimatedSize := len(result1) + len(result2)
+	uniqueRecords := make(map[string]bool, estimatedSize)
+	mergedResults := make([][]interface{}, 0, estimatedSize)
 
 	// Helper function to convert a record to a string key for uniqueness checking
     toKey := func(record []interface{}) string {
-        return fmt.Sprintf("%v", record)
+		var builder strings.Builder
+        for _, value := range record {
+			mu.Lock()
+			builder.WriteString(fmt.Sprintf("%v", value)) // can be optimised further if values are strings or simpler types
+			mu.Unlock()
+		}
+		return builder.String()
     }
 
 	// Process result1
