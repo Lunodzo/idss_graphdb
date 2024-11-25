@@ -44,17 +44,18 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
+	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -168,17 +169,34 @@ func main() {
 
 	// Loop to continouesly accept queries from the user or exit command
 	for {
-		fmt.Println("Enter your query or 'exit' to quit: ")
-		query, err := reader.ReadString('\n')
+		fmt.Println("Enter your query and TTL or 'exit' to quit: \n-> Use comma to separate query and TTL")
+		fmt.Print("-> ")
+		input, err := reader.ReadString('\n')
 		if err != nil {
 			log.Error("Error reading query from user:", err)
 			continue
 		}
-		if strings.TrimSpace(query) == "exit" {
+		if strings.TrimSpace(input) == "exit" {
 			log.Warning("Client exiting...")
 			break
 		}
 
+		// Split the input into query and TTL
+		parts := strings.Split(input, ",")
+		query := strings.TrimSpace(parts[0])
+		var ttl float64
+
+		if len(parts) == 2{
+			ttlStr := strings.TrimSpace(parts[1])
+			ttl, err = strconv.ParseFloat(ttlStr, 64)
+			if err != nil {
+				log.Error("Invalid TTL value:", err)
+				continue
+			}
+		}else{
+			ttl = 1 // default TTL
+		}
+		
 		// Define UQI
 		uqi := fmt.Sprintf("%s-%d", host.ID(), time.Now().UnixNano())
 
@@ -186,7 +204,7 @@ func main() {
 		msg := common.QueryMessage{
 			Uqid:       uqi,
 			Query:      query,
-			Ttl:        10,
+			Ttl:        float32(ttl),
 			Timestamp: 	timestamppb.New(time.Now()).String(),
 			Originator: addrInfo.ID.String(),
 			Type:       common.MessageType_QUERY,
@@ -209,6 +227,7 @@ func main() {
 			continue
 		}
 
+		startTime := time.Now()
 		err = writeDelimitedMessage(stream, msgBytes)
 		if err != nil {
 			log.Errorf("Error writing to stream: %s", err)
@@ -224,6 +243,8 @@ func main() {
 			continue
 		}
 
+		timeTaken := time.Since(startTime)
+
 		var response common.QueryMessage
 		err = proto.Unmarshal(responseBytes, &response)
 		if err != nil {
@@ -236,6 +257,7 @@ func main() {
 			log.Error("Error in response:", response.Error)
 		} else {
 			log.Infof("Got %d records", response.RecordCount)
+			log.Infof("Time spent: %s", timeTaken)
 			// Create the XML structure
 			queryResponse := QueryResponse{
 				ResultCount: int(response.RecordCount),
@@ -356,6 +378,7 @@ func discoverAndConnectPeers(ctx context.Context, host host.Host, kademliaDHT *d
 	err = host.Connect(ctx, addrInfo)
 	if err != nil {
 		log.Error("Error connecting to peer:", err)
+		os.Exit(1) // Exit if connection fails
 		return
 	} else {
 		log.Info("Connected to server: ", addrInfo.ID.String())

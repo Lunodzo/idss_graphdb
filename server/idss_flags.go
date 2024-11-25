@@ -3,10 +3,13 @@ package main
 import (
 	"crypto/rand"
 	"flag"
+	"fmt"
 	"math/big"
 	"strings"
 
-	dht "github.com/libp2p/go-libp2p-kad-dht"
+	dht "github.com/libp2p/go-libp2p-kad-dht" // This is needed to get the default bootstrap peers
+	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/peer"
 	maddr "github.com/multiformats/go-multiaddr"
 )
 
@@ -36,6 +39,35 @@ func GenerateIDSSString() (string, error) {
         return "", err
     }
     return randomStr[:position.Int64()] + keyword + randomStr[position.Int64():], nil
+}
+
+func CreateLocalBootstrapPeers(port int) (peer.AddrInfo, error){
+	// gen new keypair
+	_, pub, err := crypto.GenerateKeyPair(crypto.RSA, 2048)
+	if err != nil {
+		return peer.AddrInfo{}, err
+	}
+
+	// Generate the peer ID from the public key
+	peerID, err := peer.IDFromPublicKey(pub)
+	if err != nil {
+		logger.Fatalf("Failed to generate peer ID: %v", err)
+	}
+	fmt.Println("Generated peer ID:", peerID)
+
+	ours := fmt.Sprintf("/ip4/127.0.0.1/tcp/%d", port)
+
+	// Create a multiaddress to listen on a specific port
+	addr, err := maddr.NewMultiaddr(ours)
+    if err != nil {
+        return peer.AddrInfo{}, err
+    }
+
+	completeAddr := addr.Encapsulate(maddr.StringCast("/p2p/" + peerID.String()))
+    return peer.AddrInfo{
+        ID:    peerID,
+        Addrs: []maddr.Multiaddr{completeAddr},
+    }, nil
 }
 
 type addrList []maddr.Multiaddr
@@ -79,7 +111,7 @@ type Config struct {
 func ParseFlags(peerID string) (Config, error) {
 	config := Config{}
 
-	flag.StringVar(&config.IDSSString, "IDSS", "idssStrr",
+	flag.StringVar(&config.IDSSString, "IDSS", "idss_string",
 		"Unique string to identify group of nodes. Share this with peers to let them connect.")
 	flag.Var(&config.BootstrapPeers, "peer", "Adds a peer multiaddress to the bootstrap list.")
 	flag.Var(&config.ListenAddresses, "listen", "Adds a multiaddress to the listen list.")
@@ -92,8 +124,18 @@ func ParseFlags(peerID string) (Config, error) {
 	flag.Parse()
 
 	if len(config.BootstrapPeers) == 0 {
+		logger.Warn("No bootstrap peers provided. Using local bootstrap peers.")
 		config.BootstrapPeers = dht.DefaultBootstrapPeers
+		// Create a local bootstrap peer
+		/* for i := 0; i < 5; i++ {
+			port := 4001 + i
+			localBootPeer, err := CreateLocalBootstrapPeers(port)
+			if err != nil {
+				return config, err
+			}
+			config.BootstrapPeers = append(config.BootstrapPeers, localBootPeer.Addrs...)
+			logger.Info("Created local bootstrap peer: ", localBootPeer.ID)
+		} */
 	}
-
 	return config, nil
 }
