@@ -11,7 +11,7 @@ import (
 	"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
-// Function to generate fake data and initialize the graph database
+// Function to generate fake data and initialize the graph database by loading the generated data into the graph database
 func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage.Storage, graphManager *eliasdb.Manager) error {
 	// Execute python script to generate fake data and store it in the peer-specific data file
 	err := generateData(dataFilePath)
@@ -19,7 +19,7 @@ func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage
 		logger.Fatalf("Failed to generate data: %v", err)
 	}
 
-	logger.Infof("Data generation completed")
+	logger.Infof("Data generation completed, now loading data into the graph database...")
 
 	// Read the generated data from the JSON file specific to this peer
 	myData, err := os.ReadFile(dataFilePath)

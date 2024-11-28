@@ -143,7 +143,7 @@ done
 
 # Wait for all peers to complete discovery
 while ! check_all_peers_discovered; do
-  sleep 2  # Wait and recheck every 2 seconds
+  sleep 5  # Wait and recheck every 5 seconds
 done
 echo "Peers have joined the overlay."
 

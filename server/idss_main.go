@@ -204,6 +204,7 @@ func main() {
 	if err := GenFakeDataAndInit(config.Filename, dbPath, graphDB, graphManager); err != nil {
 		logger.Fatalf("Error initializing database: %v", err)
 	}
+	logger.Info("Data loaded into the graph database")
 
 	QueryManager_init(graphManager)
 
