@@ -25,7 +25,6 @@ for i in range(1, 11): # Adjust the number of clients here
 # Generate consumption records data
 consumptions = []
 for i in range(1, 11): # Adjust the number of consumption records here
-for i in range(1, 11): # Adjust the number of consumption records here
     consumptions.append({
         "kind": "Consumption",
         "key": i,

@@ -76,7 +76,6 @@ import (
 	"github.com/ipfs/go-log/v2"
 	"github.com/krotik/eliasdb/eql"
 	"github.com/krotik/eliasdb/graph"
-	"github.com/krotik/eliasdb/graph"
 	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -84,8 +83,6 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
-	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
-	"github.com/libp2p/go-libp2p/p2p/discovery/util"
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	"github.com/libp2p/go-libp2p/p2p/discovery/util"
 
@@ -415,7 +412,7 @@ func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx
 	}
 }
 
-func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID string, config Config, gm *eliasdb.Manager, kadDHT *dht.IpfsDHT) {
+func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID string, config Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
 	//logger.Infof("Query received:\nOn peer %s \nUQI: %s\nTTL: %f \nFrom: %s", kadDHT.Host().ID(), msg.Uqid, msg.Ttl, remotePeerID)
 
 	duplicateQuery, err := checkDuplicateQuery(msg.Uqid, gm)
@@ -876,7 +873,6 @@ func writeDelimitedMessage(w io.Writer, data []byte) error {
 }
 
 // IDSS Function to execute local query
-func runQuery(command string, peer peer.ID, gm *graph.Manager) ([][]interface{}, eql.SearchResultHeader, error) {
 func runQuery(command string, peer peer.ID, gm *graph.Manager) ([][]interface{}, eql.SearchResultHeader, error) {
 	logger.Infof("Executing %s locally in %s", command, peer)
 
