@@ -82,7 +82,7 @@ func LoadGraphData(dataa string, dbPath string, graphDB graphstorage.Storage, gr
 	return trans.Commit()
 }
 
-// Function to initialise the Query Manager node
+// Function to initialise the Query Manager graph node
 func QueryManager_init(GRAPH_MANAGER *eliasdb.Manager) {
 	logger.Info("Creating the Query Manager node...")
 
