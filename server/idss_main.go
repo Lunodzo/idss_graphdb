@@ -75,7 +75,7 @@ import (
 
 	"github.com/ipfs/go-log/v2"
 	"github.com/krotik/eliasdb/eql"
-	eliasdb "github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph"
 	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -83,8 +83,8 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
-	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
-	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
+	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
+	"github.com/libp2p/go-libp2p/p2p/discovery/util"
 
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	"github.com/multiformats/go-multiaddr"
@@ -191,7 +191,7 @@ func main() {
 	}
 	defer graphDB.Close()
 
-	graphManager := eliasdb.NewGraphManager(graphDB) // Create a new graph manager
+	graphManager := graph.NewGraphManager(graphDB) // Create a new graph manager
 
 	if graphManager == nil { 
 		logger.Error("Graph manager not created")
@@ -282,8 +282,8 @@ func discoverAndConnectPeers(ctx context.Context, host host.Host, config Config,
 	logger.Info("Starting peer discovery...")
 
 	// Provide a value for the given key. Where a key in this case is the service name (config.IDSSString)
-	routingDiscovery := drouting.NewRoutingDiscovery(kadDHT)
-	dutil.Advertise(ctx, routingDiscovery, config.IDSSString)
+	routingDiscovery := routing.NewRoutingDiscovery(kadDHT)
+	util.Advertise(ctx, routingDiscovery, config.IDSSString)
 	logger.Debug("Announced the IDSS service")
 
 	// Look for other peers in the network who announced and connect to them
@@ -374,7 +374,7 @@ func initialiseDHT(ctx context.Context, host host.Host, config Config) *dht.Ipfs
 }
 
 // A function to handle incoming requests from peers.
-func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx context.Context, config Config, gm *eliasdb.Manager, kadDHT *dht.IpfsDHT) {
+func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx context.Context, config Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
 	//logger.Infof("Received incoming from %s", remotePeerID)
 	defer conn.Close()
 
@@ -408,7 +408,7 @@ func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx
 	}
 }
 
-func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID string, config Config, gm *eliasdb.Manager, kadDHT *dht.IpfsDHT) {
+func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID string, config Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
 	//logger.Infof("Query received:\nOn peer %s \nUQI: %s\nTTL: %f \nFrom: %s", kadDHT.Host().ID(), msg.Uqid, msg.Ttl, remotePeerID)
 
 	duplicateQuery, err := checkDuplicateQuery(msg.Uqid, gm)
@@ -431,7 +431,7 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	executeAndBroadcastQuery(conn, msg, config, gm, kadDHT)
 }
 
-func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, config Config, gm *eliasdb.Manager, kadDHT *dht.IpfsDHT) {
+func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, config Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
 	//logger.Info("Entering executeAndBroadcastQuery...")
 	var wg sync.WaitGroup
 	var localResHolder [][]interface{}
@@ -483,7 +483,7 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 }
 
 // Checks if the query is already in the graph database for the peer
-func checkDuplicateQuery(uqi string, gm *eliasdb.Manager) ([][]interface{}, error) {
+func checkDuplicateQuery(uqi string, gm *graph.Manager) ([][]interface{}, error) {
 	statement := fmt.Sprintf("get Query where key = '%s'", uqi)
 
 	checkQuery, err := eql.RunQuery("checkQuery", "main", statement, gm)
@@ -494,10 +494,10 @@ func checkDuplicateQuery(uqi string, gm *eliasdb.Manager) ([][]interface{}, erro
 }
 
 // Function to store query information in the graph database using msg contents
-func storeQueryInfo(msg *common.QueryMessage, graphManager *eliasdb.Manager, remotePeerID string) {
+func storeQueryInfo(msg *common.QueryMessage, graphManager *graph.Manager, remotePeerID string) {
 
 	// Create a new transaction
-	trans := eliasdb.NewGraphTrans(graphManager)
+	trans := graph.NewGraphTrans(graphManager)
 
 	// Create a new query node
 	queryNode := data.NewGraphNode()
@@ -522,7 +522,7 @@ func storeQueryInfo(msg *common.QueryMessage, graphManager *eliasdb.Manager, rem
 }
 
 // Function to broadcast the query to connected peers. This function also filters out the originating and parent peers because they are already queried
-func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, config Config, localResults [][]interface{}, gm *eliasdb.Manager, kadDHT *dht.IpfsDHT) {
+func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, config Config, localResults [][]interface{}, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
 	logger.Infof("Broadcasting query in peer: %v, Parent peer %v ", kadDHT.Host().ID(), parentStream.Conn().RemotePeer())
 
 	//routingDiscovery := drouting.NewRoutingDiscovery(kadDHT)
@@ -867,7 +867,7 @@ func writeDelimitedMessage(w io.Writer, data []byte) error {
 }
 
 // IDSS Function to execute local query
-func runQuery(command string, peer peer.ID, gm *eliasdb.Manager) ([][]interface{}, eql.SearchResultHeader, error) {
+func runQuery(command string, peer peer.ID, gm *graph.Manager) ([][]interface{}, eql.SearchResultHeader, error) {
 	logger.Infof("Executing %s locally in %s", command, peer)
 
 	result, err := eql.RunQuery("myQuery", "main", command, gm)
