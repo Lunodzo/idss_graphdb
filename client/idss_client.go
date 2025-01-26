@@ -37,6 +37,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/xml"
+	"errors"
 	"flag"
 	"fmt"
 	"idss/graphdb/common"
@@ -239,7 +240,11 @@ func main() {
 		// Read and print response using Protobuf
 		responseBytes, err := readDelimitedMessage(stream)
 		if err != nil {
-			log.Error("Error reading response from server:", err)
+			if errors.Is(err, context.DeadlineExceeded) {
+				log.Error("Timeout reading response from server:", err)
+			} else {
+				log.Error("Error reading response from server:", err)
+			}
 			continue
 		}
 

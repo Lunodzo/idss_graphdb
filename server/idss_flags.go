@@ -27,20 +27,18 @@ func GenerateRandomString(length int) (string, error) {
     return string(result), nil
 }
 
-// GenerateIDSSString generates a random string containing the keyword "idss"
+// GenerateIDSSString generates a random string containing the keyword "idss_"
 func GenerateIDSSString() (string, error) {
-    randomStr, err := GenerateRandomString(5) // Generate a random string of length 10
+    randomStr, err := GenerateRandomString(1) // Generate a random string of length 5
     if err != nil {
         return "", err
     }
-    keyword := "idss"
-    position, err := rand.Int(rand.Reader, big.NewInt(int64(len(randomStr)+1)))
-    if err != nil {
-        return "", err
-    }
-    return randomStr[:position.Int64()] + keyword + randomStr[position.Int64():], nil
+    keyword := "idss_string"
+    return keyword + randomStr, nil
 }
 
+// CreateLocalBootstrapPeers creates a local bootstrap peer with the specified port
+// This is optional because the default bootstrap peers are already provided by the libp2p library
 func CreateLocalBootstrapPeers(port int) (peer.AddrInfo, error){
 	// gen new keypair
 	_, pub, err := crypto.GenerateKeyPair(crypto.RSA, 2048)
@@ -110,7 +108,7 @@ type Config struct {
 
 func ParseFlags(peerID string) (Config, error) {
 	config := Config{}
-
+	//TODO: Should we change string in every run?
 	flag.StringVar(&config.IDSSString, "IDSS", "idss_stringa",
 		"Unique string to identify group of nodes. Share this with peers to let them connect.")
 	flag.Var(&config.BootstrapPeers, "peer", "Adds a peer multiaddress to the bootstrap list.")

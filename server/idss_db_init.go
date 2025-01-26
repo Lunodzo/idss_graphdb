@@ -103,12 +103,9 @@ func QueryManager_init(GRAPH_MANAGER *eliasdb.Manager) {
 
 	// Store the query node
 	trans.StoreNode("main", queryNode)
-
-	// Commit the transaction
 	if err := trans.Commit(); err != nil {
 		logger.Errorf("Error committing transaction: %v", err)
 		return
 	}
-
 	logger.Info("Committed Query Manager node store transaction")
 }
