@@ -15,6 +15,7 @@ SAMPLE QUERIES
 >> get Consumption traverse ::: where name = "Alice" (WORKING)
 >> lookup Client '3' traverse ::: (WORKING)
 >> get Client traverse owner:belongs_to:usage:Consumption (WORKING)
+	NOTE: This will return all the clients and their consumption records
 
 
 COUNT FUNCTION IN EQL
@@ -42,7 +43,7 @@ COUNT FUNCTION IN EQL
 		NOTE: Clients Who Have Mixed High and Low Power Consumption Records
 
 >> get Client traverse owner:belongs_to:usage:Consumption where measurement >= 400 and measurement <= 900 traverse usage:belongs_to:owner:Client
-		NOTE:  Find Clients with Specific Consumption Patterns and Shared Edges (This has alot of rows)
+		NOTE:  Find Clients with Specific Consumption Patterns and Shared Edges 
 
 >> //TODO: Add support for more complex queries and functions in EQL as follows (adapt some functions supported in SQL of relational databases)
 >> get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000
@@ -84,10 +85,12 @@ import (
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 
 	"github.com/ipfs/go-log/v2"
+
 	"github.com/krotik/eliasdb/eql"
 	"github.com/krotik/eliasdb/graph"
 	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
+
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
@@ -96,8 +99,8 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	"github.com/libp2p/go-libp2p/p2p/discovery/util"
 	"github.com/libp2p/go-libp2p-kbucket"
-
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
+
 	"github.com/multiformats/go-multiaddr"
 	"google.golang.org/protobuf/proto"
 )
@@ -627,7 +630,7 @@ func updateQuerySenderAddress(s1 *common.QueryMessage, s2 string, gm *graph.Mana
 	queryNode.SetAttr("sender_address", s2)
 
 	// Update only the sender address attribute of existing query node
-	if err := trans.UpdateNode("main", queryNode); err != nil {
+	if err := trans.UpdateNode("main", queryNode); err != nil { // This is ECAL in EliasDB
 		logger.Errorf("Error updating sender address: %v", err)
 		return err
 	}
@@ -883,6 +886,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 		// Check if current peer is an originator or an intermediate peer
 		logger.Infof("Comparing originator %s with current peer %s", msg.Originator, peerAddr)
 		if msg.Originator != peerAddr.String() {
+			// This is an intermediate peer
 			insideWg := sync.WaitGroup{}
 			insideWg.Add(1)
 			go func() {
@@ -902,6 +906,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 
 			insideWg.Wait()
 		}else{
+			//TODO: Process aggregate functions here
 			logger.Infof("This is the originator peer %s. Sending results to client", kadDHT.Host().ID())
 			// Fetch TTL from the graph database
 			queryDetails, err := fetchQueryDetails(msg.Uqid, gm)
