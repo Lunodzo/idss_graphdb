@@ -44,7 +44,16 @@ COUNT FUNCTION IN EQL
 >> get Client traverse owner:belongs_to:usage:Consumption where measurement >= 400 and measurement <= 900 traverse usage:belongs_to:owner:Client
 		NOTE:  Find Clients with Specific Consumption Patterns and Shared Edges (This has alot of rows)
 
->>
+>> //TODO: Add support for more complex queries and functions in EQL as follows (adapt some functions supported in SQL of relational databases)
+>> get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000
+>> get Client where @avg(owner:belongs_to:usage:Consumption where measurement > 500) > 700
+>> get Client where @min(owner:belongs_to:usage:Consumption where measurement > 500) > 500
+>> get Client where @max(owner:belongs_to:usage:Consumption where measurement > 500) > 1000
+>> get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000 and @avg(owner:belongs_to:usage:Consumption where measurement > 500) > 700
+>> get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000 and @avg(owner:belongs_to:usage:Consumption where measurement > 500) > 700 and @min(owner:belongs_to:usage:Consumption where measurement > 500) > 500
+>> get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000 and @avg(owner:belongs_to:usage:Consumption where measurement > 500) > 700 and @min(owner:belongs_to:usage:Consumption where measurement > 500) > 500 and @max(owner:belongs_to:usage:Consumption where measurement > 500) > 1000
+>> get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000 and @avg(owner:belongs_to:usage:Consumption where measurement > 500) > 700 and @min(owner:belongs_to:usage:Consumption where measurement > 500) > 500 and @max(owner:belongs_to:usage:Consumption where measurement > 500) > 1000 and @count(owner:belongs_to:usage:Consumption where measurement > 500) > 5
+
 ****************************************************************************************
 */
 
@@ -108,7 +117,6 @@ var (
 	logger            = log.Logger("IDSS")
 	mu sync.Mutex
 	msg common.QueryMessage 
-	//TODO: Check what else can be added here
 )
 
 // Pprof for profiling and resource monitoring
@@ -210,8 +218,10 @@ func main() {
 	}
 	logger.Info("Data loaded into the graph database")
 
+	// Initialise the query manager
 	QueryManager_init(graphManager)
 
+	// Initialise the DHT and bootstrap the peer
 	kadDHT := initialiseDHT(ctx, host, config) // Pass conf for protocol ID
 
 	// A go routine to refresh the DHT and periodically find and connect to peers
@@ -391,7 +401,7 @@ func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx
 		},
 	})
 
-
+	// Read the incoming message
 	for {
 		msgBytes, err := readDelimitedMessage(conn, ctx)
 		if err != nil {
@@ -408,7 +418,8 @@ func handleRequest(host host.Host, conn network.Stream, remotePeerID string, ctx
 			return
 		}
 
-		// This aims to handle only query messages
+		// This aims to handle only query messages. Other message types can be added and handled accordingly
+		// The client will send a query message to the server
 		if msg.Type == common.MessageType_QUERY{
 			handleQuery(conn, &msg, remotePeerID, config, gm, kadDHT)
 		}
@@ -438,6 +449,45 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	executeAndBroadcastQuery(conn, msg, config, gm, kadDHT)
 }
 
+// IDSS function to support basic functions in querying the graph database
+/* func runAggregatedQuery(query string, aggFunc string, threshold float64, peer peer.ID, gm *graph.Manager) (float64, error) {
+    // Example: get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000
+    // Parse the query to extract the part for the aggregation and the threshold condition
+    
+    result, _, err := runQuery(query, peer, gm)
+    if err != nil {
+        return 0, err
+    }
+
+    var aggResult float64
+    for _, row := range result {
+        // Assuming measurement is the column we're aggregating over
+        measurement, ok := row[0].(float64) // Adjust index based on actual result structure
+        if ok && measurement > threshold {
+            switch aggFunc {
+            case "sum":
+                aggResult += measurement
+            case "avg":
+                aggResult += measurement // We'll divide by count at the end
+            case "min":
+                if aggResult == 0 || measurement < aggResult {
+                    aggResult = measurement
+                }
+            case "max":
+                if measurement > aggResult {
+                    aggResult = measurement
+                }
+            }
+        }
+    }
+
+    if aggFunc == "avg" && len(result) > 0 {
+        aggResult /= float64(len(result))
+    }
+
+    return aggResult, nil
+} */
+
 // Function to execute the query and broadcast it to connected peers (peers in an overlay network)
 func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, config Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
 	// Get query details from the graph database
@@ -453,7 +503,7 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 	if query_string, ok := queryDetails["Query String"].(string); ok {
 		msg.Query = query_string
 	} else {
-		if v, exists := queryDetails["Query String"]; exists {
+		if v, exists := queryDetails["Query String"]; exists { // verify if we are fetching the right attribute
 			logger.Warnf("Query string for UQI %s is not a string: %v, Type: %T", msg.Uqid, v, v)
 		} else {
 			logger.Warn("Query not found or it is not a string ", err)
@@ -493,10 +543,10 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 	msg.Uqid = queryDetails["Query Key"].(string)
 
 
-	logger.Infof("Query UQI: %s, TTL: %f", msg.Uqid, msg.Ttl)
-	var wg sync.WaitGroup
-	var localResHolder [][]interface{}
-	startTime := time.Now() // for debugging
+	logger.Infof("Query UQI: %s, TTL: %f", msg.Uqid, msg.Ttl) // for debugging
+	var wg sync.WaitGroup // Wait group to ensure all operations are completed before closing the stream
+	var localResHolder [][]interface{} // To hold the local results
+	startTime := time.Now() // for debugging duration of query execution
 
 	// Run local query 
 	wg.Add(1)
@@ -518,7 +568,7 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 		}
 
 		localResHolder = result
-		msg.State = &common.QueryState{State: common.QueryState_LOCALLY_EXECUTED}
+		//msg.State = &common.QueryState{State: common.QueryState_LOCALLY_EXECUTED}
 		updateQueryState(msg, common.QueryState_LOCALLY_EXECUTED, gm)
 		//logger.Info("Local query executed successfully")
 	}()
@@ -530,7 +580,7 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 	// Store the local results in the graph database
 	storeResults(msg, localResHolder, gm)
 
-	// Handle TTL 
+	// Incase the TTL has expired, send available results to the parent peer 
 	if msg.Ttl <= 0 {
 		logger.Warn("TTL expired, not broadcasting query")
 		updateQueryState(msg, common.QueryState_SENT_BACK, gm)
@@ -545,15 +595,28 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 	}
 	msg.Sender = kadDHT.Host().ID().String() // So that the overlay peers identify this as parent peer
 
+	// Update TTL in the graph database and the message
+	if err := updateTTL(msg, gm); err != nil {
+		logger.Errorf("Error updating TTL: %v", err)
+	}
+
 	// Run broadcastquery in a goroutine
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		broadcastQuery(msg, conn, config, localResHolder, gm, kadDHT)
 	}()
-	
-	wg.Wait() // Ensure all operations are completed before closing the stream
-	logger.Infof("FINISHED! Time taken to execute and broadcast query: %v", time.Since(startTime))
+
+	// Wait for all goroutines to complete
+	go func(){
+		wg.Wait()
+		logger.Info("All remote results collected in originating peer")
+		logger.Infof("Time taken to execute query: %v", time.Since(startTime)) // for debugging
+		// close the stream
+		if err := conn.Close(); err != nil {
+			logger.Errorf("Error closing stream: %v", err)
+		}
+	}()
 }
 
 func updateQuerySenderAddress(s1 *common.QueryMessage, s2 string, gm *graph.Manager) error {
@@ -578,7 +641,7 @@ func updateQuerySenderAddress(s1 *common.QueryMessage, s2 string, gm *graph.Mana
 	return nil
 }
 
-func fetchQueryDetails(s string, gm *graph.Manager) (map[string]interface{}, any) {
+func fetchQueryDetails(s string, gm *graph.Manager) (map[string]interface{}, error) {
 	queryStatement := fmt.Sprintf("get Query where key = '%s'", s)
 	results, err := eql.RunQuery("fetchQueryDetails", "main", queryStatement, gm)
 	if err != nil {
@@ -672,41 +735,22 @@ func storeResults(msg *common.QueryMessage, results [][]interface{}, gm *graph.M
 	resultsNode.SetAttr("kind", "Results")
 	resultsNode.SetAttr("name", "Results")
 	resultsNode.SetAttr("query_key", msg.Uqid)
-	resultsNode.SetAttr("results", string(jsonResults)) //TODO: Convert to string or JSON array if necessary
+	resultsNode.SetAttr("results", string(jsonResults))
 	trans.StoreNode("main", resultsNode)
 	if err := trans.Commit(); err != nil {
 		logger.Errorf("Failed to store results for %s: %v", msg.Uqid, err)
 	}
 }
 
-// Function to decide on to continue or stop broadcasting the query
-func shouldContinueBroadcastingQuery(msg *common.QueryMessage, gm *graph.Manager) bool {
-	queryInfo, err := checkDuplicateQuery(msg.Uqid, gm)
-	if err != nil || len(queryInfo) == 0 {
-		return true // Continue broadcasting
-	}
-
-	stateStr := fmt.Sprintf("%v", queryInfo[0][7]) // Assert type to string
-	state, ok := common.QueryState_State_value[stateStr]
-	if !ok {
-		logger.Warnf("Unknown state %s for query %s", stateStr, msg.Uqid)
-		return false
-	}
-	return 	state != int32(common.QueryState_COMPLETED) && 
-			state != int32(common.QueryState_SENT_BACK) && 
-			msg.Ttl > 0 // Continue broadcasting
-}
-
-
-// Function to broadcast the query to connected peers. This function also filters out the originating and parent peers because they are already queried
+// IDSS function to broadcast the query to connected peers. This function also filters out the originating and parent peers because they are already queried
 func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, config Config, localResults [][]interface{}, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
 
 	logger.Infof("Checking if to continue broadcasting query: %s", msg.Uqid)
 	if shouldContinueBroadcastingQuery(msg, gm) {
 		logger.Infof("Broadcasting query in peer: %v, Parent peer %v, TTL: %v ", kadDHT.Host().ID(), parentStream.Conn().RemotePeer(), msg.Ttl)
+
 		//routingDiscovery := routing.NewRoutingDiscovery(kadDHT)
 		var mergedResults [][]interface{} // To hold the merged results from all peers
-		
 		connectedPeers := kadDHT.Host().Network().Peers() // Connected peers are the peers in the routing table
 		closestPeers := kadDHT.RoutingTable().NearestPeers(kbucket.ConvertPeerID(kadDHT.Host().ID()), 10) // Closest peers to the current peer
 		logger.Infof("Closest peers to %s: %v", kadDHT.Host().ID(), closestPeers)
@@ -729,38 +773,16 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 		// on all eligible peers without waiting for one to complete
 		var localWg sync.WaitGroup
 		remoteResultsChan := make(chan [][]interface{}, len(eligiblePeers)) // enough to accomodate involved peers
+		duration := time.Duration(msg.Ttl) * time.Second // Duration follows the TTL
+		responseTimeout := time.After(duration)
 
 		// Broadcast the query, and wait for results from the peers that have received a query from you
 		for _, peerID := range eligiblePeers {
 			localWg.Add(1)
-
-
 			go func(p peer.ID){ // Separate goroutine for each peer
 				defer localWg.Done()
 
-				// fetct current ttl from the graph database
-				queryInfo, err := fetchQueryDetails(msg.Uqid, gm)
-				if err != nil {
-					logger.Errorf("Error fetching query info: %v", err)
-					return
-				}
-
-				if queryInfo == nil {
-					logger.Warnf("Query %s not found in the graph database", msg.Uqid)
-					return
-				}
-
-				// Extract the TTL from the query info
-				ttl, ok := queryInfo["Ttl"].(float32)
-				if !ok {
-					logger.Warnf("TTL not found for query %s", msg.Uqid)
-					return
-				}
-
-				msg.Ttl = ttl // Update the TTL in the message
-
-				duration := time.Duration(msg.Ttl) * time.Second // Duration follows the TTL
-				responseTimeout := time.After(duration)
+				
 				streamCtx, streamCancel := context.WithTimeout(context.Background(), duration) // Stream life span is the TTL
 				defer streamCancel()
 
@@ -827,46 +849,81 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 			}(peerID)
 		}
 
-		
-		// Now adjust the TTL to account for the time taken to broadcast the query
-		// Update TTL in the graph database
-		updateTTL(msg, gm)
-		//msg.Ttl = msg.Ttl * 0.75
-		//logger.Infof("Query UQI: %s, TTL after broadcast: %f", msg.Uqid, msg.Ttl)
-
 		// Waits for all goroutines (all eligible peers) to complete. 
 		// To ensure that we do not bock indefinitely, TTL and timeout are used
 		go func(){
 			localWg.Wait() 
 			close(remoteResultsChan)
-			logger.Infof("All remote results collected")
+			logger.Infof("All remote results collected in an intermediate peer")
 		}()
 
-		logger.Info("Overlay peers peer results collected, start merging...")
+		logger.Info("Overlay peers peer results collected, start merging...") 
 
-		// Collect al remote results
-		for remoteResult := range remoteResultsChan {
-			mergedResults = append(mergedResults, remoteResult...) 
+		for {
+			select {
+				case result, ok := <-remoteResultsChan:
+					if !ok {
+						mergedResults = append(mergedResults, result...)
+						goto MergedResults
+					}
+					mergedResults = append(mergedResults, result...)
+				case <-responseTimeout:
+					logger.Warn("Timeout merging results, stepping to next phase")
+					goto MergedResults
+			}
 		}
-		mergedResults = mergeTwoResults(localResults, mergedResults) 
-		logger.Infof("DONE merging local and remote results")
+		MergedResults:
+		mergedResults = mergeTwoResults(localResults, mergedResults) // Merge local and remote results
 
-		// extract originator peer from the query message
-		originatingPeerID, err := peer.Decode(msg.GetOriginator())
-		if err != nil {
-			logger.Errorf("Error decoding originating peer ID: %v", err)
-			return
-		}
+		parentPeerID := parentStream.Conn().RemotePeer() // Parent peer ID
 
-		if kadDHT.Host().ID() == originatingPeerID { // It has to be an originating peer for state to be completed
-			logger.Infof("This is the originating peer %s. Merging results locally", originatingPeerID)
-			
+		// get a complete host multiaddress
+		peerAddr := kadDHT.Host().Addrs()[0].Encapsulate(multiaddr.StringCast("/p2p/" + kadDHT.Host().ID().String()))
+		
+		// Check if current peer is an originator or an intermediate peer
+		logger.Infof("Comparing originator %s with current peer %s", msg.Originator, peerAddr)
+		if msg.Originator != peerAddr.String() {
+			insideWg := sync.WaitGroup{}
+			insideWg.Add(1)
+			go func() {
+				defer insideWg.Done()
+
+				// Update the query state to sent back
+				msg.State = &common.QueryState{State: common.QueryState_SENT_BACK}
+				updateQueryState(msg, common.QueryState_SENT_BACK, gm)
+			}()
+
+			insideWg.Add(1)
+			go func() {
+				defer insideWg.Done()
+				logger.Infof("This is an intermediate peer %s. Sending results to parent peer %s", kadDHT.Host().ID(), parentPeerID)
+				sendMergedResult(parentStream, parentPeerID, mergedResults, kadDHT) 
+			}()
+
+			insideWg.Wait()
+		}else{
+			logger.Infof("This is the originator peer %s. Sending results to client", kadDHT.Host().ID())
+			// Fetch TTL from the graph database
+			queryDetails, err := fetchQueryDetails(msg.Uqid, gm)
+			if err != nil {
+				logger.Errorf("Error fetching query details: %v", err)
+			}
+
+			// Also get client peer ID from the graph database
+			if clientPeerID, ok := queryDetails["Sender Address"].(string); ok {
+				msg.Sender = clientPeerID
+			} else {
+				logger.Warn("Client peer ID not found or it is not a string")
+			}
+
+			// merge the local results with the merged results
+			mergedResults = mergeTwoResults(localResults, mergedResults)
+
 			// Update the query state to completed
 			msg.State = &common.QueryState{State: common.QueryState_COMPLETED}
-			//storeQueryInfo(msg, gm, originatingPeerID.String())
 			updateQueryState(msg, common.QueryState_COMPLETED, gm)
 
-			// Send the results to the client
+			// Send the merged results to the client
 			clientPeerID, err := peer.Decode(msg.Sender)
 			if err != nil {
 				logger.Errorf("Error decoding client peer ID: %v", err)
@@ -874,18 +931,6 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 			}
 
 			sendMergedResult(parentStream, clientPeerID, mergedResults, kadDHT)
-		}else{
-
-			parentPeerID := parentStream.Conn().RemotePeer() // Parent peer ID
-
-			// Update the query state to sent back
-			msg.State = &common.QueryState{State: common.QueryState_SENT_BACK}
-			//storeQueryInfo(msg, gm, parentPeerID.String())
-			updateQueryState(msg, common.QueryState_SENT_BACK, gm)
-
-			logger.Infof("This is an intermediate peer %s. Merging results to send to parent peer %s", kadDHT.Host().ID(), parentPeerID)
-			// If time has elapsed and remote peer is the client then send the result to the client
-			sendMergedResult(parentStream, parentPeerID, mergedResults, kadDHT) 
 		}
 	}else{
 		logger.Infof("Query %s will not be broadcast further due to state or TTL", msg.Uqid)
@@ -896,6 +941,49 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
         }
 		return
 	}
+}
+
+/* func fetchLocalResults(s string, gm *graph.Manager) ([][]interface{}, error) {
+	statement := fmt.Sprintf("get Results where query_key = '%s'", s)
+	results, err := eql.RunQuery("fetchLocalResults", "main", statement, gm)
+	if err != nil {
+		logger.Errorf("Error fetching local results: %v", err)
+		return nil, err
+	}
+	return results.Rows(), nil
+} */
+
+// Function to decide on to continue or stop broadcasting the query
+func shouldContinueBroadcastingQuery(msg *common.QueryMessage, gm *graph.Manager) bool {
+	queryInfo, err := checkDuplicateQuery(msg.Uqid, gm)
+	if err != nil || len(queryInfo) == 0 {
+		return true // Continue broadcasting
+	}
+
+	stateStr := fmt.Sprintf("%v", queryInfo[0][7]) // Assert type to string
+	state, ok := common.QueryState_State_value[stateStr]
+	if !ok {
+		logger.Warnf("Unknown state %s for query %s", stateStr, msg.Uqid)
+		return false
+	}
+
+	// Fetch TTL from the graph database
+	queryDetails, err := fetchQueryDetails(msg.Uqid, gm)
+	if err != nil {
+		logger.Errorf("Error fetching query details: %v", err)
+		return false
+	}
+
+	if ttl, ok := queryDetails["Ttl"].(float32); ok {
+		msg.Ttl = ttl
+	} else {
+		logger.Warn("TTL not found or it is not a float")
+		return false
+	}
+
+	return 	state != int32(common.QueryState_COMPLETED) && 
+			state != int32(common.QueryState_SENT_BACK) && 
+			msg.Ttl > 0 // Continue broadcasting
 }
 
 // Function to update the TTL in the graph database
@@ -929,7 +1017,7 @@ func updateTTL(msg *common.QueryMessage, gm *graph.Manager) error {
 		logger.Warn("TTL not found or it is not a float")
 	}
 
-	logger.Infof("TTL updated to: %f", msg.Ttl)
+	logger.Infof("TTL updated to: %f", msg.Ttl) 
 	return nil
 }
 

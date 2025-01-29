@@ -122,7 +122,7 @@ func main() {
 	}
 	defer host.Close()
 
-	// Print the host's listening addresses
+	// Print the client's listening addresses
 	for _, addr := range host.Addrs() {
 		completePeerAddr := addr.Encapsulate(multiaddr.StringCast("/p2p/" + host.ID().String()))
 		log.Info("Client listening on: \n", completePeerAddr)
@@ -170,7 +170,7 @@ func main() {
 
 	// Loop to continouesly accept queries from the user or exit command
 	for {
-		fmt.Println("Enter your query and TTL or 'exit' to quit: \n-> Use comma to separate query and TTL")
+		fmt.Println("\n\nEnter your query and TTL or 'exit' to quit: \nUse comma to separate query and TTL")
 		fmt.Print("-> ")
 		input, err := reader.ReadString('\n')
 		if err != nil {
@@ -207,9 +207,9 @@ func main() {
 			Query:      query,
 			Ttl:        float32(ttl),
 			Timestamp: 	timestamppb.New(time.Now()).String(),
-			Originator: addrInfo.ID.String(),
+			Originator: serverPeer.String(), // store the address to which the client is connecting
 			Type:       common.MessageType_QUERY,
-			Sender:     host.ID().String(), // if used, it has to be updated in each hop at the server to allow results merging, or else, rely on streams.
+			Sender:     host.ID().String(), // This has to be updated in each hop at the server to allow results merging, or else, rely on streams.
 		}
 
 		// Open stream
@@ -235,7 +235,8 @@ func main() {
 			continue
 		}
 
-		log.Info("Query sent to server.")
+		log.Infoln("Query sent to server.")
+		log.Infoln("UQI: ", uqi)
 
 		// Read and print response using Protobuf
 		responseBytes, err := readDelimitedMessage(stream)
@@ -261,6 +262,7 @@ func main() {
 		if response.Error != "" {
 			log.Error("Error in response:", response.Error)
 		} else {
+			log.Infoln("\n----------- Response -----------")
 			log.Infof("Got %d records", response.RecordCount)
 			log.Infof("Time spent: %s", timeTaken)
 			// Create the XML structure

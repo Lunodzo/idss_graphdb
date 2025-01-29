@@ -1,3 +1,9 @@
+/*
+This file contains functions to generate fake data and initialise the graph 
+database by loading the generated data into the graph database. It also contains 
+a function to initialise the Query Manager graph node.
+*/
+
 package main
 
 import (
@@ -6,13 +12,13 @@ import (
 	"os/exec"
 	"time"
 
-	eliasdb "github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph"
 	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
 // Function to generate fake data and initialize the graph database by loading the generated data into the graph database
-func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage.Storage, graphManager *eliasdb.Manager) error {
+func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage.Storage, graphManager *graph.Manager) error {
 	// Execute python script to generate fake data and store it in the peer-specific data file
 	err := generateData(dataFilePath)
 	if err != nil {
@@ -30,11 +36,12 @@ func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage
 	return LoadGraphData(string(myData), dbPath, graphDB, graphManager)
 }
 
+// Function to generate fake data using a python script
 func generateData(dataFilePath string) error {
 	cmd := exec.Command("python3", "generate_data.py", dataFilePath)
 	err := cmd.Run()
 	if err != nil {
-		logger.Fatalf("Command execution failed: %v", err)
+		logger.Fatalf("Data generation command execution failed: %v", err)
 		return err
 	}
 	return nil
@@ -42,8 +49,8 @@ func generateData(dataFilePath string) error {
 
 
 // Function to load graph data into the graph database using a JSON string of nodes and edges and graph transaction
-func LoadGraphData(dataa string, dbPath string, graphDB graphstorage.Storage, graphManager *eliasdb.Manager) error {
-	trans := eliasdb.NewGraphTrans(graphManager)
+func LoadGraphData(dataa string, dbPath string, graphDB graphstorage.Storage, graphManager *graph.Manager) error {
+	trans := graph.NewGraphTrans(graphManager)
 
 	// Unmarshal the JSON data
 	var myData map[string]interface{}
@@ -83,10 +90,10 @@ func LoadGraphData(dataa string, dbPath string, graphDB graphstorage.Storage, gr
 }
 
 // Function to initialise the Query Manager graph node
-func QueryManager_init(GRAPH_MANAGER *eliasdb.Manager) {
+func QueryManager_init(GRAPH_MANAGER *graph.Manager) {
 	logger.Info("Creating the Query Manager node...")
 
-	trans := eliasdb.NewGraphTrans(GRAPH_MANAGER)
+	trans := graph.NewGraphTrans(GRAPH_MANAGER)
 
 	// Create the query node
 	queryNode := data.NewGraphNode()
