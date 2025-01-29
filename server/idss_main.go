@@ -514,13 +514,6 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 		return
 	}
 
-	if ttl, ok := queryDetails["Ttl"].(float32); ok {
-		msg.Ttl = ttl
-	} else {
-		logger.Warn("TTL not found or it is not a float")
-		return
-	}
-
 	if originator, ok := queryDetails["Originator"]; ok {
 		msg.Originator = originator.(string)
 	} else {
@@ -597,11 +590,6 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 		logger.Errorf("Error updating sender address: %v", err)
 	}
 	msg.Sender = kadDHT.Host().ID().String() // So that the overlay peers identify this as parent peer
-
-	// Update TTL in the graph database and the message
-	if err := updateTTL(msg, gm); err != nil {
-		logger.Errorf("Error updating TTL: %v", err)
-	}
 
 	// Run broadcastquery in a goroutine
 	wg.Add(1)
@@ -795,6 +783,12 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 				}
 				defer stream.Close()
 
+				// Update TTL in the graph database and the message
+				if err := updateTTL(msg, gm); err != nil {
+					logger.Errorf("Error updating TTL: %v", err)
+				}
+				logger.Infof("Broadcasting query with TTL: %f", msg.Ttl)
+
 				// Change msg TYPE to QUERY
 				msg.Type = common.MessageType_QUERY
 				msgBytes, err := proto.Marshal(msg)
@@ -857,18 +851,18 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 		go func(){
 			localWg.Wait() 
 			close(remoteResultsChan)
-			logger.Infof("All remote results collected in an intermediate peer")
+			logger.Infof("All remote results collected in an intermediate peer, now merging remote with local results")
 		}()
-
-		logger.Info("Overlay peers peer results collected, start merging...") 
 
 		for {
 			select {
 				case result, ok := <-remoteResultsChan:
 					if !ok {
+						logger.Warn("No more remote results")
 						mergedResults = append(mergedResults, result...)
 						goto MergedResults
 					}
+					logger.Infof("Merging %d results", len(result))
 					mergedResults = append(mergedResults, result...)
 				case <-responseTimeout:
 					logger.Warn("Timeout merging results, stepping to next phase")
@@ -993,11 +987,12 @@ func shouldContinueBroadcastingQuery(msg *common.QueryMessage, gm *graph.Manager
 
 // Function to update the TTL in the graph database
 func updateTTL(msg *common.QueryMessage, gm *graph.Manager) error {
+	newTTL := msg.Ttl * 0.75 // Reduce the TTL by 25%
 	trans := graph.NewGraphTrans(gm)
 	queryNode := data.NewGraphNode()
 	queryNode.SetAttr("key", msg.Uqid)
 	queryNode.SetAttr("kind", "Query")
-	queryNode.SetAttr("ttl", msg.Ttl * 0.75) // Reduce the TTL by 25%
+	queryNode.SetAttr("ttl", float64(newTTL)) 
 
 	// Update only the TTL attribute of existing query node
 	if err := trans.UpdateNode("main", queryNode); err != nil {
@@ -1010,17 +1005,7 @@ func updateTTL(msg *common.QueryMessage, gm *graph.Manager) error {
 		return err
 	}
 
-	// get the updated TTL from the graph database
-	queryDetails, err := fetchQueryDetails(msg.Uqid, gm)
-	if err != nil {
-		logger.Errorf("Error fetching query details: %v", err)
-	}
-
-	if ttl, ok := queryDetails["Ttl"].(float32); ok {
-		msg.Ttl = ttl
-	} else {
-		logger.Warn("TTL not found or it is not a float")
-	}
+	msg.Ttl = float32(newTTL)
 
 	logger.Infof("TTL updated to: %f", msg.Ttl) 
 	return nil
