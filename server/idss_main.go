@@ -453,7 +453,7 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 }
 
 // IDSS function to support basic functions in querying the graph database
-/* func runAggregatedQuery(query string, aggFunc string, threshold float64, peer peer.ID, gm *graph.Manager) (float64, error) {
+func runAggregatedQuery(query string, aggFunc string, threshold float64, peer peer.ID, gm *graph.Manager) (float64, error) {
     // Example: get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000
     // Parse the query to extract the part for the aggregation and the threshold condition
     
@@ -489,7 +489,7 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
     }
 
     return aggResult, nil
-} */
+}
 
 // Function to execute the query and broadcast it to connected peers (peers in an overlay network)
 func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, config Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
@@ -738,25 +738,30 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 
 	logger.Infof("Checking if to continue broadcasting query: %s", msg.Uqid)
 	if shouldContinueBroadcastingQuery(msg, gm) {
-		logger.Infof("Broadcasting query in peer: %v, Parent peer %v, TTL: %v ", kadDHT.Host().ID(), parentStream.Conn().RemotePeer(), msg.Ttl)
-
-		//routingDiscovery := routing.NewRoutingDiscovery(kadDHT)
 		var mergedResults [][]interface{} // To hold the merged results from all peers
+		targetProtocol := protocol.ID(config.ProtocolID) // Protocol ID for the stream
 		connectedPeers := kadDHT.Host().Network().Peers() // Connected peers are the peers in the routing table
-		closestPeers := kadDHT.RoutingTable().NearestPeers(kbucket.ConvertPeerID(kadDHT.Host().ID()), 10) // Closest peers to the current peer
+		closestPeers := kadDHT.RoutingTable().NearestPeers(kbucket.ConvertPeerID(kadDHT.Host().ID()), 10000) // Closest peers to the current peer
 		logger.Infof("Closest peers to %s: %v", kadDHT.Host().ID(), closestPeers)
 		var eligiblePeers []peer.ID
 
 		// Filter peers to exclude the originating peer and the parent stream peer. Because we dont want to query them again
+		// Ensure that we don't query self, the parent stream peer or the peer that sent the query
 		for _, peerID := range connectedPeers {
-			if peerID != kadDHT.Host().ID() && (parentStream == nil || parentStream.Conn().RemotePeer() != peerID) {
-				// Ensure that we don't query self, the parent stream peer or the peer that sent the query
+			if 	peerID != kadDHT.Host().ID() && 
+				(parentStream == nil || parentStream.Conn().RemotePeer() != peerID) {
+				// Check if the peer is in the closest peers list then add to eligible peers
 				eligiblePeers = append(eligiblePeers, peerID) // Check if there is an active connection to the peer
+				/* if len(eligiblePeers) >= config.TopKPeers {
+					break
+				} */
 			}
 		}
 
-		if len(eligiblePeers) <= 0 { // Check if there are any eligible peers to broadcast to
-			logger.Warn("No eligible peers for broadcast")
+		if len(eligiblePeers) > 0 {
+			logger.Infof("Broadcasting query to %d peers", len(eligiblePeers))
+		} else {
+			logger.Warn("No eligible peers to broadcast to")
 			return
 		}
 
@@ -777,7 +782,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 				streamCtx, streamCancel := context.WithTimeout(context.Background(), duration) // Stream life span is the TTL
 				defer streamCancel()
 
-				stream, err := kadDHT.Host().NewStream(streamCtx, p, protocol.ID(config.ProtocolID))
+				stream, err := kadDHT.Host().NewStream(streamCtx, p, targetProtocol)
 				if err != nil {
 					return
 				}
@@ -823,7 +828,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 						return ch
 					}():
 						if resultsByte == nil {
-							logger.Warnf("Error reading remote results from peer %s", p)
+							logger.Warnf("Error reading remote results from peer %s, %v", p, err)
 							return
 						}
 
@@ -851,7 +856,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 		go func(){
 			localWg.Wait() 
 			close(remoteResultsChan)
-			logger.Infof("All remote results collected in an intermediate peer, now merging remote with local results")
+			logger.Infof("All remote results collected, now merging remote with local results")
 		}()
 
 		for {
@@ -941,16 +946,6 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 		return
 	}
 }
-
-/* func fetchLocalResults(s string, gm *graph.Manager) ([][]interface{}, error) {
-	statement := fmt.Sprintf("get Results where query_key = '%s'", s)
-	results, err := eql.RunQuery("fetchLocalResults", "main", statement, gm)
-	if err != nil {
-		logger.Errorf("Error fetching local results: %v", err)
-		return nil, err
-	}
-	return results.Rows(), nil
-} */
 
 // Function to decide on to continue or stop broadcasting the query
 func shouldContinueBroadcastingQuery(msg *common.QueryMessage, gm *graph.Manager) bool {
