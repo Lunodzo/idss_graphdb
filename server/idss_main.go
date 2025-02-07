@@ -1,61 +1,6 @@
 /*
-HOW TO RUN
-1. Run the server(s) using the command: go run idss_main.go -f <filename> (or user script start_peers.sh <number>). <number> represents number of peers you want to simulate
-2. Run the client using the command: go run idss_client.go -s <server_multiaddress>
-3. Enter your query or 'exit' to quit.
-4. The client will send the query to the server and print the response.
-5. The client will continue to send queries until the user types 'exit' or forcefully quiets.
+@2023, University of Salento, Italy
 
-****************************************************************************************
-SAMPLE QUERIES get and lookup
-TRAVERSAL SYNTAX:
-<source role>:<relationship kind>:<destination role>:<destination kind>
-
-SAMPLE QUERIES
->> get Consumption traverse ::: where name = "Alice" (WORKING)
->> lookup Client '3' traverse ::: (WORKING)
->> get Client traverse owner:belongs_to:usage:Consumption (WORKING)
-	NOTE: This will return all the clients and their consumption records
-
-
-COUNT FUNCTION IN EQL
->> get Client where @count(owner:belongs_to:usage:Consumption) > 2 (WORKING)
->> get Client where @count(owner:belongs_to:usage:Consumption) > 4 (WORKING)
-		NOTE: All clients that have more than 4 connections will be returned
-				They have more 4 consumption nodes each
->> get Consumption where @count(:::) > 0 (WORKING)
-		NOTE: Returns all the nodes in the graph who are connected to each other
-		and its count is greater than 0, so any connected node will be returned
-
->> get Client where Power > 150 and @count(owner:belongs_to:usage:Consumption) > 5
-		NOTE: Retrieve Clients with more than 5 Consumption Records with Power Greater than 150
-
->> get Client traverse owner:belongs_to:usage:Consumption where measurement >= 300 and measurement <= 800
-		NOTE: Retrieve Clients with a Specific Consumption Measurement Range
-
->> get Client where contract_number >= 200 and contract_number <= 500 and @count(owner:belongs_to:usage:Consumption where measurement > 600) >= 3
-		NOTE: Retrieve Clients with at Least 3 High-Power Consumptions and Specific Contract Numbers
-
->> get Client where @count(::belongs_to:usage:Consumption) > 1 and @count(owner:belongs_to::Client) > 1
-		NOTE: Clients Who Have at Least 2 Shared Consumption Records with Other Clients
-
->> get Client where @count(owner:belongs_to:usage:Consumption where measurement > 700) > 0 and @count(owner:belongs_to:usage:Consumption where measurement < 300) > 0
-		NOTE: Clients Who Have Mixed High and Low Power Consumption Records
-
->> get Client traverse owner:belongs_to:usage:Consumption where measurement >= 400 and measurement <= 900 traverse usage:belongs_to:owner:Client
-		NOTE:  Find Clients with Specific Consumption Patterns and Shared Edges 
-
->> //TODO: Add support for more complex queries and functions in EQL as follows (adapt some functions supported in SQL of relational databases)
->> get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000
->> get Client where @avg(owner:belongs_to:usage:Consumption where measurement > 500) > 700
->> get Client where @min(owner:belongs_to:usage:Consumption where measurement > 500) > 500
->> get Client where @max(owner:belongs_to:usage:Consumption where measurement > 500) > 1000
->> get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000 and @avg(owner:belongs_to:usage:Consumption where measurement > 500) > 700
->> get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000 and @avg(owner:belongs_to:usage:Consumption where measurement > 500) > 700 and @min(owner:belongs_to:usage:Consumption where measurement > 500) > 500
->> get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000 and @avg(owner:belongs_to:usage:Consumption where measurement > 500) > 700 and @min(owner:belongs_to:usage:Consumption where measurement > 500) > 500 and @max(owner:belongs_to:usage:Consumption where measurement > 500) > 1000
->> get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000 and @avg(owner:belongs_to:usage:Consumption where measurement > 500) > 700 and @min(owner:belongs_to:usage:Consumption where measurement > 500) > 500 and @max(owner:belongs_to:usage:Consumption where measurement > 500) > 1000 and @count(owner:belongs_to:usage:Consumption where measurement > 500) > 5
-
-****************************************************************************************
 */
 
 package main
@@ -91,6 +36,7 @@ import (
 	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
 
+	"github.com/libp2p/go-libp2p-kbucket"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
