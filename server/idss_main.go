@@ -10,6 +10,9 @@ import (
 	"context"
 	"net/http"
 	_ "net/http/pprof"
+	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 
 	"encoding/binary"
@@ -36,7 +39,6 @@ import (
 	"github.com/krotik/eliasdb/graph/data"
 	"github.com/krotik/eliasdb/graph/graphstorage"
 
-	"github.com/libp2p/go-libp2p-kbucket"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
@@ -44,7 +46,6 @@ import (
 	"github.com/libp2p/go-libp2p/core/protocol"
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	"github.com/libp2p/go-libp2p/p2p/discovery/util"
-	"github.com/libp2p/go-libp2p-kbucket"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
 
 	"github.com/multiformats/go-multiaddr"
@@ -57,16 +58,23 @@ Constants
 **********
 */
 const (
-	DB_PATH = "../server/idss_graph_db"
-	//TODO: Check what else can be added here
+	DB_PATH = "../server/idss_graph_db" // Path to the graph database
 )
 
 var (
 	activeConnections int64
 	logger            = log.Logger("IDSS")
-	mu sync.Mutex
 	msg common.QueryMessage 
 )
+
+type AggregateInfo struct {
+    Function    string
+    Traversal   string
+    Filter      string
+    Comparison  string
+    Attribute   string
+    Threshold   float64
+}
 
 // Pprof for profiling and resource monitoring
 func init() {
@@ -386,55 +394,227 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	}
 
 	if len(duplicateQuery) > 0 {
-		//logger.Warnf("Duplicate query received on Peer: %s %s (UQI: %s)", kadDHT.Host().ID(), msg.Query, msg.Uqid) // for debugging
 		return
 	}
 	logger.Infof("This is a new query on this peer")
 	logger.Infof("\nReceiver %s \nUQI: %s\nTTL: %f \nFrom: %s", kadDHT.Host().ID(), msg.Uqid, msg.Ttl, remotePeerID) // for debugging
 	msg.State = &common.QueryState{State: common.QueryState_QUEUED} // Set the query state to QUEUED
 	storeQueryInfo(msg, gm, remotePeerID) // Store the query info in the graph database
-	
+
+	// Parse the query string to extract the aggregates
+	aggregates := parseAggregates(msg.Query)
+    if len(aggregates) > 0 {
+        handleAggregateQuery(conn, msg, config, gm, kadDHT, aggregates[0])
+        return
+    }
+
 	// Execute and broadcast the query
 	executeAndBroadcastQuery(conn, msg, config, gm, kadDHT)
 }
 
-// IDSS function to support basic functions in querying the graph database
-func runAggregatedQuery(query string, aggFunc string, threshold float64, peer peer.ID, gm *graph.Manager) (float64, error) {
-    // Example: get Client where @sum(owner:belongs_to:usage:Consumption where measurement > 500) > 1000
-    // Parse the query to extract the part for the aggregation and the threshold condition
-    
-    result, _, err := runQuery(query, peer, gm)
+// Function to parse the query string and extract the aggregates
+func parseAggregates(query string) []AggregateInfo {
+    var aggregates []AggregateInfo
+    re := regexp.MustCompile(
+        `@(sum|avg|max|min)\(([^\)]+)\)\s*(>|<|>=|<=|==|!=)\s*([\d\.]+)`,
+    )
+
+    matches := re.FindAllStringSubmatch(query, -1)
+    for _, m := range matches {
+        if len(m) < 5 {
+            continue
+        }
+
+        parts := strings.SplitN(m[2], " where ", 2)
+        traversal := parts[0]
+        filter := ""
+        if len(parts) > 1 {
+            filter = parts[1]
+        }
+
+        threshold, _ := strconv.ParseFloat(m[4], 64)
+        aggregates = append(aggregates, AggregateInfo{
+            Function:   m[1],
+            Traversal:  traversal,
+            Filter:     filter,
+            Comparison: m[3],
+            Attribute:  "measurement", // Adjust based on your schema
+            Threshold:  threshold,
+        })
+    }
+    return aggregates
+}
+
+// Function to handle aggregate queries
+func handleAggregateQuery(conn network.Stream, msg *common.QueryMessage, config Config, gm *graph.Manager, kadDHT *dht.IpfsDHT, agg AggregateInfo) {
+    // Execute local aggregate
+	localSum, localCount, err := runAggregatedQuery(agg, gm, kadDHT)
     if err != nil {
-        return 0, err
+        logger.Errorf("Aggregate query failed: %v", err)
+        return
     }
 
-    var aggResult float64
-    for _, row := range result {
-        // Assuming measurement is the column we're aggregating over
-        measurement, ok := row[0].(float64) // Adjust index based on actual result structure
-        if ok && measurement > threshold {
-            switch aggFunc {
-            case "sum":
-                aggResult += measurement
-            case "avg":
-                aggResult += measurement // We'll divide by count at the end
-            case "min":
-                if aggResult == 0 || measurement < aggResult {
-                    aggResult = measurement
-                }
-            case "max":
-                if measurement > aggResult {
-                    aggResult = measurement
-                }
+    // Broadcast and collect remote results
+    remoteResults := broadcastAggregateQuery(msg, conn, config, gm, kadDHT)
+    
+    // Merge results
+    finalValue := mergeAggregateResults(agg, localSum, localCount, remoteResults)
+    
+    // Apply comparison
+    if !applyAggregateCondition(finalValue, agg.Comparison, agg.Threshold) {
+        logger.Info("Aggregate condition not met")
+        return
+    }
+
+    // Prepare and send final result
+    finalRows := [][]interface{}{{finalValue}}
+    sendMergedResult(conn, conn.Conn().RemotePeer(), finalRows, kadDHT)
+}
+
+func runAggregatedQuery(agg AggregateInfo, gm *graph.Manager, kadDHT *dht.IpfsDHT) (sum float64, count float64, err error) {
+    // Transform query based on aggregate type
+    baseQuery := fmt.Sprintf("get %s traverse %s where %s",
+        strings.Split(agg.Traversal, ":")[0],
+        agg.Traversal,
+        agg.Filter,
+    )
+
+    switch agg.Function {
+    case "sum":
+		res, _, err := runQuery(baseQuery+" show sum("+agg.Attribute+")", kadDHT.Host().ID(), gm)
+        if err != nil || len(res) == 0 {
+            return 0, 0, err
+        }
+        return res[0][0].(float64), 0, nil
+
+    case "avg":
+        sumRes, _, err := runQuery(baseQuery+" show sum("+agg.Attribute+")", kadDHT.Host().ID(), gm)
+        if err != nil || len(sumRes) == 0 {
+            return 0, 0, err
+        }
+        countRes, _, err := runQuery(baseQuery+" show count()", kadDHT.Host().ID(), gm)
+        if err != nil || len(countRes) == 0 {
+            return 0, 0, err
+        }
+        return sumRes[0][0].(float64), countRes[0][0].(float64), nil
+
+    case "max":
+        res, _, err := runQuery(baseQuery+" show max("+agg.Attribute+")", kadDHT.Host().ID(), gm)
+        if err != nil || len(res) == 0 {
+            return 0, 0, err
+        }
+        return res[0][0].(float64), 0, nil
+
+    case "min":
+        res, _, err := runQuery(baseQuery+" show min("+agg.Attribute+")", kadDHT.Host().ID(), gm)
+        if err != nil || len(res) == 0 {
+            return 0, 0, err
+        }
+        return res[0][0].(float64), 0, nil
+
+    default:
+        return 0, 0, fmt.Errorf("unsupported aggregate function")
+    }
+}
+
+// Function to broadcast the aggregate query to connected peers
+func broadcastAggregateQuery(msg *common.QueryMessage, parentStream network.Stream, config Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) [][2]float64 {
+    var remoteResults [][2]float64
+    var mu sync.Mutex
+    var wg sync.WaitGroup
+
+    eligiblePeers := getEligiblePeers(kadDHT, parentStream)
+    
+    for _, peerID := range eligiblePeers {
+        wg.Add(1)
+        go func(p peer.ID) {
+            defer wg.Done()
+            
+            // Stream creation
+			streamCtx, streamCancel := context.WithTimeout(context.Background(), time.Duration(msg.Ttl)) // Stream life span is the TTL
+			defer streamCancel()
+
+			stream, err := kadDHT.Host().NewStream(streamCtx, p, protocol.ID(config.ProtocolID))
+			if err != nil {
+				return
+			}
+			defer stream.Close()
+
+			// Update TTL in the graph database and the message
+			if err := updateTTL(msg, gm); err != nil {
+				logger.Errorf("Error updating TTL: %v", err)
+			}
+			logger.Infof("Broadcasting query with TTL: %f", msg.Ttl)
+            
+            // Send query and receive response
+            sum, count, err := receiveAggregateResponse(stream)
+            if err != nil {
+                return
             }
+
+            mu.Lock()
+            remoteResults = append(remoteResults, [2]float64{sum, count})
+            mu.Unlock()
+        }(peerID)
+    }
+    
+    wg.Wait()
+    return remoteResults
+}
+
+func receiveAggregateResponse(stream network.Stream) (float64, float64, error) {
+    defer stream.Close()
+
+    // Read response message
+    msgBytes, err := readDelimitedMessage(stream, context.Background())
+    if err != nil {
+        return 0, 0, fmt.Errorf("error reading response: %v", err)
+    }
+
+    // Unmarshal response into QueryMessage
+    var response common.QueryMessage
+    err = proto.Unmarshal(msgBytes, &response)
+    if err != nil {
+        return 0, 0, fmt.Errorf("error unmarshalling response: %v", err)
+    }
+
+    // Ensure the received message is of type RESULT
+    if response.Type != common.MessageType_RESULT {
+        return 0, 0, fmt.Errorf("unexpected message type: %v", response.Type)
+    }
+
+    // Extract sum and count values from the response
+    if len(response.Result) < 1 || len(response.Result[0].Data) < 1 {
+        return 0, 0, fmt.Errorf("received empty aggregate result")
+    }
+
+    var sum, count float64
+    sum, err = strconv.ParseFloat(response.Result[0].Data[0], 64)
+    if err != nil {
+        return 0, 0, fmt.Errorf("error parsing sum: %v", err)
+    }
+
+    // Check if the response includes a count value (needed for AVG queries)
+    if len(response.Result[0].Data) > 1 {
+        count, err = strconv.ParseFloat(response.Result[0].Data[1], 64)
+        if err != nil {
+            return 0, 0, fmt.Errorf("error parsing count: %v", err)
         }
     }
 
-    if aggFunc == "avg" && len(result) > 0 {
-        aggResult /= float64(len(result))
-    }
+    return sum, count, nil
+}
 
-    return aggResult, nil
+
+func getEligiblePeers(kadDHT *dht.IpfsDHT, parentStream network.Stream) []peer.ID {
+    var eligible []peer.ID
+    for _, p := range kadDHT.RoutingTable().ListPeers() {
+        if p != kadDHT.Host().ID() && 
+            (parentStream == nil || p != parentStream.Conn().RemotePeer()) {
+            eligible = append(eligible, p)
+        }
+    }
+    return eligible
 }
 
 // Function to execute the query and broadcast it to connected peers (peers in an overlay network)
@@ -554,6 +734,75 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 			logger.Errorf("Error closing stream: %v", err)
 		}
 	}()
+}
+
+// Support for WITH operations
+func parseWithClauses(query string) []string {
+    re := regexp.MustCompile(`(?i)\bwith\s+([^;]*)`)
+    matches := re.FindStringSubmatch(query)
+    if len(matches) < 2 {
+        return nil
+    }
+    return strings.Split(matches[1], ",")
+}
+
+
+func applyWithClauses(results [][]interface{}, clauses []string) [][]interface{} {
+    for _, clause := range clauses {
+        clause = strings.TrimSpace(clause)
+        if strings.HasPrefix(clause, "ordering(") {
+            applyOrdering(results, clause)
+        }
+    }
+    return results
+}
+
+func applyOrdering(results [][]interface{}, clause string) {
+    if len(results) < 2 {
+        return
+    }
+
+    re := regexp.MustCompile(`ordering\((ascending|descending)\s+([^)]+)`)
+    matches := re.FindStringSubmatch(clause)
+    if len(matches) < 3 {
+        return
+    }
+
+	orderType := matches[1]
+    colName := matches[2]
+    //header := results[0]
+    var colIndex int = -1
+
+	// Assume the first row is the header
+	headers := results[0]
+	for i, h := range headers {
+		if fmt.Sprintf("%v", h) == colName {
+			colIndex = i
+			break
+		}
+	}
+	
+    
+    // If the header is missing assume column index is provided in the query
+    if colIndex == -1 {
+        logger.Warnf("Column %s not found, defaulting to index 2", colName)
+        colIndex = 2 // Default to Name column. For debugging, this can be changed to 0
+    }
+
+	// Sort the results based on the identified column 
+    sort.Slice(results[1:], func(i, j int) bool {
+		a, okA := results[i+1][colIndex].(string)
+        b, okB := results[j+1][colIndex].(string)
+
+        if !okA || !okB {
+            return false
+        }
+
+        if orderType == "ascending" {
+            return a < b
+        }
+        return a > b
+    })
 }
 
 func updateQuerySenderAddress(s1 *common.QueryMessage, s2 string, gm *graph.Manager) error {
@@ -687,8 +936,6 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 		var mergedResults [][]interface{} // To hold the merged results from all peers
 		targetProtocol := protocol.ID(config.ProtocolID) // Protocol ID for the stream
 		connectedPeers := kadDHT.Host().Network().Peers() // Connected peers are the peers in the routing table
-		closestPeers := kadDHT.RoutingTable().NearestPeers(kbucket.ConvertPeerID(kadDHT.Host().ID()), 10000) // Closest peers to the current peer
-		logger.Infof("Closest peers to %s: %v", kadDHT.Host().ID(), closestPeers)
 		var eligiblePeers []peer.ID
 
 		// Filter peers to exclude the originating peer and the parent stream peer. Because we dont want to query them again
@@ -698,9 +945,6 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 				(parentStream == nil || parentStream.Conn().RemotePeer() != peerID) {
 				// Check if the peer is in the closest peers list then add to eligible peers
 				eligiblePeers = append(eligiblePeers, peerID) // Check if there is an active connection to the peer
-				/* if len(eligiblePeers) >= config.TopKPeers {
-					break
-				} */
 			}
 		}
 
@@ -869,6 +1113,11 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 			// merge the local results with the merged results
 			mergedResults = mergeTwoResults(localResults, mergedResults)
 
+			withClauses := parseWithClauses(msg.Query)
+			if len(withClauses) > 0 {
+				mergedResults = applyWithClauses(mergedResults, withClauses)
+			}
+
 			// Update the query state to completed
 			msg.State = &common.QueryState{State: common.QueryState_COMPLETED}
 			updateQueryState(msg, common.QueryState_COMPLETED, gm)
@@ -992,35 +1241,72 @@ func sendMergedResult(parentStream network.Stream, parentPeerD peer.ID,   result
 	}
 }
 
+// Function to merge aggregate results from local and remote peers
+func mergeAggregateResults(agg AggregateInfo, localSum, localCount float64, remoteResults [][2]float64) float64 {
+    totalSum := localSum
+    totalCount := localCount
+
+    for _, res := range remoteResults {
+        totalSum += res[0]
+        totalCount += res[1]
+    }
+
+    switch agg.Function {
+    case "sum":
+        return totalSum
+    case "avg":
+        if totalCount == 0 {
+            return 0
+        }
+        return totalSum / totalCount
+    case "max":
+        maxVal := localSum
+        for _, res := range remoteResults {
+            if res[0] > maxVal {
+                maxVal = res[0]
+            }
+        }
+        return maxVal
+    case "min":
+        minVal := localSum
+        for _, res := range remoteResults {
+            if res[0] < minVal {
+                minVal = res[0]
+            }
+        }
+        return minVal
+    default:
+        return 0
+    }
+}
+
+func applyAggregateCondition(value float64, operator string, threshold float64) bool {
+    switch operator {
+    case ">": return value > threshold
+    case "<": return value < threshold
+    case ">=": return value >= threshold
+    case "<=": return value <= threshold
+    case "==": return value == threshold
+    case "!=": return value != threshold
+    default: return false
+    }
+}
+
 func mergeTwoResults(result1, result2 [][]interface{}) [][]interface{} {
 	// Use a map to track unique entries
 	estimatedSize := len(result1) + len(result2)
 	uniqueRecords := make(map[string]bool, estimatedSize)
 	mergedResults := make([][]interface{}, 0, estimatedSize)
 
-	// Helper function to convert a record to a string key for uniqueness checking
-    toKey := func(record []interface{}) string {
-		var builder strings.Builder
-        for _, value := range record {
-			mu.Lock()
-			builder.WriteString(fmt.Sprintf("%v", value)) // can be optimised further if values are strings or simpler types
-			mu.Unlock()
-		}
-		return builder.String()
+	// Ensure headers are preserved from only one source
+    if len(result1) > 0 && len(result2) > 0 && fmt.Sprintf("%v", result1[0]) == fmt.Sprintf("%v", result2[0]) {
+        result2 = result2[1:] // Remove duplicate header from result2
     }
 
-	// Process result1
-    for _, record := range result1 {
-        key := toKey(record)
-        if !uniqueRecords[key] {
-            mergedResults = append(mergedResults, record)
-            uniqueRecords[key] = true
-        }
-    }
 
-	// Process result2
-    for _, record := range result2 {
-        key := toKey(record)
+	// Merge both result sets while keeping only unique records
+    for _, record := range append(result1, result2...) {
+        key := fmt.Sprintf("%v", record)
         if !uniqueRecords[key] {
             mergedResults = append(mergedResults, record)
             uniqueRecords[key] = true
@@ -1045,12 +1331,16 @@ func convertProtobufRowsToResult(rows []*common.Row) [][]interface{} {
 // Function to convert EliasDB query results to Protobuf rows
 func covertResultToProtobufRows(result [][]interface{}, header []string) []*common.Row {
 	var rows []*common.Row
+
 	// Send headers first as a special row, if available
     if len(header) > 0 {
         rows = append(rows, &common.Row{Data: header})
-    }
+    }else if len(result) > 0 { //if header is missing, infer it
+		inferredHeader := []string{"ID", "Value", "Name", "Score"} // for debugging
+		rows = append(rows, &common.Row{Data: inferredHeader})
+	}
 
-
+	// convert result rows
 	for _, row := range result {
 		var values []string
 		for _, value := range row {

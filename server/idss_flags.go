@@ -110,7 +110,7 @@ type Config struct {
 func ParseFlags(peerID string) (Config, error) {
 	config := Config{}
 	flag.IntVar(&config.TopKPeers, "k", 10, "Number of top peers to broadcast query to.") // Sometimes called closest peers
-	flag.StringVar(&config.IDSSString, "IDSS", "idss_stringn",
+	flag.StringVar(&config.IDSSString, "IDSS", "idss_stringi",
 		"Unique string to identify group of nodes. Share this with peers to let them connect.")
 	flag.Var(&config.BootstrapPeers, "peer", "Adds a peer multiaddress to the bootstrap list.")
 	flag.Var(&config.ListenAddresses, "listen", "Adds a multiaddress to the listen list.")
