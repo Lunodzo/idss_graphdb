@@ -447,6 +447,7 @@ func parseAggregates(query string) []AggregateInfo {
 
 // Function to handle aggregate queries
 func handleAggregateQuery(conn network.Stream, msg *common.QueryMessage, config Config, gm *graph.Manager, kadDHT *dht.IpfsDHT, agg AggregateInfo) {
+	
     // Execute local aggregate
 	localSum, localCount, err := runAggregatedQuery(agg, gm, kadDHT)
     if err != nil {
@@ -468,7 +469,7 @@ func handleAggregateQuery(conn network.Stream, msg *common.QueryMessage, config 
 
     // Prepare and send final result
     finalRows := [][]interface{}{{finalValue}}
-    sendMergedResult(conn, conn.Conn().RemotePeer(), finalRows, kadDHT)
+    sendMergedResult(conn, conn.Conn().RemotePeer(), finalRows, nil, kadDHT)
 }
 
 func runAggregatedQuery(agg AggregateInfo, gm *graph.Manager, kadDHT *dht.IpfsDHT) (sum float64, count float64, err error) {
@@ -681,14 +682,16 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 		}
 
 		// Handle nil header (for debugging or metadata) 
-		if header != nil {
-			labels := header.Labels()
-			logger.Debug("Labels: ", labels)
-		} else {
-			labels := []string{}
-			logger.Debug("Labels: ", labels)
+		// Get clean headers from EliasDB result
+	
+		// Remove any prefixes from header labels (e.g., "Client:name" -> "name")
+		for i, h := range header {
+			parts := strings.FieldsFunc(h, func(r rune) bool { return r == ':' || r == ' ' })
+			if len(parts) > 0 {
+				header[i] = parts[len(parts)-1]
+			}
 		}
-
+		
 		localResHolder = result
 		//msg.State = &common.QueryState{State: common.QueryState_LOCALLY_EXECUTED}
 		updateQueryState(msg, common.QueryState_LOCALLY_EXECUTED, gm)
@@ -696,7 +699,7 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 	}()
 
 	wg.Wait() // proceed to convert results after local query is done
-	localResults := covertResultToProtobufRows(localResHolder, nil)
+	localResults := covertResultToProtobufRows(localResHolder, header)
 	//msg.Result = localResults
 
 	// Store the local results in the graph database
@@ -706,7 +709,7 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 	if msg.Ttl <= 0 {
 		logger.Warn("TTL expired, not broadcasting query")
 		updateQueryState(msg, common.QueryState_SENT_BACK, gm)
-		sendMergedResult(conn, conn.Conn().RemotePeer(), convertProtobufRowsToResult(localResults), kadDHT)
+		sendMergedResult(conn, conn.Conn().RemotePeer(), convertProtobufRowsToResult(localResults), header, kadDHT)
 		return
 	}
 
@@ -736,9 +739,11 @@ func executeAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 	}()
 }
 
+var header []string // Define the header variable
+
 // Support for WITH operations
 func parseWithClauses(query string) []string {
-    re := regexp.MustCompile(`(?i)\bwith\s+([^;]*)`)
+    re := regexp.MustCompile(`(?i)\bwith\s+(.*?)(?:\s*;|\s*$)`)
     matches := re.FindStringSubmatch(query)
     if len(matches) < 2 {
         return nil
@@ -757,52 +762,66 @@ func applyWithClauses(results [][]interface{}, clauses []string) [][]interface{}
     return results
 }
 
-func applyOrdering(results [][]interface{}, clause string) {
+// Function to apply ordering to the results. This must be called after the query has been 
+// executed and results are available in the results slice of the initiator peer
+func applyOrdering(results [][]interface{}, clause string) [][]interface{} {
     if len(results) < 2 {
-        return
+        return results
     }
 
-    re := regexp.MustCompile(`ordering\((ascending|descending)\s+([^)]+)`)
+	// Assume the header is the first row (as []interface{}).
+	// Convert it to []string.
+	var canonicalHeader []string
+	for _, v := range results[0] {
+		canonicalHeader = append(canonicalHeader, fmt.Sprintf("%v", v))
+	}
+
+    // Improved regex to capture order and column
+    re := regexp.MustCompile(`(?i)ordering\s*\(\s*(asc|desc|ascending|descending)\s+([\w:]+)\s*\)`)
     matches := re.FindStringSubmatch(clause)
     if len(matches) < 3 {
-        return
+		logger.Warn("Invalid ordering clause.")
+        return results // Invalid clause
     }
 
-	orderType := matches[1]
-    colName := matches[2]
-    //header := results[0]
-    var colIndex int = -1
+	orderType := strings.ToLower(matches[1])
+    targetCol := strings.ToLower(matches[2])
+    if strings.Contains(targetCol, ":") {
+        targetCol = strings.Split(targetCol, ":")[1]
+    }
 
-	// Assume the first row is the header
-	headers := results[0]
-	for i, h := range headers {
-		if fmt.Sprintf("%v", h) == colName {
+    // Find column index using cleaned headers
+    colIndex := -1
+    for i, h := range canonicalHeader {
+        // Optionally, split on colon or space if your header includes prefixes.
+		parts := strings.FieldsFunc(strings.ToLower(h), func(r rune) bool { return r == ':' || r == ' ' })
+		if len(parts) > 0 && parts[len(parts)-1] == targetCol {
 			colIndex = i
 			break
 		}
-	}
+    }
 	
-    
     // If the header is missing assume column index is provided in the query
     if colIndex == -1 {
-        logger.Warnf("Column %s not found, defaulting to index 2", colName)
-        colIndex = 2 // Default to Name column. For debugging, this can be changed to 0
+        logger.Warnf("Column '%s' not found in headers: %v", targetCol, canonicalHeader)
+        return results
     }
 
-	// Sort the results based on the identified column 
-    sort.Slice(results[1:], func(i, j int) bool {
-		a, okA := results[i+1][colIndex].(string)
-        b, okB := results[j+1][colIndex].(string)
+	dataRows := results[1:] // Exclude the header
 
-        if !okA || !okB {
-            return false
-        }
+
+	// Sort data rows (excluding header)
+    sort.Slice(dataRows, func(i, j int) bool {
+		a := fmt.Sprintf("%v", dataRows[i][colIndex])
+        b := fmt.Sprintf("%v", dataRows[j][colIndex])
 
         if orderType == "ascending" {
             return a < b
         }
         return a > b
     })
+	// Reassemble header + sorted data
+    return append([][]interface{}{results[0]}, dataRows...)
 }
 
 func updateQuerySenderAddress(s1 *common.QueryMessage, s2 string, gm *graph.Manager) error {
@@ -930,7 +949,7 @@ func storeResults(msg *common.QueryMessage, results [][]interface{}, gm *graph.M
 
 // IDSS function to broadcast the query to connected peers. This function also filters out the originating and parent peers because they are already queried
 func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, config Config, localResults [][]interface{}, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
-
+	logger.Infof(" Received results is %v", localResults)
 	logger.Infof("Checking if to continue broadcasting query: %s", msg.Uqid)
 	if shouldContinueBroadcastingQuery(msg, gm) {
 		var mergedResults [][]interface{} // To hold the merged results from all peers
@@ -982,7 +1001,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 				if err := updateTTL(msg, gm); err != nil {
 					logger.Errorf("Error updating TTL: %v", err)
 				}
-				logger.Infof("Broadcasting query with TTL: %f", msg.Ttl)
+				//logger.Infof("Broadcasting query with TTL: %f", msg.Ttl)
 
 				// Change msg TYPE to QUERY
 				msg.Type = common.MessageType_QUERY
@@ -992,13 +1011,15 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 					return
 				}
 
+				logger.Infof("Sending this %v", msgBytes)
+
 				// Send the query to the peer
 				if err := writeDelimitedMessage(stream, msgBytes); err != nil {
 					logger.Errorf("Error writing query to peer %s: %v", p, err)
 					return
 				}
 
-				logger.Infof("Query sent to peer %s, awaiting for response", p)
+				//logger.Infof("Query sent to peer %s, awaiting for response", p)
 
 				select{
 					case <-responseTimeout: // If the response times out
@@ -1023,6 +1044,7 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 						}
 
 						logger.Infof("Received %d records from peer %s", len(resultsByte), p)
+						logger.Infof("Received results: %v", resultsByte)
 
 						var remoteResults common.QueryMessage
 						// Unmarshal the results
@@ -1065,7 +1087,16 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 			}
 		}
 		MergedResults:
-		mergedResults = mergeTwoResults(localResults, mergedResults) // Merge local and remote results
+		logger.Infof("Merging %v with %v", localResults, mergedResults)
+
+		// fetch local results from the graph database
+		localResults, headers, err := runQuery(msg.Query, kadDHT.Host().ID(), gm)
+		if err != nil {
+			logger.Errorf("Error executing local query: %v", err)
+			return
+		}
+
+		mergedResults = mergeTwoResults(localResults, mergedResults, headers) // Merge local and remote results
 
 		parentPeerID := parentStream.Conn().RemotePeer() // Parent peer ID
 
@@ -1089,8 +1120,10 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 			insideWg.Add(1)
 			go func() {
 				defer insideWg.Done()
+				// fetch header from the graph database
+				
 				logger.Infof("This is an intermediate peer %s. Sending results to parent peer %s", kadDHT.Host().ID(), parentPeerID)
-				sendMergedResult(parentStream, parentPeerID, mergedResults, kadDHT) 
+				sendMergedResult(parentStream, parentPeerID, mergedResults, header, kadDHT) 
 			}()
 
 			insideWg.Wait()
@@ -1111,7 +1144,8 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 			}
 
 			// merge the local results with the merged results
-			mergedResults = mergeTwoResults(localResults, mergedResults)
+			mergedResults = mergeTwoResults(localResults, mergedResults, headers)
+			//mergedResults = mergeTwoResults(localResults, <-remoteResultsChan)
 
 			withClauses := parseWithClauses(msg.Query)
 			if len(withClauses) > 0 {
@@ -1129,14 +1163,14 @@ func broadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 				return
 			}
 
-			sendMergedResult(parentStream, clientPeerID, mergedResults, kadDHT)
+			sendMergedResult(parentStream, clientPeerID, mergedResults, header, kadDHT)
 		}
 	}else{
 		logger.Infof("Query %s will not be broadcast further due to state or TTL", msg.Uqid)
         if msg.State.State == common.QueryState_SENT_BACK {
             logger.Info("Sending query results back...")
             parentPeerID := parentStream.Conn().RemotePeer()
-            sendMergedResult(parentStream, parentPeerID, localResults, kadDHT) // Send back local results if they weren't broadcast
+            sendMergedResult(parentStream, parentPeerID, localResults, header, kadDHT) // Send back local results if they weren't broadcast
         }
 		return
 	}
@@ -1202,7 +1236,7 @@ func updateTTL(msg *common.QueryMessage, gm *graph.Manager) error {
 }
 
 // Function to send the merged result to the client
-func sendMergedResult(parentStream network.Stream, parentPeerD peer.ID,   result [][]interface{}, kadDHT *dht.IpfsDHT) {
+func sendMergedResult(parentStream network.Stream, parentPeerD peer.ID,   result [][]interface{}, headers[] string,kadDHT *dht.IpfsDHT) {
 	var wg sync.WaitGroup
 	defer parentStream.Close()
 
@@ -1212,7 +1246,7 @@ func sendMergedResult(parentStream network.Stream, parentPeerD peer.ID,   result
 		logger.Infof("Sending merged result to peer %s", parentStream.Conn().RemotePeer()) 
 		recordCount := len(result)
 		logger.Info("Record count: ", recordCount)
-		resultRows := covertResultToProtobufRows(result, nil)
+		resultRows := covertResultToProtobufRows(result, headers)
 
 		resultMsg := &common.QueryMessage{
 			Type:       common.MessageType_RESULT,
@@ -1292,29 +1326,32 @@ func applyAggregateCondition(value float64, operator string, threshold float64) 
     }
 }
 
-func mergeTwoResults(result1, result2 [][]interface{}) [][]interface{} {
-	// Use a map to track unique entries
-	estimatedSize := len(result1) + len(result2)
-	uniqueRecords := make(map[string]bool, estimatedSize)
-	mergedResults := make([][]interface{}, 0, estimatedSize)
 
-	// Ensure headers are preserved from only one source
-    if len(result1) > 0 && len(result2) > 0 && fmt.Sprintf("%v", result1[0]) == fmt.Sprintf("%v", result2[0]) {
-        result2 = result2[1:] // Remove duplicate header from result2
-    }
+func mergeTwoResults(localResults, remoteResults [][]interface{}, canonical []string) [][]interface{} {
+	// Create a merged slice starting with the canonical header row.
+	merged := [][]interface{}{make([]interface{}, len(canonical))}
+	for i, h := range canonical {
+		merged[0][i] = h
+	}
+	
+	// Append local data rows.
+	merged = append(merged, localResults...)
+	// Append remote data rows.
+	merged = append(merged, remoteResults...)
 
-
-	// Merge both result sets while keeping only unique records
-    for _, record := range append(result1, result2...) {
-        key := fmt.Sprintf("%v", record)
-        if !uniqueRecords[key] {
-            mergedResults = append(mergedResults, record)
-            uniqueRecords[key] = true
-        }
-    }
-
-	return mergedResults
+	// Optionally, remove duplicates.
+	unique := make(map[string]bool)
+	final := [][]interface{}{merged[0]}
+	for _, row := range merged[1:] {
+		key := fmt.Sprintf("%v", row)
+		if !unique[key] {
+			unique[key] = true
+			final = append(final, row)
+		}
+	}
+	return final
 }
+
 
 func convertProtobufRowsToResult(rows []*common.Row) [][]interface{} {
 	var result [][]interface{}
@@ -1332,13 +1369,12 @@ func convertProtobufRowsToResult(rows []*common.Row) [][]interface{} {
 func covertResultToProtobufRows(result [][]interface{}, header []string) []*common.Row {
 	var rows []*common.Row
 
+	logger.Infof("Received header in convertion: %v", header)
+
 	// Send headers first as a special row, if available
     if len(header) > 0 {
         rows = append(rows, &common.Row{Data: header})
-    }else if len(result) > 0 { //if header is missing, infer it
-		inferredHeader := []string{"ID", "Value", "Name", "Score"} // for debugging
-		rows = append(rows, &common.Row{Data: inferredHeader})
-	}
+    }
 
 	// convert result rows
 	for _, row := range result {
@@ -1350,6 +1386,7 @@ func covertResultToProtobufRows(result [][]interface{}, header []string) []*comm
 	}
 	return rows
 }
+
 
 // Function to read a delimited message from the stream
 func readDelimitedMessage(r io.Reader, ctx context.Context) ([]byte, error) {
@@ -1403,7 +1440,7 @@ func writeDelimitedMessage(w io.Writer, data []byte) error {
 }
 
 // IDSS Function to execute local query
-func runQuery(command string, peer peer.ID, gm *graph.Manager) ([][]interface{}, eql.SearchResultHeader, error) {
+func runQuery(command string, peer peer.ID, gm *graph.Manager) ([][]interface{}, []string, error) {
 	logger.Infof("Executing %s locally in %s", command, peer)
 
 	result, err := eql.RunQuery("myQuery", "main", command, gm)
@@ -1411,7 +1448,29 @@ func runQuery(command string, peer peer.ID, gm *graph.Manager) ([][]interface{},
 		logger.Error("Error querying data: ", err)
 		return nil, nil, err
 	}
-	return result.Rows(), result.Header(), err
+	// Filter out metadata rows and keep only actual values
+	
+	headers := result.Header().Labels()
+		
+
+
+    var cleanRows [][]interface{}
+    for _, row := range result.Rows() {
+        if len(row) == 0 || isMetadataRow(row[0]) {
+            continue
+        }
+        cleanRows = append(cleanRows, row)
+    }
+
+    logger.Infof("Query result - Header: %v, Clean Rows: %d", result.Header().Labels(), len(cleanRows))
+    return cleanRows, headers, nil
+}
+
+func isMetadataRow(val interface{}) bool {
+    if s, ok := val.(string); ok {
+        return strings.Contains(s, ":")
+    }
+    return false
 }
 
 // Function to check for errors

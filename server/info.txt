@@ -84,4 +84,8 @@ MULTISTEP TRAVERSAL
 
 WITH CLAUSE
 6. get Client traverse :belongs_to:Consumption end show 1:n:name, @count(2, ::, "measurement > 500000") as HighMeasCount with ordering(ascending 1:n:name), filtering(unique HighMeasCount), nulltraversal(true)
-7. get Client with ordering(ascending Client:name)
+7. get Client with ordering(ascending Client:name) (Working)
+8. get Client show name with ordering(ascending name), 4 (Currently all are treated as strings)
+
+
+(We cant combine these two conditions)
