@@ -26,7 +26,7 @@ execution.
 | **Bash Script** | Automatomating peer startup, data loading, and querying |
 
 # Installation and Setup
-## Prerequisites
+## Dependencies
 Before running IDSS, ensure you have the following installed:
 - Golang (1.23.1) [Check how to install](https://go.dev/doc/install)
 - Python3 (It should be installed within your Linux Distribution, it should be okay to simply update/upgrade)
