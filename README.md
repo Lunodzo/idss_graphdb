@@ -79,14 +79,13 @@ get Client, 3
 get Consumption, 7
 ```
 More advanced queries following EQL syntax are included in the `info.txt` file. A limited support of 
-aggregate functions like `min`, `max`, `sum` and `avg` is also possible using this version.
+aggregate functions like `min`, `max`, `sum` and `avg` will also be supported soon.
 
 ## Query results
 Query results are stored in the `results` directory. A directory that is generated once a query is submitted 
 to an overlay. A `.xml` file named after your client ID with the time to which a query was submitted contains 
 results set following the submitted query.
 
-@2025, University of Salento
 Authors:
 1. Lunodzo Justine Mwinuka
 2. Massimo Cafaro
