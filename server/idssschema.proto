@@ -1,8 +1,16 @@
+/*
+ * ! \file idssschema.proto
+ * ! \brief A file that contains the protocol buffer definition for the messages that are exchanged between the nodes in the network.
+ *
+ * Copyright 2023-2027, University of Salento, Italy.
+ * All rights reserved.
+ */
+
 syntax = "proto3";
 
 package common;
 
-option go_package = "idss/graphdb/common";
+option go_package = "idss/graphdb/common"; // The package name for the generated Go code
 
 enum MessageType {
     QUERY = 0;

@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# A script to launch a specified number of peers running the IDSS server.
+# This script compiles the Go server code and launches the specified number of peers.
+# Each peer is run in the background, and the script waits for all peers to complete DHT discovery.
+# The script also cleans up log files and graph database directories when the script is interrupted.
+# The number of peers to run is passed as an argument to the script.
+# NOTE: The script assumes that the Go server code is in the same directory as this script.
+#
+# Copyright 2023-2027, University of Salento, Italy.
+# All rights reserved.
+
 # Check if the number of peers is passed as an argument
 if [ $# -eq 0 ]; then
   echo "Usage: $0 <number_of_peers>"
@@ -18,7 +28,7 @@ echo "Build completed. The binary is named idss_server."
 
 # Check if the build was successful
 if [ $? -ne 0 ]; then
-  echo "Failed to build the Go server. Exiting."
+  echo "Failed to build the Go server. Exiting."=
   exit 1
 fi
 
@@ -47,7 +57,7 @@ launch_peer() {
   # Wait for the peer to log its address and complete initialization
   local PEER_ID=""
   for i in {1..10}; do  # Retry up to 10 times, with a 1-second delay
-    sleep 2
+    sleep 1
     PEER_ID=$(grep "Listening on peer Address" "${LOG_FILE}" | head -n 1 | awk -F "/p2p/" '{print $2}')
     if [ ! -z "$PEER_ID" ]; then
       break
@@ -90,7 +100,7 @@ check_all_peers_discovered() {
       DISCOVERY_COMPLETED[$((i - 1))]="1"
       updated=true
       SUCCESSFUL_PEERS=$((SUCCESSFUL_PEERS + 1))
-      echo "Peers successfully joined: ${SUCCESSFUL_PEERS}/${NUM_PEERS}"
+      #echo "Peers successfully joined: ${SUCCESSFUL_PEERS}/${NUM_PEERS}"
     fi
   done
 
@@ -143,7 +153,7 @@ done
 
 # Wait for all peers to complete discovery
 while ! check_all_peers_discovered; do
-  sleep 5  # Wait and recheck every 5 seconds
+  sleep 2  # Wait and recheck every 2 seconds
 done
 echo "Peers have joined the overlay."
 

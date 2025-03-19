@@ -1,25 +1,28 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/ipfs/boxo/ipns"
 	ds "github.com/ipfs/go-datastore"
 	dssync "github.com/ipfs/go-datastore/sync"
+	"github.com/libp2p/go-libp2p-kad-dht/amino"
+	"github.com/libp2p/go-libp2p-kad-dht/internal/net"
+	pb "github.com/libp2p/go-libp2p-kad-dht/pb"
 	"github.com/libp2p/go-libp2p-kad-dht/providers"
 	"github.com/libp2p/go-libp2p-kbucket/peerdiversity"
 	record "github.com/libp2p/go-libp2p-record"
 	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
 	ma "github.com/multiformats/go-multiaddr"
 )
 
 // DefaultPrefix is the application specific prefix attached to all DHT protocols by default.
-const DefaultPrefix protocol.ID = "/ipfs"
-
-const defaultBucketSize = 20
+const DefaultPrefix protocol.ID = amino.ProtocolPrefix
 
 // ModeOpt describes what mode the dht should operate in
 type ModeOpt int
@@ -48,6 +51,7 @@ type Config struct {
 	ProviderStore          providers.ProviderStore
 	QueryPeerFilter        QueryFilterFunc
 	LookupCheckConcurrency int
+	MsgSenderBuilder       func(h host.Host, protos []protocol.ID) pb.MessageSenderWithDisconnect
 
 	RoutingTable struct {
 		RefreshQueryTimeout time.Duration
@@ -61,6 +65,7 @@ type Config struct {
 
 	BootstrapPeers func() []peer.AddrInfo
 	AddressFilter  func([]ma.Multiaddr) []ma.Multiaddr
+	OnRequestHook  func(ctx context.Context, s network.Stream, req *pb.Message)
 
 	// test specific Config options
 	DisableFixLowPeers          bool
@@ -114,6 +119,7 @@ var Defaults = func(o *Config) error {
 	o.EnableProviders = true
 	o.EnableValues = true
 	o.QueryPeerFilter = EmptyQueryFilter
+	o.MsgSenderBuilder = net.NewMessageSenderImpl
 
 	o.RoutingTable.LatencyTolerance = 10 * time.Second
 	o.RoutingTable.RefreshQueryTimeout = 10 * time.Second
@@ -123,9 +129,9 @@ var Defaults = func(o *Config) error {
 
 	o.MaxRecordAge = providers.ProvideValidity
 
-	o.BucketSize = defaultBucketSize
-	o.Concurrency = 10
-	o.Resiliency = 3
+	o.BucketSize = amino.DefaultBucketSize
+	o.Concurrency = amino.DefaultConcurrency
+	o.Resiliency = amino.DefaultResiliency
 	o.LookupCheckConcurrency = 256
 
 	// MAGIC: It makes sense to set it to a multiple of OptProvReturnRatio * BucketSize. We chose a multiple of 4.
@@ -135,11 +141,12 @@ var Defaults = func(o *Config) error {
 }
 
 func (c *Config) Validate() error {
+	// Configuration is validated and enforced only if prefix matches Amino DHT
 	if c.ProtocolPrefix != DefaultPrefix {
 		return nil
 	}
-	if c.BucketSize != defaultBucketSize {
-		return fmt.Errorf("protocol prefix %s must use bucket size %d", DefaultPrefix, defaultBucketSize)
+	if c.BucketSize != amino.DefaultBucketSize {
+		return fmt.Errorf("protocol prefix %s must use bucket size %d", DefaultPrefix, amino.DefaultBucketSize)
 	}
 	if !c.EnableProviders {
 		return fmt.Errorf("protocol prefix %s must have providers enabled", DefaultPrefix)

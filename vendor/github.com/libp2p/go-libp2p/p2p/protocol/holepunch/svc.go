@@ -8,19 +8,18 @@ import (
 	"time"
 
 	logging "github.com/ipfs/go-log/v2"
-	"github.com/libp2p/go-libp2p/core/event"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
-	"github.com/libp2p/go-libp2p/p2p/host/eventbus"
 	"github.com/libp2p/go-libp2p/p2p/protocol/holepunch/pb"
 	"github.com/libp2p/go-libp2p/p2p/protocol/identify"
 	"github.com/libp2p/go-msgio/pbio"
 
 	ma "github.com/multiformats/go-multiaddr"
-	manet "github.com/multiformats/go-multiaddr/net"
 )
+
+const defaultDirectDialTimeout = 10 * time.Second
 
 // Protocol is the libp2p protocol for Hole Punching.
 const Protocol protocol.ID = "/libp2p/dcutr"
@@ -41,16 +40,30 @@ var ErrClosed = errors.New("hole punching service closing")
 
 type Option func(*Service) error
 
+func DirectDialTimeout(timeout time.Duration) Option {
+	return func(s *Service) error {
+		s.directDialTimeout = timeout
+		return nil
+	}
+}
+
 // The Service runs on every node that supports the DCUtR protocol.
 type Service struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
 	host host.Host
-	ids  identify.IDService
+	// ids helps with connection reversal. We wait for identify to complete and attempt
+	// a direct connection to the peer if it's publicly reachable.
+	ids identify.IDService
+	// listenAddrs provides the addresses for the host to be used for hole punching. We use this
+	// and not host.Addrs because host.Addrs might remove public unreachable address and only advertise
+	// publicly reachable relay addresses.
+	listenAddrs func() []ma.Multiaddr
 
-	holePuncherMx sync.Mutex
-	holePuncher   *holePuncher
+	directDialTimeout time.Duration
+	holePuncherMx     sync.Mutex
+	holePuncher       *holePuncher
 
 	hasPublicAddrsChan chan struct{}
 
@@ -58,6 +71,17 @@ type Service struct {
 	filter AddrFilter
 
 	refCount sync.WaitGroup
+
+	// Prior to https://github.com/libp2p/go-libp2p/pull/3044, go-libp2p would
+	// pick the opposite roles for client/server a hole punch. Setting this to
+	// true preserves that behavior
+	legacyBehavior bool
+}
+
+// SetLegacyBehavior is only exposed for testing purposes.
+// Do not set this unless you know what you are doing.
+func (s *Service) SetLegacyBehavior(legacyBehavior bool) {
+	s.legacyBehavior = legacyBehavior
 }
 
 // NewService creates a new service that can be used for hole punching
@@ -65,7 +89,9 @@ type Service struct {
 // no matter if they are behind a NAT / firewall or not.
 // The Service handles DCUtR streams (which are initiated from the node behind
 // a NAT / Firewall once we establish a connection to them through a relay.
-func NewService(h host.Host, ids identify.IDService, opts ...Option) (*Service, error) {
+//
+// listenAddrs MUST only return public addresses.
+func NewService(h host.Host, ids identify.IDService, listenAddrs func() []ma.Multiaddr, opts ...Option) (*Service, error) {
 	if ids == nil {
 		return nil, errors.New("identify service can't be nil")
 	}
@@ -76,7 +102,10 @@ func NewService(h host.Host, ids identify.IDService, opts ...Option) (*Service, 
 		ctxCancel:          cancel,
 		host:               h,
 		ids:                ids,
+		listenAddrs:        listenAddrs,
 		hasPublicAddrsChan: make(chan struct{}),
+		directDialTimeout:  defaultDirectDialTimeout,
+		legacyBehavior:     true,
 	}
 
 	for _, opt := range opts {
@@ -88,18 +117,18 @@ func NewService(h host.Host, ids identify.IDService, opts ...Option) (*Service, 
 	s.tracer.Start()
 
 	s.refCount.Add(1)
-	go s.watchForPublicAddr()
+	go s.waitForPublicAddr()
 
 	return s, nil
 }
 
-func (s *Service) watchForPublicAddr() {
+func (s *Service) waitForPublicAddr() {
 	defer s.refCount.Done()
 
-	log.Debug("waiting until we have at least one public address", "peer", s.host.ID())
+	log.Debugw("waiting until we have at least one public address", "peer", s.host.ID())
 
 	// TODO: We should have an event here that fires when identify discovers a new
-	// address (and when autonat confirms that address).
+	// address.
 	// As we currently don't have an event like this, just check our observed addresses
 	// regularly (exponential backoff starting at 250 ms, capped at 5s).
 	duration := 250 * time.Millisecond
@@ -107,8 +136,8 @@ func (s *Service) watchForPublicAddr() {
 	t := time.NewTimer(duration)
 	defer t.Stop()
 	for {
-		if len(s.getPublicAddrs()) > 0 {
-			log.Debug("Host now has a public address. Starting holepunch protocol.")
+		if len(s.listenAddrs()) > 0 {
+			log.Debugf("Host %s now has a public address (%s). Starting holepunch protocol.", s.host.ID(), s.host.Addrs())
 			s.host.SetStreamHandler(Protocol, s.handleNewStream)
 			break
 		}
@@ -125,36 +154,22 @@ func (s *Service) watchForPublicAddr() {
 		}
 	}
 
-	// Only start the holePuncher if we're behind a NAT / firewall.
-	sub, err := s.host.EventBus().Subscribe(&event.EvtLocalReachabilityChanged{}, eventbus.Name("holepunch"))
-	if err != nil {
-		log.Debugf("failed to subscripe to Reachability event: %s", err)
+	s.holePuncherMx.Lock()
+	if s.ctx.Err() != nil {
+		// service is closed
 		return
 	}
-	defer sub.Close()
-	for {
-		select {
-		case <-s.ctx.Done():
-			return
-		case e, ok := <-sub.Out():
-			if !ok {
-				return
-			}
-			if e.(event.EvtLocalReachabilityChanged).Reachability != network.ReachabilityPrivate {
-				continue
-			}
-			s.holePuncherMx.Lock()
-			s.holePuncher = newHolePuncher(s.host, s.ids, s.tracer, s.filter)
-			s.holePuncherMx.Unlock()
-			close(s.hasPublicAddrsChan)
-			return
-		}
-	}
+	s.holePuncher = newHolePuncher(s.host, s.ids, s.listenAddrs, s.tracer, s.filter)
+	s.holePuncher.directDialTimeout = s.directDialTimeout
+	s.holePuncher.legacyBehavior = s.legacyBehavior
+	s.holePuncherMx.Unlock()
+	close(s.hasPublicAddrsChan)
 }
 
 // Close closes the Hole Punch Service.
 func (s *Service) Close() error {
 	var err error
+	s.ctxCancel()
 	s.holePuncherMx.Lock()
 	if s.holePuncher != nil {
 		err = s.holePuncher.Close()
@@ -162,7 +177,6 @@ func (s *Service) Close() error {
 	s.holePuncherMx.Unlock()
 	s.tracer.Close()
 	s.host.RemoveStreamHandler(Protocol)
-	s.ctxCancel()
 	s.refCount.Wait()
 	return err
 }
@@ -172,7 +186,7 @@ func (s *Service) incomingHolePunch(str network.Stream) (rtt time.Duration, remo
 	if !isRelayAddress(str.Conn().RemoteMultiaddr()) {
 		return 0, nil, nil, fmt.Errorf("received hole punch stream: %s", str.Conn().RemoteMultiaddr())
 	}
-	ownAddrs = s.getPublicAddrs()
+	ownAddrs = s.listenAddrs()
 	if s.filter != nil {
 		ownAddrs = s.filter.FilterLocal(str.Conn().RemotePeer(), ownAddrs)
 	}
@@ -269,33 +283,16 @@ func (s *Service) handleNewStream(str network.Stream) {
 	log.Debugw("starting hole punch", "peer", rp)
 	start := time.Now()
 	s.tracer.HolePunchAttempt(pi.ID)
-	err = holePunchConnect(s.ctx, s.host, pi, false)
+	ctx, cancel := context.WithTimeout(s.ctx, s.directDialTimeout)
+	isClient := false
+	if s.legacyBehavior {
+		isClient = true
+	}
+	err = holePunchConnect(ctx, s.host, pi, isClient)
+	cancel()
 	dt := time.Since(start)
 	s.tracer.EndHolePunch(rp, dt, err)
 	s.tracer.HolePunchFinished("receiver", 1, addrs, ownAddrs, getDirectConnection(s.host, rp))
-}
-
-// getPublicAddrs returns public observed and interface addresses
-func (s *Service) getPublicAddrs() []ma.Multiaddr {
-	addrs := removeRelayAddrs(s.ids.OwnObservedAddrs())
-
-	interfaceListenAddrs, err := s.host.Network().InterfaceListenAddresses()
-	if err != nil {
-		log.Debugf("failed to get to get InterfaceListenAddresses: %s", err)
-	} else {
-		addrs = append(addrs, interfaceListenAddrs...)
-	}
-
-	addrs = ma.Unique(addrs)
-
-	publicAddrs := make([]ma.Multiaddr, 0, len(addrs))
-
-	for _, addr := range addrs {
-		if manet.IsPublicAddr(addr) {
-			publicAddrs = append(publicAddrs, addr)
-		}
-	}
-	return publicAddrs
 }
 
 // DirectConnect is only exposed for testing purposes.

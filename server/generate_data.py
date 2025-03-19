@@ -1,3 +1,14 @@
+# A simple script to generate random data for the graph database. 
+# Modify the number of clients, consumption records, and consumption 
+# records per client as needed. The script uses the Faker library to 
+# generate fake data. The generated data is saved as a JSON file. 
+# The script takes one argument, the output file name.
+
+# Usage: python3 generate_data.py <output_file>
+
+# Copyright 2023-2027, University of Salento, Italy.
+# All rights reserved.
+
 import random
 import json
 import sys
@@ -17,8 +28,8 @@ for i in range(1, 11): # Adjust the number of clients here
     clients.append({
         "kind": "Client",
         "key": i,
-        "name": fake.name(),
-        "contract_number": fake.unique.random_int(min=100, max=9999999),
+        "client_name": fake.name(),
+        "contract_number": fake.unique.random_int(min=100, max=9999),
         "power": random.randint(0, 2000)
     })
 
@@ -29,7 +40,7 @@ for i in range(1, 101): # Adjust the number of consumption records here
         "kind": "Consumption",
         "key": i,
         "timestamp": fake.unix_time(),
-        "measurement": random.randint(0, 1000000)
+        "measurement": random.randint(0, 10000000)
     })
     
 print("Stored a total of %d consumption records", len(consumptions))

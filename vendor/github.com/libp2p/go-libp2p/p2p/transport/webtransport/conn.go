@@ -71,11 +71,15 @@ func (c *conn) allowWindowIncrease(size uint64) bool {
 // It must be called even if the peer closed the connection in order for
 // garbage collection to properly work in this package.
 func (c *conn) Close() error {
-	c.scope.Done()
+	defer c.scope.Done()
 	c.transport.removeConn(c.session)
 	err := c.session.CloseWithError(0, "")
 	_ = c.qconn.CloseWithError(1, "")
 	return err
+}
+
+func (c *conn) CloseWithError(_ network.ConnErrorCode) error {
+	return c.Close()
 }
 
 func (c *conn) IsClosed() bool           { return c.session.Context().Err() != nil }

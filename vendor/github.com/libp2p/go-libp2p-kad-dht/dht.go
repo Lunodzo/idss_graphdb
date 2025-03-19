@@ -20,8 +20,7 @@ import (
 
 	"github.com/libp2p/go-libp2p-kad-dht/internal"
 	dhtcfg "github.com/libp2p/go-libp2p-kad-dht/internal/config"
-	"github.com/libp2p/go-libp2p-kad-dht/internal/net"
-	"github.com/libp2p/go-libp2p-kad-dht/metrics"
+	"github.com/libp2p/go-libp2p-kad-dht/internal/metrics"
 	"github.com/libp2p/go-libp2p-kad-dht/netsize"
 	pb "github.com/libp2p/go-libp2p-kad-dht/pb"
 	"github.com/libp2p/go-libp2p-kad-dht/providers"
@@ -31,18 +30,19 @@ import (
 	record "github.com/libp2p/go-libp2p-record"
 	recpb "github.com/libp2p/go-libp2p-record/pb"
 
-	"github.com/gogo/protobuf/proto"
 	ds "github.com/ipfs/go-datastore"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/multiformats/go-base32"
 	ma "github.com/multiformats/go-multiaddr"
-	"go.opencensus.io/tag"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
-const tracer = tracing.Tracer("go-libp2p-kad-dht")
-const dhtName = "IpfsDHT"
+const (
+	tracer  = tracing.Tracer("go-libp2p-kad-dht")
+	dhtName = "IpfsDHT"
+)
 
 var (
 	logger     = logging.Logger("dht")
@@ -164,6 +164,16 @@ type IpfsDHT struct {
 	// addrFilter is used to filter the addresses we put into the peer store.
 	// Mostly used to filter out localhost and local addresses.
 	addrFilter func([]ma.Multiaddr) []ma.Multiaddr
+
+	onRequestHook func(ctx context.Context, s network.Stream, req *pb.Message)
+}
+
+func (dht *IpfsDHT) DroppedPeers() any {
+	panic("unimplemented")
+}
+
+func (dht *IpfsDHT) BootstrapPeers() any {
+	panic("unimplemented")
 }
 
 // Assert that IPFS assumptions about interfaces aren't broken. These aren't a
@@ -206,7 +216,7 @@ func New(ctx context.Context, h host.Host, options ...Option) (*IpfsDHT, error) 
 	dht.disableFixLowPeers = cfg.DisableFixLowPeers
 
 	dht.Validator = cfg.Validator
-	dht.msgSender = net.NewMessageSenderImpl(h, dht.protocols)
+	dht.msgSender = cfg.MsgSenderBuilder(h, dht.protocols)
 	dht.protoMessenger, err = pb.NewProtocolMessenger(dht.msgSender)
 	if err != nil {
 		return nil, err
@@ -307,6 +317,7 @@ func makeDHT(h host.Host, cfg dhtcfg.Config) (*IpfsDHT, error) {
 		routingTablePeerFilter: cfg.RoutingTable.PeerFilter,
 		rtPeerDiversityFilter:  cfg.RoutingTable.DiversityFilter,
 		addrFilter:             cfg.AddressFilter,
+		onRequestHook:          cfg.OnRequestHook,
 
 		fixLowPeersChan: make(chan struct{}, 1),
 
@@ -332,7 +343,7 @@ func makeDHT(h host.Host, cfg dhtcfg.Config) (*IpfsDHT, error) {
 	}
 
 	// construct routing table
-	// use twice the theoritical usefulness threhold to keep older peers around longer
+	// use twice the theoretical usefulness threshold to keep older peers around longer
 	rt, err := makeRoutingTable(dht, cfg, 2*maxLastSuccessfulOutboundThreshold)
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct routing table,err=%s", err)
@@ -418,7 +429,6 @@ func makeRoutingTable(dht *IpfsDHT, cfg dhtcfg.Config, maxLastSuccessfulOutbound
 		df, err := peerdiversity.NewFilter(dht.rtPeerDiversityFilter, "rt/diversity", func(p peer.ID) int {
 			return kb.CommonPrefixLen(dht.selfKey, kb.ConvertPeerID(p))
 		})
-
 		if err != nil {
 			return nil, fmt.Errorf("failed to construct peer diversity filter: %w", err)
 		}
@@ -717,7 +727,7 @@ func (dht *IpfsDHT) validPeerFound(p peer.ID) {
 	}
 }
 
-// peerStoppedDHT signals the routing table that a peer is unable to responsd to DHT queries anymore.
+// peerStoppedDHT signals the routing table that a peer is unable to respond to DHT queries anymore.
 func (dht *IpfsDHT) peerStoppedDHT(p peer.ID) {
 	logger.Debugw("peer stopped dht", "peer", p)
 	// A peer that does not support the DHT protocol is dead for us.
@@ -909,19 +919,16 @@ func (dht *IpfsDHT) NetworkSize() (int32, error) {
 }
 
 // newContextWithLocalTags returns a new context.Context with the InstanceID and
-// PeerID keys populated. It will also take any extra tags that need adding to
-// the context as tag.Mutators.
-func (dht *IpfsDHT) newContextWithLocalTags(ctx context.Context, extraTags ...tag.Mutator) context.Context {
-	extraTags = append(
-		extraTags,
-		tag.Upsert(metrics.KeyPeerID, dht.self.String()),
-		tag.Upsert(metrics.KeyInstanceID, fmt.Sprintf("%p", dht)),
-	)
-	ctx, _ = tag.New(
-		ctx,
-		extraTags...,
-	) // ignoring error as it is unrelated to the actual function of this code.
-	return ctx
+// PeerID keys populated. It will also take any extra attributes that need adding to
+// the context as attribute.KeyValue.
+func (dht *IpfsDHT) newContextWithLocalTags(ctx context.Context, extraAttrs ...attribute.KeyValue) context.Context {
+	allAttrs := make([]attribute.KeyValue, 0, len(extraAttrs)+2)
+	copy(allAttrs, extraAttrs)
+
+	allAttrs = append(allAttrs, attribute.Key(metrics.KeyPeerID).String(dht.self.String()))
+	allAttrs = append(allAttrs, attribute.Key(metrics.KeyInstanceID).String(fmt.Sprintf("%p", dht)))
+
+	return metrics.ContextWithAttributes(ctx, allAttrs...)
 }
 
 func (dht *IpfsDHT) maybeAddAddrs(p peer.ID, addrs []ma.Multiaddr, ttl time.Duration) {

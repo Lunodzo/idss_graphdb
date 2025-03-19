@@ -2,6 +2,7 @@ package holepunch
 
 import (
 	"context"
+	"slices"
 
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
@@ -11,13 +12,7 @@ import (
 )
 
 func removeRelayAddrs(addrs []ma.Multiaddr) []ma.Multiaddr {
-	result := make([]ma.Multiaddr, 0, len(addrs))
-	for _, addr := range addrs {
-		if !isRelayAddress(addr) {
-			result = append(result, addr)
-		}
-	}
-	return result
+	return slices.DeleteFunc(addrs, isRelayAddress)
 }
 
 func isRelayAddress(a ma.Multiaddr) bool {
@@ -56,10 +51,9 @@ func getDirectConnection(h host.Host, p peer.ID) network.Conn {
 func holePunchConnect(ctx context.Context, host host.Host, pi peer.AddrInfo, isClient bool) error {
 	holePunchCtx := network.WithSimultaneousConnect(ctx, isClient, "hole-punching")
 	forceDirectConnCtx := network.WithForceDirectDial(holePunchCtx, "hole-punching")
-	dialCtx, cancel := context.WithTimeout(forceDirectConnCtx, dialTimeout)
-	defer cancel()
 
-	if err := host.Connect(dialCtx, pi); err != nil {
+	log.Debugw("holepunchConnect", "host", host.ID(), "peer", pi.ID, "addrs", pi.Addrs)
+	if err := host.Connect(forceDirectConnCtx, pi); err != nil {
 		log.Debugw("hole punch attempt with peer failed", "peer ID", pi.ID, "error", err)
 		return err
 	}

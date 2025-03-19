@@ -14,6 +14,7 @@ import (
 	"github.com/ipfs/go-datastore/autobatch"
 	dsq "github.com/ipfs/go-datastore/query"
 	logging "github.com/ipfs/go-log/v2"
+	"github.com/libp2p/go-libp2p-kad-dht/amino"
 	"github.com/libp2p/go-libp2p-kad-dht/internal"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/peerstore"
@@ -30,12 +31,12 @@ const (
 	// peers around. Those addresses are returned alongside provider. After
 	// it expires, the returned records will require an extra lookup, to
 	// find the multiaddress associated with the returned peer id.
-	ProviderAddrTTL = 24 * time.Hour
+	ProviderAddrTTL = amino.DefaultProviderAddrTTL
 )
 
 // ProvideValidity is the default time that a Provider Record should last on DHT
 // This value is also known as Provider Record Expiration Interval.
-var ProvideValidity = time.Hour * 48
+var ProvideValidity = amino.DefaultProvideValidity
 var defaultCleanupInterval = time.Hour
 var lruCacheSize = 256
 var batchBufferSize = 256
@@ -145,8 +146,7 @@ func (pm *ProviderManager) run() {
 		defer func() {
 			gcTimer.Stop()
 			if gcQuery != nil {
-				// don't really care if this fails.
-				_ = gcQuery.Close()
+				gcQuery.Close()
 			}
 			if err := pm.dstore.Flush(context.Background()); err != nil {
 				log.Error("failed to flush datastore: ", err)
@@ -179,9 +179,7 @@ func (pm *ProviderManager) run() {
 				gp.resp <- provs[0:len(provs):len(provs)]
 			case res, ok := <-gcQueryRes:
 				if !ok {
-					if err := gcQuery.Close(); err != nil {
-						log.Error("failed to close provider GC query: ", err)
-					}
+					gcQuery.Close()
 					gcTimer.Reset(pm.cleanupInterval)
 
 					// cleanup GC round
