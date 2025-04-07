@@ -37,8 +37,18 @@ git clone https://github.com/Lunodzo/idss_graphdb.git
 ```
 ## Install dependencies
 ```sh
+conda install -c conda-forge faker
+```
+For testing, it is also mandatory to install pythons faker package. Depending on your package manager, you may use one of the following commands
+```sh
+pip install faker
+```
+
+or
+```sh
 go mod tidy
 ```
+
 # Running the Peer Node(s)
 Peer node can be launched in two ways, first, by running each node separately. When this is done, each node should run on its own terminal. Second, by using the `start_peers.sh` script.
 

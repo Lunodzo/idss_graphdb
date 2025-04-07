@@ -1,6 +1,6 @@
 /*
  * ! \file helper.go
- * Helper functions for IDSS. Contains functions to parse queries, apply WITH clauses, 
+ * Helper functions for IDSS. Contains functions to parse queries, apply WITH clauses,
  * and manipulation of query results.
  *
  * Copyright 2023-2027, University of Salento, Italy.
@@ -16,11 +16,13 @@ import (
 	"encoding/binary"
 	"io"
 	_ "net/http/pprof"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
+
+	//"sync"
 
 	"google.golang.org/protobuf/proto"
 
@@ -230,24 +232,18 @@ func IsMetadataRow(val interface{}) bool {
 
 // Function to convert EliasDB query results to Protobuf rows
 func CovertResultToProtobufRows(result [][]interface{}, header []string) []*common.Row {
-	var rows []*common.Row
-
-	logger.Infof("Received header in convertion: %v", header) //TODO: Prints nothing. Why?
-
-	// Send headers first as a special row, if available
+    var rows []*common.Row
     if len(header) > 0 {
         rows = append(rows, &common.Row{Data: header})
     }
-
-	// convert result rows
-	for _, row := range result {
-		var values []string
-		for _, value := range row {
-			values = append(values, fmt.Sprintf("%v", value))
-		}
-		rows = append(rows, &common.Row{Data: values})
-	}
-	return rows
+    for _, row := range result {
+        var values []string
+        for _, value := range row {
+            values = append(values, fmt.Sprintf("%v", value))
+        }
+        rows = append(rows, &common.Row{Data: values})
+    }
+    return rows
 }
 
 func ComputeAggregate(rows [][]interface{}, header []string, attribute string) (sum float64, count float64, min float64, max float64, err error) {
@@ -336,43 +332,66 @@ func SendErrorMessage(conn network.Stream, remotePeerID peer.ID, errorMsg string
 }
 
 // Function to send the merged result to the client
-func SendMergedResult(parentStream network.Stream, parentPeerD peer.ID,   result [][]interface{}, headers[] string,kadDHT *dht.IpfsDHT) {
-	var wg sync.WaitGroup
-	defer parentStream.Close()
+func SendMergedResult(conn network.Stream, remotePeer peer.ID, dataRows [][]interface{}, headers []string, kadDHT *dht.IpfsDHT) {
+    if remotePeer != kadDHT.Host().ID() {
+        resultMsg := &common.QueryMessage{
+            Type:   common.MessageType_RESULT,
+            Result: CovertResultToProtobufRows(dataRows, nil), // No headers for inter-peer
+        }
+        msgBytes, err := proto.Marshal(resultMsg)
+        if err != nil {
+            logger.Errorf("Error marshalling result: %v", err)
+            return
+        }
+        if err := WriteDelimitedMessage(conn, msgBytes); err != nil {
+            logger.Errorf("Error sending result to %s: %v", remotePeer, err)
+        }
+        return
+    }
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		logger.Infof("Sending merged result to peer %s", parentStream.Conn().RemotePeer()) 
-		recordCount := len(result)
-		logger.Info("Record count: ", recordCount)
-		resultRows := CovertResultToProtobufRows(result, headers)
+    // For client, send protobuf with headers and explicit record count
+    resultMsg := &common.QueryMessage{
+        Type:        common.MessageType_RESULT,
+        Result:      CovertResultToProtobufRows(dataRows, headers),
+        RecordCount: int32(len(dataRows)), // Explicit count; ensure QueryMessage has this field
+    }
+    msgBytes, err := proto.Marshal(resultMsg)
+    if err != nil {
+        logger.Errorf("Error marshalling result for client: %v", err)
+        return
+    }
 
-		resultMsg := &common.QueryMessage{
-			Type:       common.MessageType_RESULT,
-			Result:     resultRows,
-			RecordCount: int32(recordCount),
-		}
+    logger.Infof("Sending merged result to client %s, rows: %d", remotePeer, len(dataRows))
+    if err := WriteDelimitedMessage(conn, msgBytes); err != nil {
+        logger.Errorf("Error sending merged result to %s: %v", remotePeer, err)
+        return
+    }
 
-		// Marshal the QueryResult message to bytes using Protobuf
-		resultBytes, err := proto.Marshal(resultMsg)
-		if err != nil {
-			logger.Errorf("Error marshalling result for peer %s: %v", kadDHT.Host().ID(), err)
-			return
-		}
+    // Log XML to file for debugging
+    results := "<response>\n"
+    results += fmt.Sprintf("    <resultCount>%d</resultCount>\n", len(dataRows))
+    if len(headers) > 0 {
+        results += "    <result>\n"
+        results += fmt.Sprintf("        <data>%s</data>\n", strings.Join(headers, ","))
+        results += "    </result>\n"
+    }
+    for _, row := range dataRows {
+        results += "    <result>\n"
+        rowStr := make([]string, len(row))
+        for i, val := range row {
+            if val == nil {
+                rowStr[i] = "<nil>"
+            } else {
+                rowStr[i] = fmt.Sprintf("%v", val)
+            }
+        }
+        results += fmt.Sprintf("        <data>%s</data>\n", strings.Join(rowStr, ","))
+        results += "    </result>\n"
+    }
+    results += "</response>"
+    // Optionally write to file (adjust path as needed)
+    os.WriteFile(fmt.Sprintf("results/%s.xml", "some-UQI"), []byte(results), 0644)
 
-		if err := WriteDelimitedMessage(parentStream, resultBytes); err != nil {
-			logger.Errorf("Error writing merged result to peer %s: %v", parentPeerD, err)
-		} else {
-			logger.Infof("Successfully sent merged result to peer %s", parentStream.Conn().RemotePeer()) 
-		}
-	}()
-
-	// Ensure all operations are completed before closing the stream
-	wg.Wait()
-	if err := parentStream.Close(); err != nil {
-		logger.Errorf("Error closing stream to peer %s: %v", parentPeerD, err)
-	}
 }
 
 // Function to merge local and remote results
