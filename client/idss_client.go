@@ -261,21 +261,39 @@ func main() {
             log.Error("Error in response:", response.Error)
         } else {
             log.Infoln("\n----------- Response -----------")
-            dataNonHeaders := response.RecordCount
-            log.Infof("Got %d records", dataNonHeaders)
+            dataNonHeaders := len(response.Result)
+            var headers []string
+            var dataRows []Result
+            if len(response.Result) > 0  { // Check if first row is header >> && !strings.Contains(response.Result[0].Data[0], ",")
+                headers = response.Result[0].Data // Assuming the first row is the header
+                for _, row := range response.Result[1:] {
+                    dataRows = append(dataRows, Result{Data: strings.Join(row.Data, ",")})
+                }
+                dataNonHeaders-- // Exclude header row from count
+            }
+
+            log.Infof("Headers: %v", headers)
+            log.Infof("Data rows (excluding headers): %d", dataNonHeaders)
+
+
+            //dataNonHeaders := response.RecordCount
+            log.Infof("Got %d records", len(dataRows))
             log.Infof("Time spent: %s", timeTaken)
 
             // Check if it's a status message or query result
-            queryResponse := QueryResponse{ResultCount: int(response.RecordCount)}
+            queryResponse := QueryResponse{ResultCount: dataNonHeaders}
             isStatus := len(response.Result) == 2 && response.Result[0].Data[0] == "Status"
 
-            for _, result := range response.Result {
+            for i, result := range response.Result {
+                if i == 0 && len(headers) > 0 { // Skip header row
+                    continue
+                }
                 queryResponse.Results = append(queryResponse.Results, Result{Data: strings.Join(result.Data, ",")})
             }
 
             if isStatus {
                 // Handle status message
-                statusMsg := queryResponse.Results[1].Data
+                statusMsg := queryResponse.Results[0].Data
                 log.Infof("Server response: %s", statusMsg)
             } else {
                 // Handle query result
@@ -283,6 +301,10 @@ func main() {
                 if err != nil {
                     log.Error("Error marshalling XML response:", err)
                     continue
+                }
+                if len(headers) > 0 {
+                    headerXML := fmt.Sprintf("<headers>%s</headers>\n", strings.Join(headers, ","))
+                    xmlResponse = append([]byte(headerXML), xmlResponse...)
                 }
 
                 resultsDir := "results"
@@ -292,6 +314,7 @@ func main() {
                     continue
                 }
 
+                
                 filename := filepath.Join(resultsDir, fmt.Sprintf("%s.xml", uqi))
                 err = os.WriteFile(filename, xmlResponse, 0644)
                 if err != nil {

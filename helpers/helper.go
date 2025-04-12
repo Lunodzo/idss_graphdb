@@ -143,7 +143,7 @@ func ApplyWithClauses(results [][]interface{}, header [] string, clauses []strin
     for _, clause := range clauses {
         clause = strings.TrimSpace(clause)
         if strings.HasPrefix(clause, "ordering(") {
-            ApplyOrdering(results, header, clause)
+            results = ApplyOrdering(results, header, clause)
         }
     }
     return results
@@ -152,15 +152,15 @@ func ApplyWithClauses(results [][]interface{}, header [] string, clauses []strin
 // Function to apply ordering to the results. This must be called after the query has been 
 // executed and results are available in the results slice of the initiator peer
 func ApplyOrdering(results [][]interface{}, header [] string, clause string) [][]interface{} {
-    if len(results) < 2 {
+    if len(results) < 1 {
         return results
     }
 
 	// Assume the header is the first row (as []interface{}).
 	// Convert it to []string.
-	for _, v := range results[0] {
+	/* for _, v := range results[0] {
 		header = append(header, fmt.Sprintf("%v", v))
-	}
+	} */
 
     // Improved regex to capture order and column
     re := regexp.MustCompile(`(?i)ordering\s*\(\s*(asc|desc|ascending|descending)\s+([\w:]+)\s*\)`)
@@ -171,7 +171,15 @@ func ApplyOrdering(results [][]interface{}, header [] string, clause string) [][
     }
 
 	orderType := strings.ToLower(matches[1])
+    if orderType == "asc" {
+        orderType = "ascending"
+    } else if orderType == "desc" {
+        orderType = "descending"
+    }
     targetCol := strings.ToLower(matches[2])
+    // Remove any prefix before the colon (if present)
+    // This assumes the format is "prefix:columnName"
+    // If the column name contains a colon, split it and take the last part
     if strings.Contains(targetCol, ":") {
         targetCol = strings.Split(targetCol, ":")[1]
     }
@@ -193,13 +201,13 @@ func ApplyOrdering(results [][]interface{}, header [] string, clause string) [][
         return results
     }
 
-	dataRows := results[1:] // Exclude the header
+	//dataRows := results[1:] // Exclude the header
 
 
 	// Sort data rows (excluding header)
-    sort.Slice(dataRows, func(i, j int) bool {
-		a := fmt.Sprintf("%v", dataRows[i][colIndex])
-        b := fmt.Sprintf("%v", dataRows[j][colIndex])
+    sort.Slice(results, func(i, j int) bool {
+		a := fmt.Sprintf("%v", results[i][colIndex])
+        b := fmt.Sprintf("%v", results[j][colIndex])
 
         if orderType == "ascending" {
             return a < b
@@ -207,7 +215,7 @@ func ApplyOrdering(results [][]interface{}, header [] string, clause string) [][
         return a > b
     })
 	// Reassemble header + sorted data
-    return append([][]interface{}{results[0]}, dataRows...)
+    return results
 }
 
 // Helper to determine if a row is the header.
@@ -236,6 +244,8 @@ func CovertResultToProtobufRows(result [][]interface{}, header []string) []*comm
     if len(header) > 0 {
         rows = append(rows, &common.Row{Data: header})
     }
+
+    // Add data rows
     for _, row := range result {
         var values []string
         for _, value := range row {
@@ -333,10 +343,11 @@ func SendErrorMessage(conn network.Stream, remotePeerID peer.ID, errorMsg string
 
 // Function to send the merged result to the client
 func SendMergedResult(conn network.Stream, remotePeer peer.ID, dataRows [][]interface{}, headers []string, kadDHT *dht.IpfsDHT) {
-    if remotePeer != kadDHT.Host().ID() {
+    if remotePeer == kadDHT.Host().ID() { //TODO: Revisit the purpose of this and if we need to pass headers or not for local queries.
         resultMsg := &common.QueryMessage{
             Type:   common.MessageType_RESULT,
-            Result: CovertResultToProtobufRows(dataRows, nil), // No headers for inter-peer
+            Result: CovertResultToProtobufRows(dataRows, headers), // No headers for inter-peer
+            RecordCount: int32(len(dataRows)),
         }
         msgBytes, err := proto.Marshal(resultMsg)
         if err != nil {
@@ -361,7 +372,7 @@ func SendMergedResult(conn network.Stream, remotePeer peer.ID, dataRows [][]inte
         return
     }
 
-    logger.Infof("Sending merged result to client %s, rows: %d", remotePeer, len(dataRows))
+    logger.Infof("Sending merged result to client %s, rows: %d, headers %v", remotePeer, len(dataRows), headers)
     if err := WriteDelimitedMessage(conn, msgBytes); err != nil {
         logger.Errorf("Error sending merged result to %s: %v", remotePeer, err)
         return
@@ -371,9 +382,9 @@ func SendMergedResult(conn network.Stream, remotePeer peer.ID, dataRows [][]inte
     results := "<response>\n"
     results += fmt.Sprintf("    <resultCount>%d</resultCount>\n", len(dataRows))
     if len(headers) > 0 {
-        results += "    <result>\n"
+        results += "    <headers>\n"
         results += fmt.Sprintf("        <data>%s</data>\n", strings.Join(headers, ","))
-        results += "    </result>\n"
+        results += "    </headers>\n"
     }
     for _, row := range dataRows {
         results += "    <result>\n"

@@ -14,6 +14,7 @@ package broadcast
 import (
 	"context"
 	_ "net/http/pprof"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -574,11 +575,22 @@ func BroadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
     remoteResultsChan := make(chan [][]interface{}, len(eligiblePeers))
     duration := time.Duration(int64(msg.Ttl)) * 1000 * time.Millisecond
 
-    localResults, _, err := RunIDSSQuery(msg.Query, kadDHT.Host().ID(), gm)
+    localResults, finalHeader, err := RunIDSSQuery(msg.Query, kadDHT.Host().ID(), gm)
     if err != nil {
         logger.Errorf("Error executing local query: %v", err)
         return
     }
+
+	// Use finalHeader if provided, otherwise use local header
+    if len(finalHeader) == 0 {
+        for i, h := range finalHeader {
+            parts := strings.FieldsFunc(h, func(r rune) bool { return r == ':' || r == ' ' })
+            if len(parts) > 0 {
+                finalHeader[i] = parts[len(parts)-1]
+            }
+        }
+    }
+
     logger.Infof("Query result - Header: %v, Data Rows: %d", finalHeader, len(localResults))
 
     for _, peerID := range eligiblePeers {
@@ -652,6 +664,15 @@ func BroadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
     uniqueResults := deduplicateRows(mergedResults)
     logger.Infof("Merged local and remote results, unique rows: %d", len(uniqueResults))
 
+	// Reapply WITH clause sorting if present in the original query
+    withClauses := helpers.ParseWithClauses(msg.Query)
+    if withClauses != nil {
+		logger.Infof("Applying WITH clause: %v on header: %v", withClauses, finalHeader)
+        uniqueResults = helpers.ApplyWithClauses(uniqueResults, finalHeader, withClauses)
+        logger.Infof("Applied WITH clause sorting from query '%s', final rows: %d", msg.Query, len(uniqueResults))
+		logger.Info("Header after applying WITH clause: ", finalHeader)
+    }
+
     parentPeerID := parentStream.Conn().RemotePeer()
     peerAddr := kadDHT.Host().Addrs()[0].Encapsulate(multiaddr.StringCast("/p2p/" + kadDHT.Host().ID().String())).String()
 
@@ -713,6 +734,7 @@ func filterHeaderRows(rows [][]interface{}, header []string) [][]interface{} {
         }
 		filtered = append(filtered, row)
     }
+	logger.Debug("The filtered rows are: ", filtered)
     return filtered
 }
 
@@ -797,7 +819,17 @@ func UpdateTTL(msg *common.QueryMessage, gm *graph.Manager) error {
 func RunIDSSQuery(command string, peer peer.ID, gm *graph.Manager) ([][]interface{}, []string, error) {
 	logger.Debug("Executing %s locally in %s", command, peer)
 
-	result, err := eql.RunQuery("myQuery", "main", command, gm)
+	// Parse WITH clauses
+	withClauses := helpers.ParseWithClauses(command)
+	baseQuery := command
+	if withClauses != nil {
+		// Remove WITH clause from the query for EliasDB
+		re := regexp.MustCompile(`(?i)\bwith\s+(.*?)(?:\s*;|\s*$)`)
+		baseQuery = re.ReplaceAllString(command, "")
+		baseQuery = strings.TrimSpace(baseQuery)
+	}
+
+	result, err := eql.RunQuery("myQuery", "main", baseQuery, gm)
 	if err != nil {
 		logger.Error("Error querying data: ", err)
 		return nil, nil, err
@@ -805,6 +837,12 @@ func RunIDSSQuery(command string, peer peer.ID, gm *graph.Manager) ([][]interfac
 	// Filter out metadata rows and keep only actual values
 	
 	header := result.Header().Labels()
+	for i, h := range header {
+        parts := strings.FieldsFunc(h, func(r rune) bool { return r == ':' || r == ' ' })
+        if len(parts) > 0 {
+			header[i] = strings.Title(parts[len(parts)-1])
+        }
+    }
 	
     var dataRows [][]interface{}
 	for _, row := range result.Rows() {
@@ -813,7 +851,15 @@ func RunIDSSQuery(command string, peer peer.ID, gm *graph.Manager) ([][]interfac
 		}
 		dataRows = append(dataRows, row)
 	}
+
+	// Apply WITH clauses (e.g., ordering) if present
+    if withClauses != nil {
+		logger.Infof("Applying WITH clauses: %v with header: %v", withClauses, header)
+        dataRows = helpers.ApplyWithClauses(dataRows, header, withClauses)
+    }
+	
 	logger.Infof("Query result - Header: %v, Data Rows: %d", header, len(dataRows))
+	logger.Infof("Query result - Header: %v, Data Rows: %d, First Row: %v", header, len(dataRows), dataRows[0])
 	return dataRows, header, nil
 }
 

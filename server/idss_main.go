@@ -425,6 +425,8 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 				}
 
 				// Send the results back to the client
+				logger.Infof("Local query results - Header: %v, Rows: %d", header, len(results))
+				
 				helpers.SendMergedResult(conn, peer.ID(remotePeerID), results, header, kadDHT)
 				logger.Infof("Local query executed successfully")
 				return
