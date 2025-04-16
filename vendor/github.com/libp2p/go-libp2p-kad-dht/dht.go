@@ -168,14 +168,6 @@ type IpfsDHT struct {
 	onRequestHook func(ctx context.Context, s network.Stream, req *pb.Message)
 }
 
-func (dht *IpfsDHT) DroppedPeers() any {
-	panic("unimplemented")
-}
-
-func (dht *IpfsDHT) BootstrapPeers() any {
-	panic("unimplemented")
-}
-
 // Assert that IPFS assumptions about interfaces aren't broken. These aren't a
 // guarantee, but we can use them to aid refactoring.
 var (
