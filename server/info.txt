@@ -76,5 +76,3 @@ WITH CLAUSE
 7. get Client with ordering(ascending Client:name) (Working)
 8. get Client show name with ordering(ascending name), 4 
 	NOTE: (Currently all are treated as strings)
-
-

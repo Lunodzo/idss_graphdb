@@ -7,6 +7,7 @@
 # Usage: python3 generate_data.py <output_file>
 
 # Copyright 2023-2027, University of Salento, Italy.
+# Coded by Lunodzo J. Mwinuka, PhD Student, University of Lisbon, Portugal.
 # All rights reserved.
 
 import random
