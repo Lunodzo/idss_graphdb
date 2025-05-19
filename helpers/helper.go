@@ -50,6 +50,7 @@ type OverlayInfo struct {
 }
 
 // Function to gather overlay information
+//TODO: Check the potential of using this to manage the overlay
 func GetOverlayInfo(kadDHT *dht.IpfsDHT) OverlayInfo {
 	bootstrapPeers := kadDHT.BootstrapPeers()
 	peers := kadDHT.Host().Network().Peers()

@@ -168,11 +168,11 @@ type IpfsDHT struct {
 	onRequestHook func(ctx context.Context, s network.Stream, req *pb.Message)
 }
 
-func (dht *IpfsDHT) DroppedPeers() any {
+func (dht *IpfsDHT) BootstrapPeers() any {
 	panic("unimplemented")
 }
 
-func (dht *IpfsDHT) BootstrapPeers() any {
+func (dht *IpfsDHT) DroppedPeers() any {
 	panic("unimplemented")
 }
 
