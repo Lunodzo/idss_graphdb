@@ -4,6 +4,8 @@
 # generate fake data. The generated data is saved as a JSON file. 
 # The script takes one argument, the output file name.
 
+# For simple testing, user 10 clients and 100 consumption records
+
 # Usage: python3 generate_data.py <output_file>
 
 # Copyright 2023-2027, University of Salento, Italy.
