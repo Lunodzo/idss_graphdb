@@ -37,10 +37,10 @@ require (
 	go.opentelemetry.io/otel/metric v1.35.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	gonum.org/v1/gonum v0.15.1 // indirect
-	//modernc.org/libc v1.62.1 // indirect
-	//modernc.org/mathutil v1.7.1 // indirect
-	//modernc.org/memory v1.9.1 // indirect
-	//modernc.org/sqlite v1.37.0 // indirect
+//modernc.org/libc v1.62.1 // indirect
+//modernc.org/mathutil v1.7.1 // indirect
+//modernc.org/memory v1.9.1 // indirect
+//modernc.org/sqlite v1.37.0 // indirect
 )
 
 require (
@@ -110,11 +110,11 @@ require (
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pion/datachannel v1.5.10 // indirect
 	github.com/pion/dtls/v2 v2.2.12 // indirect
-	github.com/pion/interceptor v0.1.37 // indirect
+	github.com/pion/interceptor v0.1.39 // indirect
 	github.com/pion/logging v0.2.3 // indirect
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/rtcp v1.2.15 // indirect
-	github.com/pion/rtp v1.8.13 // indirect
+	github.com/pion/rtp v1.8.18 // indirect
 	github.com/pion/sctp v1.8.37 // indirect
 	github.com/pion/sdp/v3 v3.0.11 // indirect
 	github.com/pion/transport/v2 v2.2.10 // indirect

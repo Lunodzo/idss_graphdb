@@ -24,8 +24,6 @@ github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa
 # github.com/docker/go-units v0.5.0
 ## explicit
 github.com/docker/go-units
-# github.com/dustin/go-humanize v1.0.1
-## explicit; go 1.16
 # github.com/elastic/gosigar v0.14.3
 ## explicit; go 1.14
 github.com/elastic/gosigar
@@ -368,8 +366,6 @@ github.com/multiformats/go-varint
 # github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 ## explicit
 github.com/munnerz/goautoneg
-# github.com/ncruces/go-strftime v0.1.9
-## explicit; go 1.17
 # github.com/onsi/ginkgo/v2 v2.23.0
 ## explicit; go 1.23.0
 github.com/onsi/ginkgo/v2/config
@@ -453,10 +449,11 @@ github.com/pion/ice/v4/internal/atomic
 github.com/pion/ice/v4/internal/fakenet
 github.com/pion/ice/v4/internal/stun
 github.com/pion/ice/v4/internal/taskloop
-# github.com/pion/interceptor v0.1.37
+# github.com/pion/interceptor v0.1.39
 ## explicit; go 1.20
 github.com/pion/interceptor
 github.com/pion/interceptor/internal/ntp
+github.com/pion/interceptor/internal/rtpbuffer
 github.com/pion/interceptor/internal/sequencenumber
 github.com/pion/interceptor/pkg/nack
 github.com/pion/interceptor/pkg/report
@@ -474,7 +471,7 @@ github.com/pion/randutil
 # github.com/pion/rtcp v1.2.15
 ## explicit; go 1.20
 github.com/pion/rtcp
-# github.com/pion/rtp v1.8.13
+# github.com/pion/rtp v1.8.18
 ## explicit; go 1.20
 github.com/pion/rtp
 github.com/pion/rtp/codecs
@@ -586,8 +583,6 @@ github.com/quic-go/webtransport-go
 # github.com/raulk/go-watchdog v1.3.0
 ## explicit; go 1.15
 github.com/raulk/go-watchdog
-# github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec
-## explicit; go 1.12
 # github.com/sirupsen/logrus v1.9.3
 ## explicit; go 1.13
 github.com/sirupsen/logrus
@@ -794,12 +789,4 @@ google.golang.org/protobuf/types/pluginpb
 lukechampine.com/blake3
 lukechampine.com/blake3/bao
 lukechampine.com/blake3/guts
-# modernc.org/libc v1.62.1
-## explicit; go 1.23.0
-# modernc.org/mathutil v1.7.1
-## explicit; go 1.21
-# modernc.org/memory v1.9.1
-## explicit; go 1.23.0
-# modernc.org/sqlite v1.37.0
-## explicit; go 1.23.0
 # github.com/gortc/stun => gortc.io/stun v1.23.0
