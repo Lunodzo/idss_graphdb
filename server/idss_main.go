@@ -313,6 +313,7 @@ func handlePeerDisconnection(iD peer.ID, kadDHT *dht.IpfsDHT) {
 
 // A function to handle incoming requests from peers.
 func handleRequest(conn network.Stream, remotePeerID string, ctx context.Context, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT, host host.Host) {
+	//var currentMsg common.QueryMessage // give message a local scope
 	logger.Debug("Received incoming from %s", remotePeerID)
 	defer conn.Close()
 

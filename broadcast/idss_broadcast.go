@@ -456,6 +456,7 @@ func BroadcastAggregateQuery(msg *common.QueryMessage, parentStream network.Stre
             defer wg.Done()
 
 			msgCopy := proto.Clone(msg).(*common.QueryMessage) // Clone the message to
+			msgCopy.Result = nil
             
             // Stream creation
 			streamCtx, streamCancel := context.WithTimeout(

@@ -26,7 +26,7 @@ output_file = sys.argv[1]
 
 # Generate clients data
 clients = []
-for i in range(1, 11): # Adjust the number of clients here
+for i in range(1, 1001): # Adjust the number of clients here
     clients.append({
         "kind": "Client",
         "key": i,
@@ -37,7 +37,7 @@ for i in range(1, 11): # Adjust the number of clients here
 
 # Generate consumption records data
 consumptions = []
-for i in range(1, 101): # Adjust the number of consumption records here
+for i in range(1, 10001): # Adjust the number of consumption records here
     consumptions.append({
         "kind": "Consumption",
         "key": i,
@@ -53,7 +53,7 @@ print("Stored a total of %d consumption records", len(consumptions))
 # range(1, x) is the range of consumption records keys. x should be less than the total number of consumption records.
 edges = []
 for client in clients:
-    consumption_keys = random.sample(range(1, 100), 10)  
+    consumption_keys = random.sample(range(1, 10000), 10)  
     for consumption_key in consumption_keys:
         edges.append({
             "key": f"e{len(edges) + 1}",
