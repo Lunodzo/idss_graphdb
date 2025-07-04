@@ -1,14 +1,15 @@
 #!/bin/bash
 
-# A script to launch a specified number of peers running the IDSS server.
-# This script compiles the Go server code and launches the specified number of peers.
-# Each peer is run in the background, and the script waits for all peers to complete DHT discovery.
-# The script also cleans up log files and graph database directories when the script is interrupted.
-# The number of peers to run is passed as an argument to the script.
-# NOTE: The script assumes that the Go server code is in the same directory as this script.
+# A script to compile and launch IDSS peers.
+# It creates a detailed log file ('peer_info.log') with the full address
+# and database directory path for each peer.
 #
 # Copyright 2023-2027, University of Salento, Italy.
 # All rights reserved.
+
+set -e # Exit immediately if a command exits with a non-zero status.
+
+#!/bin/bash
 
 # Check if the number of peers is passed as an argument
 if [ $# -eq 0 ]; then
@@ -17,147 +18,139 @@ if [ $# -eq 0 ]; then
 fi
 
 # Variables
-NUM_PEERS=$1        # Number of peers to run
-LOG_DIR="./logs"    # Directory to store log files
-DB_DIR="./idss_graph_db"  # Directory to store graph databases
+NUM_PEERS=$1
+LOG_DIR="./logs"
+DB_DIR="./idss_graph_db"
 
-# Ensure the server code is compiled before running
+# Ensure the server code is compiled
 go build -o idss_server .
 
-echo "Build completed. The binary is named idss_server."
-
-# Check if the build was successful
 if [ $? -ne 0 ]; then
-  echo "Failed to build the Go server. Exiting."=
+  echo "Failed to build the Go server. Exiting."
   exit 1
 fi
 
-# Create the log directory if it doesn't exist
 mkdir -p "${LOG_DIR}"
+mkdir -p "${DB_DIR}"
 
-# Array to store process IDs and discovery completion status
-PIDS=()
-DISCOVERY_COMPLETED=()
-
-# Counter for successfully joined peers
-SUCCESSFUL_PEERS=0
+# Associative arrays to store PIDs and discovery status
+declare -A PIDS
+declare -A DISCOVERY_COMPLETED
+PEER_IDS=()
 
 # Function to launch a peer
 launch_peer() {
-  local PEER_INDEX=$1
-  local LOG_FILE="${LOG_DIR}/peer_${PEER_INDEX}.log"
+  local INDEX=$1
+  local TMP_LOG="${LOG_DIR}/peer_tmp_${INDEX}.log"
 
-  # Run the server in the background and redirect output to a log file
-  ./idss_server > "${LOG_FILE}" 2>&1 &
+  ./idss_server > "${TMP_LOG}" 2>&1 &
 
-  # Save the process ID
-  PIDS+=($!)
-  DISCOVERY_COMPLETED+=("0")  # Initialize discovery status to not completed
+  local PID=$!
+  sleep 1
 
-  # Wait for the peer to log its address and complete initialization
+  # Try to extract the peer ID from logs
   local PEER_ID=""
-  for i in {1..10}; do  # Retry up to 10 times, with a 1-second delay
+  for i in {1..10}; do
     sleep 1
-    PEER_ID=$(grep "Listening on peer Address" "${LOG_FILE}" | head -n 1 | awk -F "/p2p/" '{print $2}')
+    PEER_ID=$(grep "Listening on peer Address" "${TMP_LOG}" | head -n 1 | awk -F "/p2p/" '{print $2}')
     if [ ! -z "$PEER_ID" ]; then
       break
     fi
   done
 
   if [ -z "$PEER_ID" ]; then
-    echo "Failed to retrieve peer ID for peer ${PEER_INDEX}. Exiting."
+    echo "Failed to retrieve peer ID for peer $INDEX"
     cleanup
     exit 1
   fi
 
-  # Print the peer's address if it's the first peer
-  if [ "$PEER_INDEX" -eq 1 ]; then
-    PEER_ADDRESS=$(grep "Listening on peer Address" "${LOG_FILE}" | head -n 1 | awk '{print $NF}')
-    echo "Peer 1 is running at address: ${PEER_ADDRESS}"
-  fi
+  # Move log to final location named by ID
+  local FINAL_LOG="${LOG_DIR}/${PEER_ID}.log"
+  mv "${TMP_LOG}" "${FINAL_LOG}"
 
-  # Create a directory for the peer's graph database
-  local PEER_DB_DIR="${DB_DIR}/${PEER_ID}"
-  mkdir -p "${PEER_DB_DIR}"
+  # Store process ID and discovery status
+  PIDS["$PEER_ID"]=$PID
+  DISCOVERY_COMPLETED["$PEER_ID"]=0
+  PEER_IDS+=("$PEER_ID")
 
-  # Check for a signal indicating data generation completion in the Go server logs
+  # Create a DB directory for this peer
+  mkdir -p "${DB_DIR}/${PEER_ID}"
+
+  # Wait for data generation (optional)
   for i in {1..100}; do
-    if grep -q "Data generation completed" "${LOG_FILE}"; then
+    if grep -q "Data generation completed" "${FINAL_LOG}"; then
       break
     fi
-    #sleep 1
   done
-  echo "Peer ${PEER_INDEX} Launched with ID ${PEER_ID}"
+
+  echo "Peer ${INDEX} launched with ID ${PEER_ID}"
+
+  # Show address for the first peer
+  if [ "$INDEX" -eq 1 ]; then
+    PEER_ADDRESS=$(grep "Listening on peer Address" "${FINAL_LOG}" | head -n 1 | awk '{print $NF}')
+    echo "First peer address: ${PEER_ADDRESS}"
+  fi
 }
 
-# Function to check if all peers have completed DHT discovery
+# Function to check discovery completion
 check_all_peers_discovered() {
   local updated=false
-  for ((i = 1; i <= NUM_PEERS; i++)); do
-    local LOG_FILE="${LOG_DIR}/peer_${i}.log"
+  local total_completed=0
 
-    if grep -q "Peer discovery completed" "${LOG_FILE}" && [ "${DISCOVERY_COMPLETED[$((i - 1))]}" -eq "0" ]; then
-      DISCOVERY_COMPLETED[$((i - 1))]="1"
+  for PEER_ID in "${PEER_IDS[@]}"; do
+    local LOG_FILE="${LOG_DIR}/${PEER_ID}.log"
+    if grep -q "Peer discovery completed" "$LOG_FILE" && [ "${DISCOVERY_COMPLETED[$PEER_ID]}" -eq 0 ]; then
+      DISCOVERY_COMPLETED[$PEER_ID]=1
       updated=true
-      SUCCESSFUL_PEERS=$((SUCCESSFUL_PEERS + 1))
-      #echo "Peers successfully joined: ${SUCCESSFUL_PEERS}/${NUM_PEERS}"
     fi
   done
 
-  # Check if all elements in DISCOVERY_COMPLETED are "1"
-  for status in "${DISCOVERY_COMPLETED[@]}"; do
-    if [ "$status" -eq 0 ]; then
-      return 1  # Not all peers have completed discovery
+  for PEER_ID in "${PEER_IDS[@]}"; do
+    if [ "${DISCOVERY_COMPLETED[$PEER_ID]}" -eq 0 ]; then
+      return 1
     fi
   done
 
   if [ "$updated" = true ]; then
-    return 0  # All peers have completed discovery
+    return 0
   fi
 }
 
-# Function to clean up log files, graph database directories, and stop peers
+# Cleanup function
 cleanup() {
   echo "Stopping all peers..."
-  
-  # Kill all peer processes
-  for PID in "${PIDS[@]}"; do
-    kill $PID 2>/dev/null
+
+  for PEER_ID in "${!PIDS[@]}"; do
+    kill "${PIDS[$PEER_ID]}" 2>/dev/null
   done
 
-  # Wait for all peers to exit
-  for PID in "${PIDS[@]}"; do
-    wait $PID 2>/dev/null
+  for PEER_ID in "${!PIDS[@]}"; do
+    wait "${PIDS[$PEER_ID]}" 2>/dev/null
   done
 
   echo "All peers have been stopped."
 
-  # Clear the logs
   echo "Clearing log files..."
   find "${LOG_DIR}" -type f -exec rm -f {} +
-  echo "Log files cleared."
-
-  # Clear the graph database directories
   echo "Clearing graph database directories..."
   find "${DB_DIR}" -mindepth 1 -type d -exec rm -rf {} +
-  echo "Graph database directories cleared."
 }
 
-# Trap to clean up when the script is interrupted (e.g., Ctrl+C)
 trap cleanup EXIT
 
-# Launch the specified number of peers
-for i in $(seq 1 $NUM_PEERS); do
-  launch_peer $i
+# Launch peers
+for i in $(seq 1 "$NUM_PEERS"); do
+  launch_peer "$i"
 done
 
-# Wait for all peers to complete discovery
+# Wait for discovery
 while ! check_all_peers_discovered; do
-  sleep 2  # Wait and recheck every 2 seconds
+  sleep 2
 done
-echo "Peers have joined the overlay."
 
-# Wait for all peers to exit (or stop when interrupted)
+echo "All peers have joined the overlay."
+
+# Wait for all peers to exit
 wait
 
 echo "All peers have exited."
