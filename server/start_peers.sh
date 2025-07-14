@@ -142,4 +142,4 @@ echo "All peers have joined the overlay."
 # Wait for all peers to exit
 wait
 
-echo "All peers have exited."
+echo "All peers have exited"
