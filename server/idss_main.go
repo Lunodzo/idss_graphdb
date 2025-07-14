@@ -45,6 +45,7 @@ import (
 
 	libp2p "github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
+	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
 
 	"github.com/ipfs/go-log/v2"
 
@@ -159,8 +160,18 @@ func main() {
 		logger.Fatal("Error creating listening address:", err)
 	}
 
+	// Add resource manager for balancing consumption
+	scalingLimits := rcmgr.DefaultLimits
+	limitConfig := scalingLimits.AutoScale() // Auto based on system
+	limiter := rcmgr.NewFixedLimiter(limitConfig)
+	rm, err := rcmgr.NewResourceManager(limiter)
+	if err != nil {
+		logger.Fatal("Resource manager init failed: ", err)
+	}
+
 	// Create libp2p host
 	host, err := libp2p.New(
+		libp2p.ResourceManager(rm), // Added for balancing
 		libp2p.Identity(priv),
 		libp2p.ListenAddrs(listenAddr),
 		libp2p.Security(noise.ID, noise.New),// Ensure secure communication
@@ -237,14 +248,6 @@ func main() {
 
 	// A go routine to refresh the DHT and periodically find and connect to peers
 	go kaddht.DiscoverAndConnectPeers(ctx, host, config, kadDHT)
-
-	// Overlay Information
-	/* overlayInfo := helpers.GetOverlayInfo(kadDHT)
-	logger.Infof("Overlay Information: %s", overlayInfo) */
-
-	// Gather overlay metrics
-	/* overlayMetrics := GatherOverlayMetrics(host, kadDHT, 5) // Ping each peer 5 times
-	logger.Infof("Overlay Metrics: %v", overlayMetrics) // TODO: It returns an empty slice. Investigate why */
 
 	// Handle streams
 	host.SetStreamHandler(protocol.ID(config.ProtocolID), func(stream network.Stream) { 

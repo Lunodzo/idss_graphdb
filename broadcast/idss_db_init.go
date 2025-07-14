@@ -3,122 +3,228 @@
 * Copyright 2023-2027, University of Salento, Italy.
 * All rights reserved.
 *
-* This file contains functions to generate demo data and initialise the graph
-* database by loading the generated data into the graph database. It also contains
-* a function to initialise the Query Manager graph node.
-* 
+* This file contains functions to generate demo data and initialize the EliasDB graph
+* database by loading the generated data. It also initializes a Query Manager node for
+* query metadata. Optimizations include streaming JSON parsing, batched transactions,
+* and cleanup of temporary JSON files.
 */
 
 package broadcast
 
 import (
-	_ "net/http/pprof"
-	"encoding/json"
-	"os"
-	"os/exec"
-	"time"
+    "encoding/json"
+    "os"
+    "os/exec"
+    "path/filepath"
+    "runtime/pprof"
+    "time"
 
-	"github.com/krotik/eliasdb/graph"
-	"github.com/krotik/eliasdb/graph/data"
-	"github.com/krotik/eliasdb/graph/graphstorage"
+    "github.com/krotik/eliasdb/eql"
+    "github.com/krotik/eliasdb/graph"
+    "github.com/krotik/eliasdb/graph/data"
+    "github.com/krotik/eliasdb/graph/graphstorage"
+)
 
-)        
-
-// Function to generate fake data and initialize the graph database by loading the generated data into the graph database
+// Function to generate fake data and initialize the graph database
 func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage.Storage, graphManager *graph.Manager) error {
-	// Execute python script to generate fake data and store it in the peer-specific data file
-	err := generateData(dataFilePath)
-	if err != nil {
-		logger.Fatalf("Failed to generate data: %v", err)
-	}
+    // Execute python script to generate fake data
+    err := generateData(dataFilePath)
+    if err != nil {
+        logger.Fatal("Failed to generate data: ", err)
+        return err
+    }
 
-	logger.Infof("Data generation completed, now loading data into the graph database...")
+    logger.Info("Data generation completed, now loading data into the graph database...")
 
-	// Read the generated data from the JSON file specific to this peer
-	myData, err := os.ReadFile(dataFilePath)
-	if err != nil {
-		return err
-	}
+    // Load the data into the graph database
+    err = LoadGraphData(dataFilePath, dbPath, graphDB, graphManager)
+    if err != nil {
+        logger.Error("Failed to load data into graph database: ", err)
+        return err
+    }
 
-	return LoadGraphData(string(myData), dbPath, graphDB, graphManager)
+    // Delete the JSON file after successful loading
+    err = os.Remove(dataFilePath)
+    if err != nil {
+        logger.Warn("Failed to delete JSON file ", dataFilePath, ": ", err)
+    } else {
+        logger.Info("Successfully deleted JSON file: ", dataFilePath)
+    }
+
+    return nil
 }
 
 // Function to generate fake data using a python script
 func generateData(dataFilePath string) error {
-	cmd := exec.Command("python3", "generate_data.py", dataFilePath)
-	err := cmd.Run()
-	if err != nil {
-		logger.Fatalf("Data generation command execution failed: %v", err)
-		return err
-	}
-	return nil
+    // Ensure the directory exists
+    if err := os.MkdirAll(filepath.Dir(dataFilePath), os.ModePerm); err != nil {
+        logger.Error("Failed to create directory for JSON file: ", err)
+        return err
+    }
+
+    // Pass configurable parameters (adjust as needed)
+    cmd := exec.Command("python3", "generate_data.py", dataFilePath,
+        "--num-clients", "1",
+        "--num-consumptions", "1",
+        "--edges-per-client", "1")
+    err := cmd.Run()
+    if err != nil {
+        logger.Fatal("Data generation command execution failed: ", err)
+        return err
+    }
+    return nil
 }
 
+// Function to load graph data into the graph database using a JSON file
+func LoadGraphData(dataFilePath string, dbPath string, graphDB graphstorage.Storage, graphManager *graph.Manager) error {
+    // Take heap snapshot before initialization
+    f, err := os.Create("heap_before_init.pprof")
+    if err == nil {
+        pprof.WriteHeapProfile(f)
+        f.Close()
+    } else {
+        logger.Warn("Failed to create heap profile: ", err)
+    }
 
-// Function to load graph data into the graph database using a JSON string of nodes and edges and graph transaction
-func LoadGraphData(dataa string, dbPath string, graphDB graphstorage.Storage, graphManager *graph.Manager) error {
-	trans := graph.NewGraphTrans(graphManager)
+    // Open the JSON file
+    file, err := os.Open(dataFilePath)
+    if err != nil {
+        logger.Error("Error opening JSON file: ", err)
+        return err
+    }
+    defer file.Close()
 
-	// Unmarshal the JSON data
-	var myData map[string]interface{}
-	err := json.Unmarshal([]byte(dataa), &myData)
-	if err != nil {
-		logger.Errorf("Error unmarshalling JSON data: %v", err)
-	}
+    const batchSize = 1000
+    trans := graph.NewGraphTrans(graphManager)
+    nodeCount, edgeCount := 0, 0
 
-	// Process nodes and edges
-	nodes := myData["nodes"].([]interface{})
-	edges := myData["edges"].([]interface{})
+    // Stream JSON data
+    decoder := json.NewDecoder(file)
+    _, err = decoder.Token() // Consume opening '{'
+    if err != nil {
+        logger.Error("Error parsing JSON: ", err)
+        return err
+    }
 
-	// Store nodes
-	for _, node := range nodes {
-		nodeData := node.(map[string]interface{})
-		graphNode := data.NewGraphNode()
+    for decoder.More() {
+        token, err := decoder.Token()
+        if err != nil {
+            logger.Error("Error reading JSON token: ", err)
+            return err
+        }
+        key := token.(string)
 
-		for key, value := range nodeData {
-			graphNode.SetAttr(key, value)
-		}
-		trans.StoreNode("main", graphNode)
-	}
+        if key == "nodes" {
+            _, err = decoder.Token() // Consume '['
+            if err != nil {
+                return err
+            }
+            for decoder.More() {
+                var nodeData map[string]interface{}
+                if err := decoder.Decode(&nodeData); err != nil {
+                    logger.Error("Error decoding node: ", err)
+                    return err
+                }
+                graphNode := data.NewGraphNode()
+                for k, v := range nodeData {
+                    graphNode.SetAttr(k, v)
+                }
+                trans.StoreNode("main", graphNode)
+                nodeCount++
+                if nodeCount%batchSize == 0 {
+                    if err := trans.Commit(); err != nil {
+                        logger.Error("Error committing node batch: ", err)
+                        return err
+                    }
+                    trans = graph.NewGraphTrans(graphManager)
+                }
+            }
+            _, err = decoder.Token() // Consume ']'
+            if err != nil {
+                return err
+            }
+        } else if key == "edges" {
+            _, err = decoder.Token() // Consume '['
+            if err != nil {
+                return err
+            }
+            for decoder.More() {
+                var edgeData map[string]interface{}
+                if err := decoder.Decode(&edgeData); err != nil {
+                    logger.Error("Error decoding edge: ", err)
+                    return err
+                }
+                graphEdge := data.NewGraphEdge()
+                for k, v := range edgeData {
+                    graphEdge.SetAttr(k, v)
+                }
+                trans.StoreEdge("main", graphEdge)
+                edgeCount++
+                if edgeCount%batchSize == 0 {
+                    if err := trans.Commit(); err != nil {
+                        logger.Error("Error committing edge batch: ", err)
+                        return err
+                    }
+                    trans = graph.NewGraphTrans(graphManager)
+                }
+            }
+            _, err = decoder.Token() // Consume ']'
+            if err != nil {
+                return err
+            }
+        }
+    }
 
-	// Store edges
-	for _, edge := range edges {
-		edgeData := edge.(map[string]interface{})
-		graphEdge := data.NewGraphEdge()
+    // Commit any remaining nodes/edges
+    if nodeCount%batchSize != 0 || edgeCount%batchSize != 0 {
+        if err := trans.Commit(); err != nil {
+            logger.Error("Error committing final batch: ", err)
+            return err
+        }
+    }
 
-		for key, value := range edgeData {
-			graphEdge.SetAttr(key, value)
-		}
-		trans.StoreEdge("main", graphEdge)
-	}
+    // Take heap snapshot after initialization
+    f, err = os.Create("heap_after_init.pprof")
+    if err == nil {
+        pprof.WriteHeapProfile(f)
+        f.Close()
+    } else {
+        logger.Warn("Failed to create heap profile: ", err)
+    }
 
-	// Commit the transaction to store the nodes and edges
-	return trans.Commit()
+    logger.Info("Loaded ", nodeCount, " nodes and ", edgeCount, " edges into graph database")
+    return nil
 }
 
-// Function to initialise the Query Manager graph node
+// Function to initialize the Query Manager graph node
 func QueryManager_init(GRAPH_MANAGER *graph.Manager) {
-	logger.Info("Creating the Query Manager node...")
+    // Check if sample node exists
+    query := "get Query where key = 'sample'"
+    result, err := eql.RunQuery("checkQuery", "main", query, GRAPH_MANAGER)
+    if err == nil && len(result.Rows()) > 0 {
+        logger.Info("Query Manager node already exists")
+        return
+    }
 
-	trans := graph.NewGraphTrans(GRAPH_MANAGER)
-	// Create the query node
-	queryNode := data.NewGraphNode()
-	queryNode.SetAttr("key", "sample") // key is a string
-	queryNode.SetAttr("kind", "Query") // kind is a string
-	queryNode.SetAttr("name", "Query") // name is a string
-	queryNode.SetAttr("query_string", "sample query") // holds the query string
-	queryNode.SetAttr("arrival_time", time.Now().Unix()) // holds the arrival time of the query
-	queryNode.SetAttr("ttl", 0) // holds the time to live of the query/how long a client can wait for a response
-	queryNode.SetAttr("originator", "sample") // holds a peer ID of the peer that received the query from client
-	queryNode.SetAttr("sender_address", "") // holds the address of the peer that sent the query. This will be changing as a query is being propagated
-	queryNode.SetAttr("state", "new") // holds the state of the query. We have QUEUED, LOCALLY_EXECUTED, SENT_BACK, COMPLETED and FAILED
-	queryNode.SetAttr("result", "") // holds the response to the query
+    logger.Info("Creating the Query Manager node...")
 
-	// Store the query node
-	trans.StoreNode("main", queryNode)
-	if err := trans.Commit(); err != nil {
-		logger.Errorf("Error committing transaction: %v", err)
-		return
-	}
-	logger.Info("Committed Query Manager node store transaction")
+    trans := graph.NewGraphTrans(GRAPH_MANAGER)
+    queryNode := data.NewGraphNode()
+    queryNode.SetAttr("key", "sample")
+    queryNode.SetAttr("kind", "Query")
+    queryNode.SetAttr("name", "Query")
+    queryNode.SetAttr("query_string", "sample query")
+    queryNode.SetAttr("arrival_time", time.Now().Unix())
+    queryNode.SetAttr("ttl", 0)
+    queryNode.SetAttr("originator", "sample")
+    queryNode.SetAttr("sender_address", "")
+    queryNode.SetAttr("state", "new")
+    queryNode.SetAttr("result", "")
+
+    trans.StoreNode("main", queryNode)
+    if err := trans.Commit(); err != nil {
+        logger.Error("Error committing Query Manager transaction: ", err)
+        return
+    }
+    logger.Info("Committed Query Manager node store transaction")
 }

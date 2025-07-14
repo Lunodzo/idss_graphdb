@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# A script to compile and launch IDSS peers.
+# It creates a detailed log file ('peer_info.log') with the full address
+# and database directory path for each peer.
+#
+# Copyright 2023-2027, University of Salento, Italy.
+# All rights reserved.
+
+set -e # Exit immediately if a command exits with a non-zero status.
+
 # Check if the number of peers is passed as an argument
 if [ $# -eq 0 ]; then
   echo "Usage: $0 <number_of_peers>"
@@ -10,6 +19,14 @@ fi
 NUM_PEERS=$1
 LOG_DIR="./logs"
 DB_DIR="./idss_graph_db"
+
+if [ $NUM_PEERS -gt 50 ]; then
+  echo "Warning: Launching >50 peers may cause delays or failures on single machine. Consider reducing or using a cluster."
+fi
+
+# Increase system limits
+ulimit -n 65535  # Open files
+ulimit -u 8192   # Processes
 
 # Ensure the server code is compiled
 go build -o idss_server .
@@ -32,14 +49,14 @@ launch_peer() {
   local INDEX=$1
   local TMP_LOG="${LOG_DIR}/peer_tmp_${INDEX}.log"
 
-  ./idss_server > "${TMP_LOG}" 2>&1 &
+  GOMAXPROCS=1 ./idss_server > "${TMP_LOG}" 2>&1 &
 
   local PID=$!
   sleep 1
 
   # Try to extract the peer ID from logs
   local PEER_ID=""
-  for i in {1..10}; do
+  for i in {1..60}; do  # Increased timeout
     sleep 1
     PEER_ID=$(grep "Listening on peer Address" "${TMP_LOG}" | head -n 1 | awk -F "/p2p/" '{print $2}')
     if [ ! -z "$PEER_ID" ]; then
@@ -48,7 +65,8 @@ launch_peer() {
   done
 
   if [ -z "$PEER_ID" ]; then
-    echo "Failed to retrieve peer ID for peer $INDEX"
+    cat "${TMP_LOG}"  # Dump log for debug
+    echo "Failed to retrieve peer ID for peer $INDEX after 60 seconds"
     cleanup
     exit 1
   fi
@@ -130,6 +148,7 @@ trap cleanup EXIT
 # Launch peers
 for i in $(seq 1 "$NUM_PEERS"); do
   launch_peer "$i"
+  sleep 1  # Stagger launches to reduce contention
 done
 
 # Wait for discovery
