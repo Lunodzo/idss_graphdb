@@ -240,10 +240,11 @@ func main() {
 
 		for {
 			responseBytes, err := readDelimitedMessage(stream)
-			if err == io.EOF {
-				break // All chunks received
-			}
+			
 			if err != nil {
+                if err == io.EOF || strings.Contains(err.Error(), "EOF") {
+                    break // All chunks received
+                }
 				log.Error("Error reading response chunk from server:", err)
 				break
 			}
