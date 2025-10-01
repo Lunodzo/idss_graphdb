@@ -12,6 +12,8 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 )
 
+require go.yaml.in/yaml/v2 v2.4.2 // indirect
+
 require (
 	//github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -37,15 +39,15 @@ require (
 	go.opentelemetry.io/otel/metric v1.35.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	gonum.org/v1/gonum v0.15.1 // indirect
-	//modernc.org/libc v1.62.1 // indirect
-	//modernc.org/mathutil v1.7.1 // indirect
-	//modernc.org/memory v1.9.1 // indirect
-	//modernc.org/sqlite v1.37.0 // indirect
+//modernc.org/libc v1.62.1 // indirect
+//modernc.org/mathutil v1.7.1 // indirect
+//modernc.org/memory v1.9.1 // indirect
+//modernc.org/sqlite v1.37.0 // indirect
 )
 
 require (
 	github.com/pion/stun v0.6.1 // indirect
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/protobuf v1.36.8
 )
 
 require (
@@ -120,10 +122,10 @@ require (
 	github.com/pion/transport/v2 v2.2.10 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/polydawn/refmt v0.89.0 // indirect
-	github.com/prometheus/client_golang v1.21.1 // indirect
-	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.63.0 // indirect
-	github.com/prometheus/procfs v0.16.0 // indirect
+	github.com/prometheus/client_golang v1.23.2 // indirect
+	github.com/prometheus/client_model v0.6.2 // indirect
+	github.com/prometheus/common v0.66.1 // indirect
+	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/quic-go/quic-go v0.50.0 // indirect
 	github.com/quic-go/webtransport-go v0.8.1-0.20241018022711-4ac2c9250e66 // indirect
@@ -136,14 +138,14 @@ require (
 	go.uber.org/mock v0.5.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
-	golang.org/x/tools v0.31.0 // indirect
+	golang.org/x/mod v0.26.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/tools v0.35.0 // indirect
 	lukechampine.com/blake3 v1.4.0 // indirect
 )
 

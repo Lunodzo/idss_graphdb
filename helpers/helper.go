@@ -49,33 +49,6 @@ type OverlayInfo struct {
 	ConnectedPeers []string `json:"connected_peers"`
 }
 
-// Function to gather overlay information
-//TODO: Check the potential of using this to manage the overlay
-func GetOverlayInfo(kadDHT *dht.IpfsDHT) OverlayInfo {
-	bootstrapPeers := kadDHT.BootstrapPeers()
-	peers := kadDHT.Host().Network().Peers()
-	activeConnections := kadDHT.Host().Network().Conns()
-	droppedPeers := kadDHT.DroppedPeers()
-	return OverlayInfo{
-		MyPeerID: kadDHT.Host().ID().String(),
-		NumPeers: len(peers),
-		PeerIDs:  peerIDs(peers),
-		BootstrapPeers: peerIDs(bootstrapPeers.([]peer.ID)),
-		ActiveConnections: len(activeConnections),
-		ConnectedPeers: peerIDs(peers),
-		DroppedPeers: peerIDs(droppedPeers.([]peer.ID)),
-		NumDropPeers: len(droppedPeers.([]peer.ID)),
-	}
-}
-
-func peerIDs(peers []peer.ID) []string {
-	var ids []string
-	for _, p := range peers {
-		ids = append(ids, p.String())
-	}
-	return ids
-}
-
 // Function to parse the query string and extract the aggregates
 func ParseAggregates(query string) []common.AggregateInfo {
     var aggregates []common.AggregateInfo
@@ -172,9 +145,10 @@ func ApplyOrdering(results [][]interface{}, header [] string, clause string) [][
     }
 
 	orderType := strings.ToLower(matches[1])
-    if orderType == "asc" {
+    switch orderType {
+case "asc":
         orderType = "ascending"
-    } else if orderType == "desc" {
+    case "desc":
         orderType = "descending"
     }
     targetCol := strings.ToLower(matches[2])

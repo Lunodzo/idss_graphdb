@@ -41,7 +41,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
 
 	libp2p "github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
@@ -63,6 +62,7 @@ import (
 
 	"github.com/multiformats/go-multiaddr"
 	"google.golang.org/protobuf/proto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // OverlayMetrics contains latency and reliability stats for a peer.
@@ -86,57 +86,13 @@ func init() {
         logger.Info("Starting pprof server on :6060") 
         logger.Info(http.ListenAndServe("localhost:6060", nil))
 		//Visit http://localhost:6060/debug/pprof/ to view the pprof server
+
+		logger.Info("Starting Prometheus metrics server on :2112/metrics")
+		http.Handle("/metrics", promhttp.Handler())
+		logger.Info(http.ListenAndServe(":2112", nil)) // Prometheus metrics server
     }()
 }
 
-// GatherOverlayMetrics pings every peer in the DHT routing table 'pingCount' times
-// and returns a slice with the metrics.
-func GatherOverlayMetrics(h host.Host, kadDHT *dht.IpfsDHT, pingCount int) []OverlayMetrics {
-	var metrics []OverlayMetrics
-
-	peers := kadDHT.RoutingTable().ListPeers()
-	for _, p := range peers {
-		var successes int
-		var total int
-		var sumRTT time.Duration
-
-		// Use a timeout context for the pings.
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		resultsCh := ping.NewPingService(h).Ping(ctx, p)
-
-		// Attempt pingCount pings
-		for i := 0; i < pingCount; i++ {
-			res, ok := <-resultsCh
-			if !ok {
-				break
-			}
-			total++
-			if res.Error == nil {
-				successes++
-				sumRTT += res.RTT
-			}
-		}
-
-		var avgLatency time.Duration
-		if successes > 0 {
-			avgLatency = sumRTT / time.Duration(successes)
-		}
-		var successRate float64
-		if total > 0 {
-			successRate = float64(successes) / float64(total)
-		}
-		metrics = append(metrics, OverlayMetrics{
-			PeerID:      p.String(),
-			AvgLatency:  avgLatency,
-			SuccessRate: successRate,
-			TotalPings:  total,
-			Successes:   successes,
-		})
-	}
-	return metrics
-}
 
 /*=====================
 MAIN FUNCTION
