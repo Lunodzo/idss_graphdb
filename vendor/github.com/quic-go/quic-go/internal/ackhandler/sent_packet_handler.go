@@ -460,10 +460,10 @@ func (h *sentPacketHandler) detectAndRemoveAckedPackets(ack *wire.AckFrame, encL
 		}
 		if p.isPathProbePacket {
 			probePacket := pnSpace.history.RemovePathProbe(p.PacketNumber)
-			if probePacket == nil {
-				panic(fmt.Sprintf("path probe doesn't exist: %d", p.PacketNumber))
+			// the probe packet might already have been declared lost
+			if probePacket != nil {
+				h.ackedPackets = append(h.ackedPackets, probePacket)
 			}
-			h.ackedPackets = append(h.ackedPackets, probePacket)
 			continue
 		}
 		h.ackedPackets = append(h.ackedPackets, p)
@@ -584,14 +584,15 @@ func (h *sentPacketHandler) setLossDetectionTimer(now time.Time) {
 	newAlarm := h.lossDetectionTime(now)
 	h.alarm = newAlarm
 
-	if newAlarm.Time.IsZero() && !oldAlarm.Time.IsZero() {
+	hasAlarm := !newAlarm.Time.IsZero()
+	if !hasAlarm && !oldAlarm.Time.IsZero() {
 		h.logger.Debugf("Canceling loss detection timer.")
 		if h.tracer != nil && h.tracer.LossTimerCanceled != nil {
 			h.tracer.LossTimerCanceled()
 		}
 	}
 
-	if h.tracer != nil && h.tracer.SetLossTimer != nil && newAlarm != oldAlarm {
+	if hasAlarm && h.tracer != nil && h.tracer.SetLossTimer != nil && newAlarm != oldAlarm {
 		h.tracer.SetLossTimer(newAlarm.TimerType, newAlarm.EncryptionLevel, newAlarm.Time)
 	}
 }
@@ -636,7 +637,7 @@ func (h *sentPacketHandler) lossDetectionTime(now time.Time) alarmTimer {
 		return alarmTimer{
 			Time:            pathProbeLossTime,
 			TimerType:       logging.TimerTypePathProbe,
-			EncryptionLevel: encLevel,
+			EncryptionLevel: protocol.Encryption1RTT,
 		}
 	}
 	return alarmTimer{}
@@ -658,7 +659,6 @@ func (h *sentPacketHandler) detectLostPathProbes(now time.Time) {
 		for _, f := range p.Frames {
 			f.Handler.OnLost(f.Frame)
 		}
-		h.appDataPackets.history.Remove(p.PacketNumber)
 		h.appDataPackets.history.RemovePathProbe(p.PacketNumber)
 	}
 }
