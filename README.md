@@ -2,7 +2,7 @@
 
 IDSS is a distributed data storage and query execution service that allows clients 
 to submit queries to an overlay network of peers. The queries are executed in a 
-decentralized manner, with results merged and returned to the client. The system uses 
+decentralised manner, with results merged and returned to the client. The system uses 
 a best-effort approach with a time-to-live (TTL) mechanism to ensure efficient query 
 execution.
 
