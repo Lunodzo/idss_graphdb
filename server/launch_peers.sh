@@ -117,6 +117,7 @@ wait_and_log_peer_info
 
 
 # --- Final Output ---
+# Display summary and instructions. Both scripts can now be used
 echo ""
 echo "------------------------------------------------------------"
 echo "✅ Cluster launch script finished."
