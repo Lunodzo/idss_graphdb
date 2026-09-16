@@ -430,6 +430,7 @@ func BroadcastAggregateQuery(msg *common.QueryMessage, parentStream network.Stre
 	}
 	eligiblePeers = selectForwardPeers(eligiblePeers, remainingQueryTime(msg))
 
+	// Log the eligible peers for broadcasting the aggregate query
 	if len(eligiblePeers) > 0 {
 		logger.Infof("There are %d eligible peers to broadcast to. Will filter by using protocol", len(eligiblePeers))
 	} else {
@@ -754,7 +755,7 @@ func BroadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 }
 
 func peerIDList(peerIDs map[string]struct{}) []string {
-	result := make([]string, 0, len(peerIDs))
+	result := make([]string, 0, len(peerIDs)) // initialize the result slice with the capacity of peerIDs
 	for peerID := range peerIDs {
 		result = append(result, peerID)
 	}
@@ -768,13 +769,15 @@ func selectForwardPeers(peers []peer.ID, budget time.Duration) []peer.ID {
 	}
 	limit := maxForwardPeers
 	switch {
-	case budget <= 750*time.Millisecond:
-		limit = 20
-	case budget <= 1500*time.Millisecond:
-		limit = 40
-	case budget <= 3*time.Second:
+	case budget <= 750*time.Millisecond: // this is less than 1 second
+		limit = 30
+	case budget <= 1500*time.Millisecond: // this is less than 1.5 seconds
 		limit = 60
+	case budget <= 3*time.Second: // this is less than 3 seconds
+		limit = 120
 	}
+
+	// Ensure the limit does not exceed the number of available peers
 	if limit > len(peers) {
 		limit = len(peers)
 	}
@@ -1034,14 +1037,21 @@ func LocalSettlementTotals(gm *graph.Manager, hostID peer.ID, from time.Time, to
 }
 
 // CompileSettlement collects aggregate-only peer totals and stores local summaries.
+// Phase timings are logged so the experiment harness can report Q6's phase breakdown.
 func CompileSettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, from time.Time, to time.Time) error {
+	totalStart := time.Now()
 	host := kadDHT.Host()
 	results := []*common.SettlementResult{}
+
+	localTotalsStart := time.Now()
 	meterSum, tradeSum, err := LocalSettlementTotals(gm, host.ID(), from, to)
 	if err != nil {
 		return err
 	}
+	logger.Infof("Settlement phase=local_totals duration_ms=%.3f", time.Since(localTotalsStart).Seconds()*1000)
 	results = append(results, &common.SettlementResult{PeerId: host.ID().String(), MeterReadingSum: meterSum, TradeVolumeSum: tradeSum})
+
+	broadcastStart := time.Now()
 	for _, remotePeer := range kadDHT.RoutingTable().ListPeers() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		stream, err := host.NewStream(ctx, remotePeer, protocol.ID(common.IDSS_PROTOCOL_LOCAL))
@@ -1064,6 +1074,9 @@ func CompileSettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, from time.Time, t
 		}
 		cancel()
 	}
+	logger.Infof("Settlement phase=broadcast_collect duration_ms=%.3f responding_peers=%d", time.Since(broadcastStart).Seconds()*1000, len(results))
+
+	writeStart := time.Now()
 	for _, result := range results {
 		summary := data.NewGraphNode()
 		summary.SetAttr("key", fmt.Sprintf("settlement-%s-%d-%d", result.PeerId, from.Unix(), to.Unix()))
@@ -1077,6 +1090,8 @@ func CompileSettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, from time.Time, t
 			return fmt.Errorf("storing settlement summary: %v", err)
 		}
 	}
+	logger.Infof("Settlement phase=write_summaries duration_ms=%.3f", time.Since(writeStart).Seconds()*1000)
+	logger.Infof("Settlement phase=total duration_ms=%.3f", time.Since(totalStart).Seconds()*1000)
 	logger.Infof("Compiled %d settlement summaries", len(results))
 	return nil
 }

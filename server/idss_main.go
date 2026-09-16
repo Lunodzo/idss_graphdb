@@ -22,9 +22,11 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	_ "net/http/pprof"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"flag"
@@ -96,16 +98,35 @@ func init() {
 		}()
 	}
 
-	metricsAddr := os.Getenv("IDSS_METRICS_ADDR")
-	if metricsAddr != "" {
-		go func() {
-			metricsMux := http.NewServeMux()
-			metricsMux.HandleFunc("/metrics", metricsHandler)
-			logger.Infof("Starting Prometheus metrics server on %s", metricsAddr)
-			if err := http.ListenAndServe(metricsAddr, metricsMux); err != nil {
-				logger.Errorf("metrics server stopped: %v", err)
-			}
-		}()
+}
+
+// startMetricsServer exposes Prometheus metrics and overlay ping metrics once the
+// host and DHT are available. Called from main() after DHT initialization.
+func startMetricsServer(metricsAddr string, h host.Host, kadDHT *dht.IpfsDHT) {
+	metricsMux := http.NewServeMux()
+	metricsMux.HandleFunc("/metrics", metricsHandler)
+	metricsMux.HandleFunc("/overlay-metrics", func(writer http.ResponseWriter, request *http.Request) {
+		overlayMetricsHandler(writer, request, h, kadDHT)
+	})
+	logger.Infof("Starting Prometheus metrics server on %s", metricsAddr)
+	if err := http.ListenAndServe(metricsAddr, metricsMux); err != nil {
+		logger.Errorf("metrics server stopped: %v", err)
+	}
+}
+
+// overlayMetricsHandler serves per-peer RTT and success-rate stats as JSON for
+// measuring peer-count scaling independently of query-level TTL completeness.
+func overlayMetricsHandler(writer http.ResponseWriter, request *http.Request, h host.Host, kadDHT *dht.IpfsDHT) {
+	pingCount := 3
+	if raw := os.Getenv("IDSS_OVERLAY_PING_COUNT"); raw != "" {
+		if parsed, err := strconv.Atoi(raw); err == nil && parsed > 0 {
+			pingCount = parsed
+		}
+	}
+	metrics := GatherOverlayMetrics(h, kadDHT, pingCount)
+	writer.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(writer).Encode(metrics); err != nil {
+		http.Error(writer, fmt.Sprintf("encoding overlay metrics: %v", err), http.StatusInternalServerError)
 	}
 }
 
@@ -298,6 +319,10 @@ func main() {
 	// Initialise the DHT and bootstrap the peer
 	kadDHT := kaddht.InitialiseDHT(ctx, host, config) // Pass conf for protocol ID
 
+	if metricsAddr := os.Getenv("IDSS_METRICS_ADDR"); metricsAddr != "" {
+		go startMetricsServer(metricsAddr, host, kadDHT)
+	}
+
 	// A go routine to refresh the DHT and periodically find and connect to peers
 	go kaddht.DiscoverAndConnectPeers(ctx, host, config, kadDHT)
 	go func() {
@@ -408,6 +433,8 @@ func handleRequest(conn network.Stream, remotePeerID string, ctx context.Context
 	}
 }
 
+
+// registerManager registers the community manager node in the graph database.
 func registerManager(gm *graph.Manager, peerID string) {
 	managerNode := data.NewGraphNode()
 	managerNode.SetAttr("key", "manager-"+peerID)
@@ -424,6 +451,8 @@ func registerManager(gm *graph.Manager, peerID string) {
 	logger.Infof("Registered community manager %s", peerID)
 }
 
+
+// handleCustomerRegistration processes a customer registration message and stores the customer information in the graph database. It is only executed by the community manager.
 func handleCustomerRegistration(msg *common.QueryMessage, config flags.Config, gm *graph.Manager) {
 	if !config.IsManager || msg.CustomerRegistration == nil {
 		return
@@ -454,7 +483,9 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 		queryType = "local"
 	}
 	common.QueryTotal.WithLabelValues(queryType).Inc()
-	defer common.QueryDuration.Observe(time.Since(startTime).Seconds())
+	defer func() {
+		common.QueryDuration.Observe(time.Since(startTime).Seconds())
+	}()
 	if !isValidRequesterRole(msg.RequesterRole) {
 		err := fmt.Errorf("invalid requester role %q: expected member, manager, or observer", msg.RequesterRole)
 		logger.Errorf("Rejecting query %s from requester %s: %v", msg.Uqid, msg.RequesterId, err)
@@ -575,6 +606,8 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	broadcast.ExecuteAndBroadcastQuery(conn, msg, config, gm, kadDHT, decision)
 }
 
+
+// broadcastCustomerRegistrations broadcasts all customer registrations to all peers in the DHT. It retrieves the customer data from the local graph database and sends it to each peer.
 func broadcastCustomerRegistrations(ctx context.Context, host host.Host, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
 	rows, header, err := broadcast.RunIDSSQuery("get Customer", host.ID(), gm)
 	if err != nil {
@@ -607,6 +640,8 @@ func broadcastCustomerRegistrations(ctx context.Context, host host.Host, config 
 	}
 }
 
+
+// handleSettlementCommand processes a settlement command from a manager client. It validates the command, parses the time range, and compiles the settlement summaries using the broadcast package.
 func handleSettlementCommand(conn network.Stream, msg *common.QueryMessage, remotePeerID string, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
 	if !config.IsManager || msg.RequesterRole != "manager" {
 		helpers.SendErrorMessage(conn, peer.ID(remotePeerID), "settle is available only to a manager client connected to a manager peer")
@@ -634,6 +669,7 @@ func handleSettlementCommand(conn network.Stream, msg *common.QueryMessage, remo
 	sendSuccessMessage(conn, remotePeerID, "Settlement summaries compiled", kadDHT)
 }
 
+// handleSettlementRequest processes a settlement request from a peer. It computes the local settlement totals for the specified time range and sends the results back to the requesting peer.
 func handleSettlementRequest(conn network.Stream, msg *common.QueryMessage, gm *graph.Manager, host host.Host) {
 	if msg.SettlementRequest == nil {
 		return
@@ -657,15 +693,17 @@ func handleSettlementRequest(conn network.Stream, msg *common.QueryMessage, gm *
 	}
 }
 
+// isDataModification checks if a given query string represents a data modification operation (add, update, delete).
 func isDataModification(query string) bool {
 	return strings.HasPrefix(query, "add") || strings.HasPrefix(query, "update") || strings.HasPrefix(query, "delete")
 }
 
+// isValidRequesterRole checks if the given role is a valid requester role (member, manager, observer).
 func isValidRequesterRole(role string) bool {
 	return role == "member" || role == "manager" || role == "observer"
 }
 
-// Function to send a success message back to the client
+// sendSuccessMessage sends a success message back to the client.
 func sendSuccessMessage(conn network.Stream, remotePeerID string, message string, kadDHT *dht.IpfsDHT) {
 	// Create a simple result with the success message
 	results := [][]interface{}{
@@ -676,7 +714,7 @@ func sendSuccessMessage(conn network.Stream, remotePeerID string, message string
 	helpers.SendMergedResult(conn, peer.ID(remotePeerID), results, header, kadDHT)
 }
 
-// Function to handle update nodes in the graph database
+// handleUpdateQuery handles update queries for nodes in the graph database.
 func handleUpdateQuery(query string, gm *graph.Manager) (string, error) {
 	// Example query: "update Client 15 name='John Doe' power=300"
 	query = strings.TrimSpace(strings.TrimPrefix(query, "update"))
@@ -708,7 +746,7 @@ func handleUpdateQuery(query string, gm *graph.Manager) (string, error) {
 	return key, nil
 }
 
-// Function to handle deletion of nodes from the graph database
+// handleDeleteQuery handles deletion queries for nodes in the graph database.
 func handleDeleteQuery(query string, gm *graph.Manager) (string, error) {
 	// Example query: "delete Client 15"
 	query = strings.TrimSpace(strings.TrimPrefix(query, "delete"))
@@ -745,7 +783,7 @@ func handleDeleteQuery(query string, gm *graph.Manager) (string, error) {
 	return key, nil
 }
 
-// Function to handle addition of nodes to the graph database
+// handleAddQuery handles addition queries for nodes in the graph database.
 func handleAddQuery(query string, gm *graph.Manager) (string, error) {
 	// Example query: "add Client 15 name='John Mandili' contract_number=35435 power=255"
 	query = strings.TrimSpace(strings.TrimPrefix(query, "add"))

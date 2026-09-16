@@ -241,9 +241,11 @@ func main() {
 		var header []string
 		var errorMsg string
 		var respondingPeerCount int
+		var totalWireBytes int
 
 		for {
-			responseBytes, err := readDelimitedMessage(stream)
+			responseBytes, wireSize, err := readDelimitedMessage(stream)
+			totalWireBytes += wireSize
 
 			if err != nil {
 				if err == io.EOF || strings.Contains(err.Error(), "EOF") {
@@ -295,6 +297,7 @@ func main() {
 			dataNonHeaders := len(allRows) // Exclude header from count
 			log.Infof("Got %d records", dataNonHeaders)
 			log.Infof("Responding peers: %d", respondingPeerCount)
+			log.Infof("Wire bytes received: %d", totalWireBytes)
 			log.Infof("Time spent: %s", timeTaken)
 
 			// Check if it's a status message or query result
@@ -354,15 +357,17 @@ func writeDelimitedMessage(w io.Writer, data []byte) error {
 	return err
 }
 
-func readDelimitedMessage(r io.Reader) ([]byte, error) {
+// readDelimitedMessage returns the decoded payload plus the wire size of the frame
+// (pre-decompression) so callers can measure bytes actually transferred.
+func readDelimitedMessage(r io.Reader) ([]byte, int, error) {
 	var size uint64
 	for shift := uint(0); ; shift += 7 {
 		if shift >= 64 {
-			return nil, fmt.Errorf("invalid frame length")
+			return nil, 0, fmt.Errorf("invalid frame length")
 		}
 		var one [1]byte
 		if _, err := io.ReadFull(r, one[:]); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		size |= uint64(one[0]&0x7f) << shift
 		if one[0]&0x80 == 0 {
@@ -370,13 +375,14 @@ func readDelimitedMessage(r io.Reader) ([]byte, error) {
 		}
 	}
 	if size > 256<<20 {
-		return nil, fmt.Errorf("frame too large: %d bytes", size)
+		return nil, 0, fmt.Errorf("frame too large: %d bytes", size)
 	}
 	buf := make([]byte, size)
 	if _, err := io.ReadFull(r, buf); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return decodeFrame(buf)
+	decoded, err := decodeFrame(buf)
+	return decoded, len(buf), err
 }
 
 const compressionThreshold = 4096

@@ -1,0 +1,4 @@
+# Permissive policy used to isolate query-execution cost from access-control
+# overhead (E4 cost experiments). Every role gets raw records for every kind.
+default: allow
+rules: []

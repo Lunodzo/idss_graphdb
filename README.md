@@ -150,9 +150,11 @@ rules:
 
 `Customer` registration, settlement aggregates, and concluded trades are mandatory sharing classes. Fine-grained readings, asset details, and open orders are discretionary. A peer querying data from itself bypasses its own policy.
 
+`server/policy.permissive.yaml` grants `allow` to every kind and role. It isolates the cost of query execution from the cost of policy evaluation (see `experiments/run_e4_governance.sh`) and is not intended for a real deployment.
+
 ## Submit Queries
 
-Run the client from `client/`, supplying a peer multiaddress and requester role. The role defaults to `member`.
+Run the client from `client/`, supplying a peer multiaddress and requesting peer role. The role defaults to `member`.
 
 ```sh
 cd client
@@ -190,17 +192,20 @@ get Trade fields mRID,volume,price,timeStamp limit 100, 3
 ```
 
 Result frames larger than 4 KiB are compressed automatically and large result sets are
-streamed in chunks. Forwarding uses at most four deterministic peers from the local
-DHT routing table, records visited peers in the query, and applies the 0.75 remaining
-time reduction before forwarding. TTL is an end-to-end wall-clock budget in seconds;
-peers stop work when the original deadline expires. Aggregate queries remain preferable
-for large telemetry scans because peers return partial values instead of raw rows.
+streamed in chunks. Forwarding selects a deterministic subset of the local DHT routing
+table sized to the query's remaining TTL budget (`selectForwardPeers` in
+`broadcast/idss_broadcast.go`): 20 peers per hop when 750&nbsp;ms or less remain, 40 up to
+1.5&nbsp;s, 60 up to 3&nbsp;s, and 30 (`maxForwardPeers`) beyond that. It records visited peers
+in the query so a peer is never forwarded to twice, and applies the 0.75 remaining time
+reduction before forwarding. TTL is an end-to-end wall-clock budget in seconds; peers
+stop work when the original deadline expires. Aggregate queries remain preferable for
+large telemetry scans because peers return partial values instead of raw rows.
 
 Distributed aggregate functions `@sum`, `@avg`, `@min`, and `@max` are implemented. Query results are written as JSON files under `client/results`.
 
 ## Metrics and Experiments
 
-Prometheus metrics are exposed at `http://127.0.0.1:2112/metrics`. Metrics include query totals and duration, responding peers, returned rows, and policy decisions. With the local multi-peer launcher, only one peer can bind this host port at a time.
+Prometheus metrics are exposed at `http://127.0.0.1:2112/metrics`. Metrics include query totals and duration, responding peers, returned rows, and policy decisions. A peer's own overlay ping RTT and success rate, independent of query-level TTL completeness, are exposed as JSON at `http://127.0.0.1:2112/overlay-metrics` (set `IDSS_OVERLAY_PING_COUNT` to change pings per peer, default 3). With the local multi-peer launcher, only one peer can bind these host ports at a time; `start_peers.sh` assigns each peer its own port starting at `BASE_METRICS_PORT`/`BASE_PPROF_PORT`.
 
 Run peer-count and TTL experiments:
 
@@ -209,6 +214,39 @@ Run peer-count and TTL experiments:
 ```
 
 The script runs fixed EC queries from two through `max_peers` peers at adaptive TTL values starting at 1. Each invocation creates a unique UTC directory under `experiments/results/`, so later runs do not overwrite earlier evidence. Each run stores its `scaling.csv`, `forwarding.csv`, peer-launch logs, client logs, client JSON results, and `metadata.txt`. The cumulative `experiments/results/all-results.csv` appends rows from every run and is the recommended input for publication plots. Each row contains run ID, peer count, query label, TTL, elapsed time, responding peers, and returned rows. `forwarding.csv` records peer-to-peer query sends, intermediate results, and closed streams from server logs.
+
+### E1-E5 Experiment Suite
+
+`experiments/lib.sh` holds shared helpers (cluster launch/teardown, query timing, wire-byte and policy-decision extraction) sourced by five scripts, one per research question. Every script writes a timestamped run directory under `experiments/results/` with a `metadata.txt`, an experiment-specific CSV, and appends to a cumulative `e*-all-results.csv`; each also prints a mean-based summary from `experiments/summarize_csv.py`.
+
+```sh
+# E1: query cost vs. community size. Q1-Q5 at a single generous TTL, peer count 2..N.
+./experiments/run_e1_scale.sh <max_peers> [repeats]
+
+# E2: time budget vs. completeness. Fixed peer count, TTL swept across an explicit list.
+./experiments/run_e2_ttl.sh <peer_count> [repeats]
+
+# E3: aggregation savings. Q3 (raw MeterReading) vs Q4 (@sum) at one configuration,
+# elapsed time and wire bytes (client/idss_client.go logs "Wire bytes received").
+./experiments/run_e3_aggregation.sh <peer_count> <customers> <days> [interval_minutes] [repeats]
+
+# E4: governance correctness and cost. Q1-Q4 x {member,manager,observer} against
+# server/policy.default.yaml, then again against server/policy.permissive.yaml.
+# experiments/check_e4_decisions.py checks each recorded decision against the
+# policy file and confirms a "deny" decision does not suppress propagation.
+./experiments/run_e4_governance.sh <peer_count> [repeats]
+
+# E5: the end-to-end community scenario with one manager peer. A seller and a
+# buyer member write an Offer/Bid locally, a distributed query discovers the
+# open Offer, the match is recorded as a Trade at both counterparts (local
+# writes), the manager compiles settlement over 1-day/1-week/1-month billing
+# periods (reporting broadcast.CompileSettlement's phase breakdown from its
+# "Settlement phase=" log lines), and a DSO observer retrieves the aggregate
+# it is permitted to see via an @sum query over SettlementSummary.
+./experiments/run_e5_scenario.sh <peer_count> [repeats]
+```
+
+Each script accepts environment-variable overrides for TTL, dataset size, and timeouts; run a script with no arguments to see its usage line, or read its header comment for the exact knobs.
 
 ### Large-Dataset Experiments
 
