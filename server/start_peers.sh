@@ -28,14 +28,29 @@ LOG_DIR="${LOG_DIR:-./logs}"
 DB_DIR="./idss_graph_db"
 START_TIMEOUT_SECONDS=${START_TIMEOUT_SECONDS:-180}
 DISCOVERY_TIMEOUT_SECONDS=${DISCOVERY_TIMEOUT_SECONDS:-180}
+# ROUTING_CONVERGENCE_TIMEOUT_SECONDS: how long to wait for every peer's
+# Kademlia routing table to contain all other peers, after the initial
+# one-peer discovery handshake succeeds. Defaults to DISCOVERY_TIMEOUT_SECONDS.
+ROUTING_CONVERGENCE_TIMEOUT_SECONDS=${ROUTING_CONVERGENCE_TIMEOUT_SECONDS:-${DISCOVERY_TIMEOUT_SECONDS}}
 LAUNCH_TIMEOUT_SECONDS=${LAUNCH_TIMEOUT_SECONDS:-180}
 BASE_METRICS_PORT=${BASE_METRICS_PORT:-2112}
 BASE_PPROF_PORT=${BASE_PPROF_PORT:-6060}
+# LISTEN_IP: bind address for the libp2p host (and metrics/pprof endpoints).
+# Defaults to loopback for single-machine runs; set to this node's routable
+# IP for multi-node clusters (see experiments/hpc/) so remote peers can dial in.
+LISTEN_IP=${LISTEN_IP:-127.0.0.1}
+# DISABLE_MDNS=1 turns off mDNS discovery, which cannot see peers on other
+# hosts anyway; use for multi-node clusters to avoid noisy failed lookups.
+DISABLE_MDNS=${DISABLE_MDNS:-0}
 START_BATCH_SIZE=${START_BATCH_SIZE:-5}
 PEER_INDEX_OFFSET=${PEER_INDEX_OFFSET:-0}
 PRESERVE_EXISTING_LOGS=${PRESERVE_EXISTING_LOGS:-0}
 START_PEER_RETRIES=${START_PEER_RETRIES:-3}
 START_PEER_DELAY_SECONDS=${START_PEER_DELAY_SECONDS:-0}
+# DB_PATH_ROOT overrides where each peer's graph database is created (see
+# common.DBRoot()). Leave unset to keep the existing ./idss_graph_db default;
+# point it at node-local scratch for multi-node HPC runs.
+DB_PATH_ROOT=${DB_PATH_ROOT:-}
 
 if ! [[ "${PEER_INDEX_OFFSET}" =~ ^[0-9]+$ ]]; then
   echo "PEER_INDEX_OFFSET must be a non-negative integer" >&2
@@ -55,12 +70,24 @@ fi
 ulimit -n 65535  # Open files
 ulimit -u 8192   # Processes
 
-# Ensure the server code is compiled
-go build -o idss_server .
+# Ensure the server code is compiled. SKIP_BUILD=1 reuses an already-present
+# ./idss_server binary (e.g. a bundle staged by experiments/hpc/stage_bundle.sh
+# onto a node without the full module/vendor tree).
+if [[ "${SKIP_BUILD:-0}" == "1" ]]; then
+  if [[ ! -x ./idss_server ]]; then
+    echo "SKIP_BUILD=1 but ./idss_server is missing or not executable in $(pwd)" >&2
+    exit 1
+  fi
+else
+  # -buildvcs=false: don't shell out to git for VCS stamping; avoids build
+  # failures when the local .git metadata is missing/corrupted, and this repo
+  # embeds no VCS info in the binary anyway.
+  go build -buildvcs=false -o idss_server .
 
-if [ $? -ne 0 ]; then
-  echo "Failed to build the Go server. Exiting."
-  exit 1
+  if [ $? -ne 0 ]; then
+    echo "Failed to build the Go server. Exiting."
+    exit 1
+  fi
 fi
 
 mkdir -p "${LOG_DIR}" "${DB_DIR}"
@@ -100,9 +127,9 @@ start_peer() {
   for ((attempt=1; attempt<=START_PEER_RETRIES; attempt++)); do
     rm -f "${TMP_LOG}"
     if [ "$INDEX" -eq "$MANAGER_PEER_INDEX" ] || { [ "$MANAGER_PEER_INDEX" -eq 0 ] && [ "$INDEX" -eq "$((PEER_INDEX_OFFSET + 1))" ]; }; then
-      IDSS_METRICS_ADDR="127.0.0.1:${metrics_port}" IDSS_PPROF_ADDR="127.0.0.1:${pprof_port}" GOMAXPROCS=1 ./idss_server -manager "${SERVER_ARGS[@]}" > "${TMP_LOG}" 2>&1 &
+      IDSS_METRICS_ADDR="${LISTEN_IP}:${metrics_port}" IDSS_PPROF_ADDR="${LISTEN_IP}:${pprof_port}" IDSS_LISTEN_ADDR="/ip4/${LISTEN_IP}/tcp/0" IDSS_DISABLE_MDNS="${DISABLE_MDNS}" IDSS_DB_PATH="${DB_PATH_ROOT}" GOMAXPROCS=1 ./idss_server -manager "${SERVER_ARGS[@]}" > "${TMP_LOG}" 2>&1 &
     else
-      IDSS_METRICS_ADDR="127.0.0.1:${metrics_port}" IDSS_PPROF_ADDR="127.0.0.1:${pprof_port}" GOMAXPROCS=1 ./idss_server "${SERVER_ARGS[@]}" > "${TMP_LOG}" 2>&1 &
+      IDSS_METRICS_ADDR="${LISTEN_IP}:${metrics_port}" IDSS_PPROF_ADDR="${LISTEN_IP}:${pprof_port}" IDSS_LISTEN_ADDR="/ip4/${LISTEN_IP}/tcp/0" IDSS_DISABLE_MDNS="${DISABLE_MDNS}" IDSS_DB_PATH="${DB_PATH_ROOT}" GOMAXPROCS=1 ./idss_server "${SERVER_ARGS[@]}" > "${TMP_LOG}" 2>&1 &
     fi
     local new_pid=$!
 
@@ -166,9 +193,13 @@ register_peer() {
   # Create a DB directory for this peer
   mkdir -p "${DB_DIR}/${PEER_ID}"
 
-  # Wait for data generation (optional)
+  # Wait for the graph database load to actually finish (not just for data
+  # generation to start it) before this peer counts as launched. Batches are
+  # gated on this so START_BATCH_SIZE bounds how many peers are concurrently
+  # doing the memory-heavy EliasDB load at once, instead of every batch racing
+  # ahead into that phase together.
   for ((i=1; i<=START_TIMEOUT_SECONDS; i++)); do
-    if grep -q "Data generation completed" "${FINAL_LOG}"; then
+    if grep -q "Data loaded into the graph database" "${FINAL_LOG}"; then
       break
     fi
     if ! kill -0 "${PID}" 2>/dev/null; then
@@ -216,6 +247,28 @@ check_all_peers_discovered() {
     fi
   done
 
+  return 0
+}
+
+# Function to check whether every peer's Kademlia routing table has learned
+# about all other peers. "Peer discovery completed" above only means a peer
+# connected to one other peer; BroadcastQuery/BroadcastAggregateQuery fan out
+# using kadDHT.RoutingTable().ListPeers(), which fills in later as the DHT's
+# own lookups converge. Without this, queries issued right after startup only
+# reach a fraction of the cluster.
+check_routing_tables_converged() {
+  # PEER_INDEX_OFFSET peers may already be running from a prior additive
+  # launch (see README.md), so the expected cluster size is offset+NUM_PEERS.
+  local target=$((PEER_INDEX_OFFSET + NUM_PEERS - 1))
+  (( target < 0 )) && target=0
+  local size
+  for PEER_ID in "${PEER_IDS[@]}"; do
+    size=$(grep 'Routing table peers:' "${LOG_DIR}/${PEER_ID}.log" 2>/dev/null | tail -n 1 | awk '{print $NF}')
+    size=${size:-0}
+    if (( size < target )); then
+      return 1
+    fi
+  done
   return 0
 }
 
@@ -276,6 +329,18 @@ for ((i=1; i<=DISCOVERY_TIMEOUT_SECONDS; i++)); do
 done
 if ! check_all_peers_discovered; then
   echo "Peers did not complete discovery after ${DISCOVERY_TIMEOUT_SECONDS} seconds" >&2
+  exit 1
+fi
+
+# Wait for DHT routing-table convergence before declaring the cluster ready.
+for ((i=1; i<=ROUTING_CONVERGENCE_TIMEOUT_SECONDS; i++)); do
+  if check_routing_tables_converged; then
+    break
+  fi
+  sleep 2
+done
+if ! check_routing_tables_converged; then
+  echo "Routing tables did not converge after ${ROUTING_CONVERGENCE_TIMEOUT_SECONDS} seconds" >&2
   exit 1
 fi
 

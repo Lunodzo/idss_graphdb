@@ -37,10 +37,30 @@ harness_new_run_dir() {
 
 # harness_start_cluster <peer_count> <log_dir> <launch_log_file> [extra start_peers.sh args...]
 # Sets HARNESS_PEER_ADDRESS, HARNESS_PEER_IDS (array), HARNESS_LAUNCHER_PID.
+#
+# If HARNESS_EXTERNAL_PEER_ADDRESS is set, this attaches to an already-running
+# cluster (e.g. a multi-node HPC swarm started by experiments/hpc/) instead of
+# launching one locally via start_peers.sh; see experiments/hpc/README.md.
 harness_start_cluster() {
     local peer_count=$1; shift
     local log_dir=$1; shift
     local launch_log=$1; shift
+
+    if [[ -n "${HARNESS_EXTERNAL_PEER_ADDRESS:-}" ]]; then
+        HARNESS_PEER_ADDRESS="${HARNESS_EXTERNAL_PEER_ADDRESS}"
+        HARNESS_LAUNCHER_PID=""
+        HARNESS_PEER_IDS=()
+        if [[ -n "${HARNESS_EXTERNAL_PEER_IDS_FILE:-}" && -f "${HARNESS_EXTERNAL_PEER_IDS_FILE}" ]]; then
+            mapfile -t HARNESS_PEER_IDS < "${HARNESS_EXTERNAL_PEER_IDS_FILE}"
+        fi
+        mkdir -p "$(dirname "${log_dir}")"
+        rm -rf "${log_dir}"
+        if [[ -n "${HARNESS_EXTERNAL_LOG_DIR:-}" ]]; then
+            ln -s "${HARNESS_EXTERNAL_LOG_DIR}" "${log_dir}"
+        fi
+        echo "Using external cluster at ${HARNESS_PEER_ADDRESS} (${peer_count} peers assumed already running)" > "${launch_log}"
+        return 0
+    fi
     local launch_timeout=${LAUNCH_TIMEOUT_SECONDS:-600}
 
     mkdir -p "${log_dir}"
@@ -81,6 +101,11 @@ harness_start_cluster() {
 }
 
 harness_stop_cluster() {
+    # External clusters (see harness_start_cluster) are managed by the caller
+    # (e.g. the HPC sbatch driver), not by this experiment script.
+    if [[ -n "${HARNESS_EXTERNAL_PEER_ADDRESS:-}" ]]; then
+        return 0
+    fi
     if [[ -n "${HARNESS_LAUNCHER_PID:-}" ]]; then
         kill "${HARNESS_LAUNCHER_PID}" 2>/dev/null || true
         wait "${HARNESS_LAUNCHER_PID}" 2>/dev/null || true
@@ -93,6 +118,28 @@ harness_count_server_logs() {
     local log_dir=$1
     local pattern=$2
     grep -hFic "${pattern}" "${log_dir}"/*.log 2>/dev/null | awk -F: '{ total += $NF } END { print total + 0 }' || true
+}
+
+# harness_build_client
+# Builds the client once into a real binary so harness_run_query can exec it
+# directly. `go run` forks the compiled binary as a child and does not
+# reliably forward signals from `timeout` to it, so a stalled query used to
+# leave an orphaned client process (open libp2p host, goroutines, sockets)
+# behind on every timeout; those orphans accumulated across a long sweep
+# until the host ran out of processes/memory. Set FORCE_CLIENT_BUILD=1 to
+# rebuild (e.g. after editing client code) even if a binary already exists.
+harness_build_client() {
+    if [[ -x "${HARNESS_CLIENT_DIR}/idss_client" && "${FORCE_CLIENT_BUILD:-0}" != "1" ]]; then
+        return 0
+    fi
+    pushd "${HARNESS_CLIENT_DIR}" >/dev/null
+    if ! go build -buildvcs=false -o idss_client .; then
+        popd >/dev/null
+        echo "Failed to build client binary" >&2
+        return 1
+    fi
+    popd >/dev/null
+    return 0
 }
 
 # harness_run_query <results_dir> <client_output_log> <peer_address> <role> <query> <ttl> [timeout_seconds]
@@ -109,11 +156,13 @@ harness_run_query() {
     rm -rf "${results_dir}"
     mkdir -p "${results_dir}"
 
+    harness_build_client || return 1
+
     local started finished
     started=$(harness_monotonic_seconds)
     pushd "${HARNESS_CLIENT_DIR}" >/dev/null
     if ! printf '%s, %s\nexit\n' "${query}" "${ttl}" | IDSS_CLIENT_RESULTS_DIR="${results_dir}" \
-        timeout --kill-after=10 "${timeout_seconds}s" go run . -role "${role}" -s "${peer_address}" >"${client_output}" 2>&1; then
+        timeout --kill-after=10 "${timeout_seconds}s" ./idss_client -role "${role}" -s "${peer_address}" >"${client_output}" 2>&1; then
         popd >/dev/null
         echo "Client query failed: role=${role} query=${query} ttl=${ttl}" >&2
         cat "${client_output}" >&2

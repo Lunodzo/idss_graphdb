@@ -6,6 +6,7 @@
 /server/heap_after_init.pprof
 
 # Client and experiment output
+/client/idss_client
 /client/results/
 /experiments/results/
 

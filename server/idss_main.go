@@ -213,8 +213,14 @@ func main() {
 		logger.Fatal("Error generating RSA key pair:", err)
 	}
 
-	// Dynamic port allocation
-	listenAddr, err := multiaddr.NewMultiaddr("/ip4/127.0.0.1/tcp/0")
+	// Dynamic port allocation. Defaults to loopback-only for local/single-machine
+	// runs; set IDSS_LISTEN_ADDR (e.g. /ip4/<node-ip>/tcp/0) for multi-node clusters
+	// so peers on other hosts can dial in.
+	listenAddrStr := "/ip4/127.0.0.1/tcp/0"
+	if v := os.Getenv("IDSS_LISTEN_ADDR"); v != "" {
+		listenAddrStr = v
+	}
+	listenAddr, err := multiaddr.NewMultiaddr(listenAddrStr)
 	if err != nil {
 		logger.Fatal("Error creating listening address:", err)
 	}
@@ -285,7 +291,7 @@ func main() {
 
 	************************/
 
-	dbPath := fmt.Sprintf("%s/%s", common.DB_PATH, host.ID().String()) // Peer specific database path
+	dbPath := fmt.Sprintf("%s/%s", common.DBRoot(), host.ID().String()) // Peer specific database path
 	logger.Info("Database path: ", dbPath)
 
 	graphDB, err := graphstorage.NewDiskGraphStorage(dbPath, false) // Create a new disk graph storage
@@ -383,7 +389,7 @@ func cleanup(graphDB graphstorage.Storage, host host.Host) {
 		logger.Error("Error closing graph database: ", err)
 	}
 
-	peerDir := filepath.Join(common.DB_PATH, host.ID().String())
+	peerDir := filepath.Join(common.DBRoot(), host.ID().String())
 	if err := os.RemoveAll(peerDir); err != nil {
 		logger.Error("Error deleting database: ", err)
 	}
@@ -433,7 +439,6 @@ func handleRequest(conn network.Stream, remotePeerID string, ctx context.Context
 	}
 }
 
-
 // registerManager registers the community manager node in the graph database.
 func registerManager(gm *graph.Manager, peerID string) {
 	managerNode := data.NewGraphNode()
@@ -450,7 +455,6 @@ func registerManager(gm *graph.Manager, peerID string) {
 	}
 	logger.Infof("Registered community manager %s", peerID)
 }
-
 
 // handleCustomerRegistration processes a customer registration message and stores the customer information in the graph database. It is only executed by the community manager.
 func handleCustomerRegistration(msg *common.QueryMessage, config flags.Config, gm *graph.Manager) {
@@ -606,7 +610,6 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	broadcast.ExecuteAndBroadcastQuery(conn, msg, config, gm, kadDHT, decision)
 }
 
-
 // broadcastCustomerRegistrations broadcasts all customer registrations to all peers in the DHT. It retrieves the customer data from the local graph database and sends it to each peer.
 func broadcastCustomerRegistrations(ctx context.Context, host host.Host, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
 	rows, header, err := broadcast.RunIDSSQuery("get Customer", host.ID(), gm)
@@ -639,7 +642,6 @@ func broadcastCustomerRegistrations(ctx context.Context, host host.Host, config 
 		stream.Close()
 	}
 }
-
 
 // handleSettlementCommand processes a settlement command from a manager client. It validates the command, parses the time range, and compiles the settlement summaries using the broadcast package.
 func handleSettlementCommand(conn network.Stream, msg *common.QueryMessage, remotePeerID string, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) {

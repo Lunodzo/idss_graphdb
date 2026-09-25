@@ -2,7 +2,7 @@
  * ! \file kademlia.go
  * kademlia DHT implementation for IDSS
  *
- * 
+ *
  * Copyright 2023-2027, University of Salento, Italy.
  * All rights reserved.
  *
@@ -30,13 +30,13 @@ import (
 var logger = log.Logger("IDSS")
 
 type discoveryNotifee struct {
-    ctx  context.Context
-    host host.Host
+	ctx  context.Context
+	host host.Host
 }
 
 func (n *discoveryNotifee) HandlePeerFound(p peer.AddrInfo) {
-    n.host.Connect(n.ctx, p)
-    logger.Debug("Connected to LAN peer: %s", p.ID)
+	n.host.Connect(n.ctx, p)
+	logger.Debug("Connected to LAN peer: %s", p.ID)
 }
 
 // IDSS Function to discover and connect to peers
@@ -44,16 +44,22 @@ func DiscoverAndConnectPeers(ctx context.Context, host host.Host, config flags.C
 	startTime := time.Now() //for debugging
 	logger.Info("Starting peer discovery...")
 
-	// Add mDNS discovery for local network
-	go func() {
-		ser := mdns.NewMdnsService(host, config.IDSSString, &discoveryNotifee{
-			ctx:  ctx,
-			host: host,
-		})
-		if err := ser.Start(); err != nil {
-			logger.Errorf("Error starting mDNS service: %v", err)
-		}
-	}()
+	// mDNS only finds peers on the same broadcast domain, which does not hold
+	// across HPC compute nodes; disable it there via IDSS_DISABLE_MDNS=1 and
+	// rely on DHT routing discovery below instead.
+	if os.Getenv("IDSS_DISABLE_MDNS") == "1" {
+		logger.Info("mDNS discovery disabled (IDSS_DISABLE_MDNS=1)")
+	} else {
+		go func() {
+			ser := mdns.NewMdnsService(host, config.IDSSString, &discoveryNotifee{
+				ctx:  ctx,
+				host: host,
+			})
+			if err := ser.Start(); err != nil {
+				logger.Errorf("Error starting mDNS service: %v", err)
+			}
+		}()
+	}
 
 	// Provide a value for the given key. Where a key in this case is the service name (config.IDSSString)
 	routingDiscovery := routing.NewRoutingDiscovery(kadDHT)
@@ -88,17 +94,17 @@ func DiscoverAndConnectPeers(ctx context.Context, host host.Host, config flags.C
 
 	logger.Infof("Num of found peers in the Routing Table: %d", len(kadDHT.RoutingTable().GetPeerInfos()))
 	logger.Debug("Peers in the Routing Table: ", kadDHT.RoutingTable().ListPeers())
-	logger.Debug("Time taken to find peers: ", time.Since(startTime)) 
-	logger.Info("Peer discovery completed") 
+	logger.Debug("Time taken to find peers: ", time.Since(startTime))
+	logger.Info("Peer discovery completed")
 }
 
 // Function to initialise the DHT and bootstrap the peer with default bootstrap nodes
 func InitialiseDHT(ctx context.Context, host host.Host, config flags.Config) *dht.IpfsDHT {
 	kadDHT, err := dht.New( // Create a new DHT
 		host,
-		dht.Mode(dht.ModeServer), 
+		dht.Mode(dht.ModeServer),
 		dht.ProtocolPrefix("/idss"), // Prefix for the DHT protocol
-		dht.BootstrapPeers(config.BootstrapPeers...), 
+		dht.BootstrapPeers(config.BootstrapPeers...),
 	)
 
 	if err != nil {
@@ -115,13 +121,25 @@ func InitialiseDHT(ctx context.Context, host host.Host, config flags.Config) *dh
 	}
 
 	// Periodically refresh routing table
-    go func() {
-        for {
-            time.Sleep(1 * time.Hour) // Refresh every 1 hours
-            kadDHT.RefreshRoutingTable()
+	go func() {
+		for {
+			time.Sleep(1 * time.Hour) // Refresh every 1 hours
+			kadDHT.RefreshRoutingTable()
 			logger.Debug("Refreshed routing table")
-        }
-    }()
+		}
+	}()
+
+	// Log routing table size every 2s so the launcher can wait for actual
+	// convergence: "Peer discovery completed" only means this peer connected
+	// to one other peer, but queries fan out via kadDHT.RoutingTable(),
+	// which fills in later as the DHT's own lookups discover the rest.
+	go func() {
+		ticker := time.NewTicker(2 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			logger.Infof("Routing table peers: %d", len(kadDHT.RoutingTable().ListPeers()))
+		}
+	}()
 
 	logger.Info("Bootstrapped the DHT")
 	return kadDHT

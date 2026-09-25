@@ -88,9 +88,40 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Resume support: if this environment keeps getting interrupted mid-sweep,
+# RESUME_E1=1 (default) skips (peer_count, query_label, repeat) combinations
+# already recorded for this ttl in the cumulative ALL_CSV_FILE, and skips
+# starting a peer cluster altogether when every combo for that peer_count is
+# already present. Set RESUME_E1=0 to force a full re-run.
+RESUME_E1=${RESUME_E1:-1}
+
+e1_combo_done() {
+    local peer_count=$1 label=$2 repeat=$3
+    [[ "${RESUME_E1}" == "1" ]] || return 1
+    [[ -f "${ALL_CSV_FILE}" ]] || return 1
+    awk -F, -v pc="${peer_count}" -v lbl="${label}" -v rep="${repeat}" -v ttl="${TTL_SECONDS}" \
+        '$2==pc && $3==lbl && $4==rep && $5==ttl { found=1; exit } END { exit !found }' \
+        "${ALL_CSV_FILE}"
+}
+
+e1_peer_count_done() {
+    local peer_count=$1
+    for repeat in $(seq 1 "${REPEATS}"); do
+        for query_spec in "${QUERIES[@]}"; do
+            label=${query_spec%%|*}
+            e1_combo_done "${peer_count}" "${label}" "${repeat}" || return 1
+        done
+    done
+    return 0
+}
 
 # Main loop to run the experiment for different peer counts and repeats
 for peer_count in $(seq "${START_PEERS}" "${PEER_STEP}" "${MAX_PEERS}"); do
+    if e1_peer_count_done "${peer_count}"; then
+        echo "peer_count=${peer_count}: all ${REPEATS} repeats already recorded at ttl=${TTL_SECONDS}, skipping cluster"
+        continue
+    fi
+
     cluster_log_dir="${LOG_DIR}/${peer_count}"
     if ! harness_start_cluster "${peer_count}" "${cluster_log_dir}" "${RUN_DIR}/launch-${peer_count}.log" \
         --customers "${E1_CUSTOMERS}" --days "${E1_DAYS}" --interval-minutes "${E1_INTERVAL_MINUTES}" -policy "${POLICY_FILE}"; then
@@ -101,6 +132,10 @@ for peer_count in $(seq "${START_PEERS}" "${PEER_STEP}" "${MAX_PEERS}"); do
         for query_spec in "${QUERIES[@]}"; do
             label=${query_spec%%|*}
             query=${query_spec#*|}
+            if e1_combo_done "${peer_count}" "${label}" "${repeat}"; then
+                echo "peer_count=${peer_count} ${label} repeat=${repeat}: already recorded, skipping"
+                continue
+            fi
             client_output="${RUN_DIR}/client-output/${peer_count}-${label}-${repeat}.log"
             if ! harness_run_query "${CLIENT_RESULTS_DIR}" "${client_output}" "${HARNESS_PEER_ADDRESS}" "${QUERY_ROLE}" "${query}" "${TTL_SECONDS}"; then
                 harness_stop_cluster
