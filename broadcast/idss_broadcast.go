@@ -1049,7 +1049,9 @@ func LocalSettlementTotals(gm *graph.Manager, hostID peer.ID, from time.Time, to
 
 // CompileSettlement collects aggregate-only peer totals and stores local summaries.
 // Phase timings are logged so the experiment harness can report Q6's phase breakdown.
-func CompileSettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, from time.Time, to time.Time) error {
+// CompileSettlement contacts the peers in the manager's routing table over
+// protocolID, the protocol the peer serves (not a fixed LAN protocol).
+func CompileSettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, protocolID protocol.ID, from time.Time, to time.Time) error {
 	totalStart := time.Now()
 	host := kadDHT.Host()
 	results := []*common.SettlementResult{}
@@ -1065,7 +1067,7 @@ func CompileSettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, from time.Time, t
 	broadcastStart := time.Now()
 	for _, remotePeer := range kadDHT.RoutingTable().ListPeers() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		stream, err := host.NewStream(ctx, remotePeer, protocol.ID(common.IDSS_PROTOCOL_LOCAL))
+		stream, err := host.NewStream(ctx, remotePeer, protocolID)
 		if err == nil {
 			request := &common.QueryMessage{Type: common.MessageType_SETTLEMENT_REQUEST, SettlementRequest: &common.SettlementRequest{From: from.Format(time.RFC3339), To: to.Format(time.RFC3339)}}
 			payload, marshalErr := proto.Marshal(request)

@@ -694,7 +694,7 @@ func handleSettlementCommand(conn network.Stream, msg *common.QueryMessage, remo
 		helpers.SendErrorMessage(conn, peer.ID(remotePeerID), err.Error())
 		return
 	}
-	if err := broadcast.CompileSettlement(gm, kadDHT, from, to); err != nil {
+	if err := broadcast.CompileSettlement(gm, kadDHT, protocol.ID(config.ProtocolID), from, to); err != nil {
 		helpers.SendErrorMessage(conn, peer.ID(remotePeerID), err.Error())
 		return
 	}
