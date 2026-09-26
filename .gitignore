@@ -22,3 +22,5 @@ experiments/web-runtime/idss-client
 
 # Stray local build output
 /web
+experiments/results_pre*/
+experiments/local_suite_*.log
