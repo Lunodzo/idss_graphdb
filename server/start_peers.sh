@@ -39,6 +39,8 @@ BASE_PPROF_PORT=${BASE_PPROF_PORT:-6060}
 # Defaults to loopback for single-machine runs; set to this node's routable
 # IP for multi-node clusters (see experiments/hpc/) so remote peers can dial in.
 LISTEN_IP=${LISTEN_IP:-127.0.0.1}
+# Do not persist merged query results in experiments (grows without bound); set to 1 to keep
+export IDSS_STORE_RESULTS=${IDSS_STORE_RESULTS:-0}
 # DISABLE_MDNS=1 turns off mDNS discovery, which cannot see peers on other
 # hosts anyway; use for multi-node clusters to avoid noisy failed lookups.
 DISABLE_MDNS=${DISABLE_MDNS:-0}

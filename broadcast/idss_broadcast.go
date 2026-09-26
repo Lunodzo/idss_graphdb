@@ -1154,6 +1154,9 @@ func UpdateQueryState(msg *common.QueryMessage, state common.QueryState_State, g
 // Function to store the results in the graph database in each peer.
 // This creates a new node for the results to separate them from the query node
 func StoreResults(msg *common.QueryMessage, results [][]interface{}, gm *graph.Manager) {
+	if os.Getenv("IDSS_STORE_RESULTS") == "0" {
+		return // experiments: do not persist merged results (unbounded growth)
+	}
 	if msg == nil || strings.TrimSpace(msg.Uqid) == "" {
 		logger.Warn("Skipping result storage for empty query UQI")
 		return
