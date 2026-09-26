@@ -26,6 +26,9 @@ E3_CUSTOMERS=${E3_CUSTOMERS:-10}
 E3_DAYS=${E3_DAYS:-1}
 E3_INTERVAL_MINUTES=${E3_INTERVAL_MINUTES:-15}
 EXPERIMENTS=${EXPERIMENTS:-"e1 e2 e3 e4 e5"}
+# On an external cluster the data is loaded once at launch, so record the
+# launch-time data knobs in every experiment's metadata.
+export E5_DAYS="${E_DAYS:-1}" E5_CUSTOMERS="${E_CUSTOMERS:-10}"
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 BOOTSTRAP_FILE="${COORD_DIR}/bootstrap_addr.txt"
