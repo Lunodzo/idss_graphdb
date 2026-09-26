@@ -282,24 +282,35 @@ cleanup() {
   SHUTTING_DOWN=1
   echo "Stopping all peers..."
 
-  for PEER_ID in "${!PIDS[@]}"; do
-    kill -TERM "${PIDS[$PEER_ID]}" 2>/dev/null || true
+  # Include peers still starting up (START_PIDS): they are not in PIDS until
+  # registered, and a launch timeout used to leave them running as orphans.
+  local -A seen=()
+  local ALL_PIDS=()
+  local pid
+  for pid in ${PIDS[@]+"${PIDS[@]}"} ${START_PIDS[@]+"${START_PIDS[@]}"}; do
+    [[ -n "${pid}" && -z "${seen[$pid]:-}" ]] || continue
+    seen[$pid]=1
+    ALL_PIDS+=("${pid}")
+  done
+
+  for pid in ${ALL_PIDS[@]+"${ALL_PIDS[@]}"}; do
+    kill -TERM "${pid}" 2>/dev/null || true
   done
 
   for ((i=1; i<=30; i++)); do
     local running=0
-    for PEER_ID in "${!PIDS[@]}"; do
-      if kill -0 "${PIDS[$PEER_ID]}" 2>/dev/null; then running=1; fi
+    for pid in ${ALL_PIDS[@]+"${ALL_PIDS[@]}"}; do
+      if kill -0 "${pid}" 2>/dev/null; then running=1; fi
     done
     [[ "${running}" -eq 0 ]] && break
     sleep 1
   done
 
-  for PEER_ID in "${!PIDS[@]}"; do
-    if kill -0 "${PIDS[$PEER_ID]}" 2>/dev/null; then
-      kill -KILL "${PIDS[$PEER_ID]}" 2>/dev/null || true
+  for pid in ${ALL_PIDS[@]+"${ALL_PIDS[@]}"}; do
+    if kill -0 "${pid}" 2>/dev/null; then
+      kill -KILL "${pid}" 2>/dev/null || true
     fi
-    wait "${PIDS[$PEER_ID]}" 2>/dev/null || true
+    wait "${pid}" 2>/dev/null || true
   done
 
   echo "All peers have been stopped."
