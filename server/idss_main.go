@@ -534,6 +534,8 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	logger.Debug("Query received:\nOn peer %s \nUQI: %s\nTTL: %f \nFrom: %s\nRequester: %s (%s)", kadDHT.Host().ID(), msg.Uqid, msg.Ttl, remotePeerID, msg.RequesterId, msg.RequesterRole) // for debugging
 	if len(duplicateQuery) > 0 {
 		logger.Debug("Query IGNORED")
+		// reply at once so the sender does not wait for its full deadline
+		helpers.SendMergedResultWithPeers(conn, peer.ID(remotePeerID), nil, nil, []string{}, kadDHT)
 		return
 	}
 	decision := access.Allow
