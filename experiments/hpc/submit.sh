@@ -37,5 +37,5 @@ case "${MODE}" in
     ;;
 esac
 
-sbatch --export="ALL,PEERS_PER_NODE=${PEERS_PER_NODE},EXPERIMENTS=${EXPERIMENTS}" \
+sbatch --export="ALL,IDSS_HPC_DIR=${SCRIPT_DIR},PEERS_PER_NODE=${PEERS_PER_NODE},EXPERIMENTS=${EXPERIMENTS}" \
   "$@" "${SCRIPT_DIR}/sophia_multinode.sbatch"

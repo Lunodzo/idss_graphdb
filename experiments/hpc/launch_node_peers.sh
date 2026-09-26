@@ -22,6 +22,12 @@
 #                           (default 300)
 
 set -Eeuo pipefail
+# Peers call python3 for generate_data.py; make sure it is a modern one
+set +u
+command -v module >/dev/null 2>&1 || source /etc/profile >/dev/null 2>&1 || true
+module load Python/3.11.3-GCCcore-12.3.0 >/dev/null 2>&1 || true
+set -u
+echo "[node ${SLURM_NODEID:-?}] python3 = $(command -v python3) ($(python3 --version 2>&1))"
 
 : "${BUNDLE_DIR:?BUNDLE_DIR must be set}"
 : "${COORD_DIR:?COORD_DIR must be set}"
@@ -35,7 +41,8 @@ BOOTSTRAP_WAIT_SECONDS=${BOOTSTRAP_WAIT_SECONDS:-300}
 
 NODE_RANK=${SLURM_NODEID:-${SLURM_PROCID:-0}}
 NODE_LOCAL_ROOT=${NODE_LOCAL_ROOT:-${TMPDISK:-${TMPRAM:-/tmp}}}
-WORKDIR="${NODE_LOCAL_ROOT}/idss-node-${NODE_RANK}"
+WORKDIR="${NODE_LOCAL_ROOT}/idss-${SLURM_JOB_ID:-nojob}-node-${NODE_RANK}"
+trap 'rm -rf "${WORKDIR}"' EXIT
 
 BOOTSTRAP_FILE="${COORD_DIR}/bootstrap_addr.txt"
 READY_DIR="${COORD_DIR}/ready"
@@ -47,6 +54,7 @@ NODE_LOG_DIR="${LOGS_ROOT}/node-${NODE_RANK}"
 mkdir -p "${READY_DIR}" "${LOGS_ROOT}" "${PEER_IDS_DIR}" "${WORKDIR}"
 rm -rf "${NODE_LOG_DIR}"
 mkdir -p "${NODE_LOG_DIR}"
+export PRESERVE_EXISTING_LOGS=1
 
 echo "[node ${NODE_RANK}] staging bundle from ${BUNDLE_DIR} to ${WORKDIR}"
 cp "${BUNDLE_DIR}/idss_server" "${BUNDLE_DIR}/generate_data.py" \
@@ -133,8 +141,10 @@ for _ in $(seq 1 "${BOOTSTRAP_WAIT_SECONDS}"); do
 done
 
 cat "${NODE_LOG_DIR}"/launcher-*.log 2>/dev/null | grep 'Peer [0-9][0-9]* launched with ID ' | awk '{print $NF}' > "${PEER_IDS_DIR}/node-${NODE_RANK}.txt"
+if [[ -f "${NODE_LOG_DIR}/launcher-rest.log" ]] && ! grep -q "All peers have joined the overlay." "${NODE_LOG_DIR}/launcher-rest.log"; then echo "[node ${NODE_RANK}] peers did not join within ${BOOTSTRAP_WAIT_SECONDS}s" >&2; tail -20 "${NODE_LOG_DIR}"/launcher-*.log >&2; exit 1; fi
 touch "${READY_DIR}/node-${NODE_RANK}.ready"
 echo "[node ${NODE_RANK}] ready with ${PEERS_PER_NODE} peers"
+echo "[node ${NODE_RANK}] resources: $(free -g | awk '/Mem:/{print "RAM total="$2"G used="$3"G tmpfs/shared="$5"G"}'), /tmp: $(df -h /tmp | awk 'NR==2{print $3" used of "$2}')"
 
 # Keep the peers alive until the driver signals completion.
 while [[ ! -f "${STOP_FILE}" ]]; do

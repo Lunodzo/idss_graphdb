@@ -50,6 +50,9 @@ import (
 	libp2p "github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
+	"github.com/libp2p/go-libp2p/x/rate"
+	"math"
+	"net/netip"
 
 	"github.com/ipfs/go-log/v2"
 
@@ -229,7 +232,30 @@ func main() {
 	scalingLimits := rcmgr.DefaultLimits
 	limitConfig := scalingLimits.AutoScale() // Auto based on system
 	limiter := rcmgr.NewFixedLimiter(limitConfig)
-	rm, err := rcmgr.NewResourceManager(limiter)
+	// Cluster/private networks host many peers behind one IP; exempt them from
+	// libp2p's per-IP connection-count and rate limits (default: loopback only).
+	privateNets := []netip.Prefix{
+		netip.MustParsePrefix("127.0.0.0/8"),
+		netip.MustParsePrefix("10.0.0.0/8"),
+		netip.MustParsePrefix("172.16.0.0/12"),
+		netip.MustParsePrefix("192.168.0.0/16"),
+	}
+	var connPrefixLimits []rcmgr.NetworkPrefixLimit
+	var ratePrefixLimits []rate.PrefixLimit
+	for _, p := range privateNets {
+		connPrefixLimits = append(connPrefixLimits, rcmgr.NetworkPrefixLimit{Network: p, ConnCount: math.MaxInt})
+		ratePrefixLimits = append(ratePrefixLimits, rate.PrefixLimit{Prefix: p, Limit: rate.Limit{}})
+	}
+	rm, err := rcmgr.NewResourceManager(limiter,
+		rcmgr.WithNetworkPrefixLimit(connPrefixLimits, nil),
+		rcmgr.WithConnRateLimiters(&rate.Limiter{
+			NetworkPrefixLimits: ratePrefixLimits,
+			SubnetRateLimiter: rate.SubnetLimiter{
+				IPv4SubnetLimits: []rate.SubnetLimit{{PrefixLength: 32, Limit: rate.Limit{RPS: 0.2, Burst: 16}}},
+				GracePeriod:      time.Minute,
+			},
+		}),
+	)
 	if err != nil {
 		logger.Fatal("Resource manager init failed: ", err)
 	}
@@ -343,6 +369,7 @@ func main() {
 		go handleRequest(stream, stream.Conn().RemotePeer().String(), ctx, config, graphManager, kadDHT, host, accessPolicy)
 	})
 
+	logger.Infof("Serving IDSS stream protocol %s", config.ProtocolID)
 	// Handle SIGTERM and interrupt signals
 	go func() { handleInterrupts(host, graphDB, kadDHT) }()
 
@@ -417,6 +444,7 @@ func handleRequest(conn network.Stream, remotePeerID string, ctx context.Context
 		}
 
 		// Decode the incoming query message
+		var msg common.QueryMessage
 		err = proto.Unmarshal(msgBytes, &msg)
 		if err != nil {
 			logger.Errorf("Error unmarshalling query message: %v", err)

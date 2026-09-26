@@ -162,7 +162,7 @@ harness_run_query() {
     started=$(harness_monotonic_seconds)
     pushd "${HARNESS_CLIENT_DIR}" >/dev/null
     if ! printf '%s, %s\nexit\n' "${query}" "${ttl}" | IDSS_CLIENT_RESULTS_DIR="${results_dir}" \
-        timeout --kill-after=10 "${timeout_seconds}s" ./idss_client -role "${role}" -s "${peer_address}" >"${client_output}" 2>&1; then
+        timeout --kill-after=10 "${timeout_seconds}s" ./idss_client -role "${role}" -p "${PROTOCOL_ID:-/lan/kad/1.0.0}" -s "${peer_address}" >"${client_output}" 2>&1; then
         popd >/dev/null
         echo "Client query failed: role=${role} query=${query} ttl=${ttl}" >&2
         cat "${client_output}" >&2

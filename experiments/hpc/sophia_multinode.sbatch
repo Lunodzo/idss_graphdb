@@ -23,9 +23,16 @@
 set -Eeuo pipefail
 
 # --- adjust module names for your allocation (see `ml avail`) ---
+export PATH=$HOME/go-sdk/go/bin:$PATH
+export GOTOOLCHAIN=local
+ml Python/3.11.3-GCCcore-12.3.0
+set +u
+command -v module >/dev/null 2>&1 || source /etc/profile >/dev/null 2>&1 || true
+module load Python/3.11.3-GCCcore-12.3.0 >/dev/null 2>&1 || true
+set -u
+echo "[batch] python3 = $(command -v python3) ($(python3 --version 2>&1))"
+
 ml purge
-ml Go
-ml Python
 
 PEERS_PER_NODE=${PEERS_PER_NODE:-100}
 REPEATS=${REPEATS:-3}
@@ -33,18 +40,19 @@ E_CUSTOMERS=${E_CUSTOMERS:-10}
 # With few peers per node, total peer count is small, so give each peer more
 # history to keep query result volumes realistic (default stays 1 day at
 # high peer density; the "latency" one-peer-per-node regime needs more).
-E_DAYS=${E_DAYS:-$(( PEERS_PER_NODE <= 10 ? 30 : 1 ))}
+E_DAYS=${E_DAYS:-1}
 E_INTERVAL_MINUTES=${E_INTERVAL_MINUTES:-15}
 POLICY_FILE=${POLICY_FILE:-policy.permissive.yaml}
 EXPERIMENTS=${EXPERIMENTS:-"e1 e2 e3 e4 e5"}
 # Multi-node runs must use the global protocol id (see common/idss_common.go);
 # the local single-machine scripts keep using IDSS_PROTOCOL_LOCAL by default.
 PROTOCOL_ID=${PROTOCOL_ID:-/kad/1.0.0}
+export ROUTING_TARGET_CAP=${ROUTING_TARGET_CAP:-20}
 
 NODES=${SLURM_JOB_NUM_NODES:?not running under Slurm}
 TOTAL_PEERS=$((NODES * PEERS_PER_NODE))
 
-SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+SCRIPT_DIR=${IDSS_HPC_DIR:-${SLURM_SUBMIT_DIR}}
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 RESULTS_DIR="${ROOT_DIR}/experiments/results"
 
@@ -55,7 +63,7 @@ RESULTS_DIR="${ROOT_DIR}/experiments/results"
 COORD_ROOT=${TMPSHARE:-${RESULTS_DIR}/.hpc-scratch}
 COORD_DIR="${COORD_ROOT}/coord-${SLURM_JOB_ID}"
 BUNDLE_DIR="${COORD_ROOT}/bundle-${SLURM_JOB_ID}"
-mkdir -p "${COORD_DIR}" "${BUNDLE_DIR}"
+mkdir -p "${COORD_DIR}/ready" "${BUNDLE_DIR}"
 
 echo "Job ${SLURM_JOB_ID}: ${NODES} nodes x ${PEERS_PER_NODE} peers = ${TOTAL_PEERS} total peers"
 echo "Coordination directory: ${COORD_DIR}"

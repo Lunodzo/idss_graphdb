@@ -71,6 +71,7 @@ func generateData(dataFilePath string, numCustomers int, readingDays int, readin
         "--days", fmt.Sprint(readingDays),
         "--interval-minutes", fmt.Sprint(readingInterval),
         "--seed", peerID)
+    cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
     err := cmd.Run()
     if err != nil {
         logger.Fatal("Data generation command execution failed: ", err)

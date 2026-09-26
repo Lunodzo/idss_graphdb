@@ -12,6 +12,12 @@
 #   (space-separated subset of "e1 e2 e3 e4 e5", default: all)
 
 set -uo pipefail
+# The experiment scripts call python3 (timings, CSV summaries); make sure it is a modern one
+set +u
+command -v module >/dev/null 2>&1 || source /etc/profile >/dev/null 2>&1 || true
+module load Python/3.11.3-GCCcore-12.3.0 >/dev/null 2>&1 || true
+set -u
+echo "[driver] python3 = $(command -v python3) ($(python3 --version 2>&1))"
 
 : "${COORD_DIR:?COORD_DIR must be set}"
 : "${TOTAL_PEERS:?TOTAL_PEERS must be set}"

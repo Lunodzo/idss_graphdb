@@ -104,8 +104,8 @@ for policy in "${POLICIES[@]}"; do
                 forwarded_after=$(harness_count_server_logs "${log_dir}" "Query sent to peer")
                 forwarded_delta=$((forwarded_after - forwarded_before))
 
-                client_peer_id=$(harness_extract_client_peer_id "${client_output}")
-                decision=$(harness_decision_for_client "${log_dir}" "${client_peer_id}")
+                client_peer_id=$(harness_extract_client_peer_id "${client_output}") || true
+                decision=$(harness_decision_for_client "${log_dir}" "${client_peer_id}") || true
                 decision=${decision:-unknown}
 
                 echo "${policy},${role},${label},${repeat},${TTL_SECONDS},${HARNESS_ELAPSED},${HARNESS_RESPONDERS},${HARNESS_ROWS},${decision},${forwarded_delta}" >> "${CSV_FILE}"

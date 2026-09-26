@@ -67,8 +67,8 @@ if [ $NUM_PEERS -gt 50 ]; then
 fi
 
 # Increase system limits
-ulimit -n 65535  # Open files
-ulimit -u 8192   # Processes
+ulimit -n 65535 2>/dev/null || ulimit -n "$(ulimit -Hn)"
+ulimit -u 8192 2>/dev/null || true
 
 # Ensure the server code is compiled. SKIP_BUILD=1 reuses an already-present
 # ./idss_server binary (e.g. a bundle staged by experiments/hpc/stage_bundle.sh
@@ -260,6 +260,8 @@ check_routing_tables_converged() {
   # PEER_INDEX_OFFSET peers may already be running from a prior additive
   # launch (see README.md), so the expected cluster size is offset+NUM_PEERS.
   local target=$((PEER_INDEX_OFFSET + NUM_PEERS - 1))
+  local cap=${ROUTING_TARGET_CAP:-0}
+  if (( cap > 0 && target > cap )); then target=${cap}; fi
   (( target < 0 )) && target=0
   local size
   for PEER_ID in "${PEER_IDS[@]}"; do

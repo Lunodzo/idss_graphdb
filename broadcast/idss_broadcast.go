@@ -13,7 +13,9 @@ package broadcast
 
 import (
 	"context"
+	"math/rand"
 	_ "net/http/pprof"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -778,10 +780,19 @@ func selectForwardPeers(peers []peer.ID, budget time.Duration) []peer.ID {
 	}
 
 	// Ensure the limit does not exceed the number of available peers
+	if v := os.Getenv("IDSS_MAX_FORWARD"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			if n <= 0 {
+				limit = len(peers) // 0 = flood to the whole routing table
+			} else {
+				limit = n
+			}
+		}
+	}
 	if limit > len(peers) {
 		limit = len(peers)
 	}
-	sort.Slice(peers, func(i, j int) bool { return peers[i].String() < peers[j].String() })
+	rand.Shuffle(len(peers), func(i, j int) { peers[i], peers[j] = peers[j], peers[i] })
 	return peers[:limit]
 }
 
