@@ -140,7 +140,13 @@ for _ in $(seq 1 "${BOOTSTRAP_WAIT_SECONDS}"); do
   sleep 1
 done
 
-{ cat "${NODE_LOG_DIR}"/launcher-seed.log 2>/dev/null; cat "${NODE_LOG_DIR}"/launcher-rest.log 2>/dev/null; true; } | grep 'Peer [0-9][0-9]* launched with ID ' | awk '{print $NF}' > "${PEER_IDS_DIR}/node-${NODE_RANK}.txt"
+# Seed log first (node 0 only), so the manager peer heads the ID list. Built
+# without a failing command: under set -e/pipefail a missing file aborts.
+ID_LOGS=()
+for f in "${NODE_LOG_DIR}/launcher-seed.log" "${NODE_LOG_DIR}/launcher-rest.log"; do
+  if [[ -f "${f}" ]]; then ID_LOGS+=("${f}"); fi
+done
+awk '/Peer [0-9][0-9]* launched with ID /{print $NF}' ${ID_LOGS[@]+"${ID_LOGS[@]}"} /dev/null > "${PEER_IDS_DIR}/node-${NODE_RANK}.txt"
 if [[ -f "${NODE_LOG_DIR}/launcher-rest.log" ]] && ! grep -q "All peers have joined the overlay." "${NODE_LOG_DIR}/launcher-rest.log"; then echo "[node ${NODE_RANK}] peers did not join within ${BOOTSTRAP_WAIT_SECONDS}s" >&2; tail -20 "${NODE_LOG_DIR}"/launcher-*.log >&2; exit 1; fi
 touch "${READY_DIR}/node-${NODE_RANK}.ready"
 echo "[node ${NODE_RANK}] ready with ${PEERS_PER_NODE} peers"
