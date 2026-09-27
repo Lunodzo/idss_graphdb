@@ -41,6 +41,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -87,6 +88,8 @@ var (
 	activeConnections int64
 	logger            = common.Logger
 	msg               common.QueryMessage
+	// seenQueries claims each UQI atomically on first arrival (see handleQuery).
+	seenQueries sync.Map
 )
 
 // Pprof for profiling and resource monitoring
@@ -523,6 +526,18 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 		logger.Errorf("Rejecting query %s from requester %s: %v", msg.Uqid, msg.RequesterId, err)
 		helpers.SendErrorMessage(conn, peer.ID(remotePeerID), err.Error())
 		return
+	}
+
+	// Claim the UQI atomically. Concurrent copies of one query (forwarded by
+	// several parents) could all pass the graph-database check below before
+	// any of them stored the query, so each copy was executed and forwarded
+	// again, multiplying traffic under load.
+	if msg.Uqid != "" {
+		if _, seen := seenQueries.LoadOrStore(msg.Uqid, struct{}{}); seen {
+			logger.Debug("Query IGNORED (UQI already claimed)")
+			helpers.SendMergedResultWithPeers(conn, peer.ID(remotePeerID), nil, nil, []string{}, kadDHT)
+			return
+		}
 	}
 
 	duplicateQuery, err := broadcast.CheckDuplicateQuery(msg.Uqid, gm) // with gm, we check queries in the graph database for this peer
