@@ -313,6 +313,21 @@ cleanup() {
     wait "${pid}" 2>/dev/null || true
   done
 
+  # Delete the graph databases of the peers this launcher started (their
+  # logs are kept). Without this, every repeat left its peers' databases in
+  # DB_PATH_ROOT and a long job filled the node's disk. KEEP_PEER_DBS=1 keeps them.
+  if [[ "${KEEP_PEER_DBS:-0}" != "1" ]]; then
+    local f dbp id
+    for f in "${LOG_DIR}"/*.log; do
+      if [[ ! -f "${f}" ]]; then continue; fi
+      dbp=$(grep -m1 'Database path:' "${f}" 2>/dev/null | awk '{print $NF}' || true)
+      if [[ -z "${dbp}" ]]; then continue; fi
+      id=${dbp##*/}
+      if [[ -n "${DB_PATH_ROOT}" && "${dbp}" == "${DB_PATH_ROOT%/}/"* ]]; then rm -rf -- "${dbp}"; fi
+      if [[ -n "${id}" && -d "${DB_DIR}/${id}" ]]; then rm -rf -- "${DB_DIR:?}/${id}"; fi
+    done
+  fi
+
   echo "All peers have been stopped."
 }
 
