@@ -42,18 +42,28 @@ BOOTSTRAP_WAIT_SECONDS=${BOOTSTRAP_WAIT_SECONDS:-300}
 NODE_RANK=${SLURM_NODEID:-${SLURM_PROCID:-0}}
 NODE_LOCAL_ROOT=${NODE_LOCAL_ROOT:-${TMPDISK:-${TMPRAM:-/tmp}}}
 WORKDIR="${NODE_LOCAL_ROOT}/idss-${SLURM_JOB_ID:-nojob}-node-${NODE_RANK}"
-trap 'rm -rf "${WORKDIR}"' EXIT
+# On exit, copy node-local peer logs (PEER_LOGS_LOCAL=1) to the shared file
+# system first, then remove the node-local work directory.
+trap 'if [[ -n "${SHARED_NODE_LOG_DIR:-}" && "${NODE_LOG_DIR:-}" != "${SHARED_NODE_LOG_DIR}" ]]; then mkdir -p "${SHARED_NODE_LOG_DIR}"; cp -r "${NODE_LOG_DIR}/." "${SHARED_NODE_LOG_DIR}/" 2>/dev/null || true; fi; rm -rf "${WORKDIR}"' EXIT
 
 BOOTSTRAP_FILE="${COORD_DIR}/bootstrap_addr.txt"
 READY_DIR="${COORD_DIR}/ready"
 LOGS_ROOT="${COORD_DIR}/peer-logs"
 PEER_IDS_DIR="${COORD_DIR}/peer-ids"
 STOP_FILE="${COORD_DIR}/stop"
-NODE_LOG_DIR="${LOGS_ROOT}/node-${NODE_RANK}"
+SHARED_NODE_LOG_DIR="${LOGS_ROOT}/node-${NODE_RANK}"
+NODE_LOG_DIR="${SHARED_NODE_LOG_DIR}"
+# PEER_LOGS_LOCAL=1: peers on nodes other than node 0 log to node-local
+# storage during the run (copied to the shared file system on exit), so 380
+# peers do not write their logs synchronously to the shared home file system.
+# Node 0 keeps shared logs because the experiment driver reads them live.
+if [[ "${PEER_LOGS_LOCAL:-0}" == "1" && "${NODE_RANK}" != "0" ]]; then
+  NODE_LOG_DIR="${WORKDIR}/logs"
+fi
 
 mkdir -p "${READY_DIR}" "${LOGS_ROOT}" "${PEER_IDS_DIR}" "${WORKDIR}"
-rm -rf "${NODE_LOG_DIR}"
-mkdir -p "${NODE_LOG_DIR}"
+rm -rf "${SHARED_NODE_LOG_DIR}" "${NODE_LOG_DIR}"
+mkdir -p "${SHARED_NODE_LOG_DIR}" "${NODE_LOG_DIR}"
 export PRESERVE_EXISTING_LOGS=1
 
 echo "[node ${NODE_RANK}] staging bundle from ${BUNDLE_DIR} to ${WORKDIR}"
