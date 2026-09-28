@@ -129,9 +129,9 @@ start_peer() {
   for ((attempt=1; attempt<=START_PEER_RETRIES; attempt++)); do
     rm -f "${TMP_LOG}"
     if [ "$INDEX" -eq "$MANAGER_PEER_INDEX" ] || { [ "$MANAGER_PEER_INDEX" -eq 0 ] && [ "$INDEX" -eq "$((PEER_INDEX_OFFSET + 1))" ]; }; then
-      IDSS_METRICS_ADDR="${LISTEN_IP}:${metrics_port}" IDSS_PPROF_ADDR="${LISTEN_IP}:${pprof_port}" IDSS_LISTEN_ADDR="/ip4/${LISTEN_IP}/tcp/0" IDSS_DISABLE_MDNS="${DISABLE_MDNS}" IDSS_DB_PATH="${DB_PATH_ROOT}" GOMAXPROCS=1 ./idss_server -manager "${SERVER_ARGS[@]}" > "${TMP_LOG}" 2>&1 &
+      IDSS_METRICS_ADDR="${LISTEN_IP}:${metrics_port}" IDSS_PPROF_ADDR="${LISTEN_IP}:${pprof_port}" IDSS_LISTEN_ADDR="/ip4/${LISTEN_IP}/tcp/0" IDSS_DISABLE_MDNS="${DISABLE_MDNS}" IDSS_DB_PATH="${DB_PATH_ROOT}" GOMAXPROCS="${PEER_GOMAXPROCS:-1}" ./idss_server -manager "${SERVER_ARGS[@]}" > "${TMP_LOG}" 2>&1 &
     else
-      IDSS_METRICS_ADDR="${LISTEN_IP}:${metrics_port}" IDSS_PPROF_ADDR="${LISTEN_IP}:${pprof_port}" IDSS_LISTEN_ADDR="/ip4/${LISTEN_IP}/tcp/0" IDSS_DISABLE_MDNS="${DISABLE_MDNS}" IDSS_DB_PATH="${DB_PATH_ROOT}" GOMAXPROCS=1 ./idss_server "${SERVER_ARGS[@]}" > "${TMP_LOG}" 2>&1 &
+      IDSS_METRICS_ADDR="${LISTEN_IP}:${metrics_port}" IDSS_PPROF_ADDR="${LISTEN_IP}:${pprof_port}" IDSS_LISTEN_ADDR="/ip4/${LISTEN_IP}/tcp/0" IDSS_DISABLE_MDNS="${DISABLE_MDNS}" IDSS_DB_PATH="${DB_PATH_ROOT}" GOMAXPROCS="${PEER_GOMAXPROCS:-1}" ./idss_server "${SERVER_ARGS[@]}" > "${TMP_LOG}" 2>&1 &
     fi
     local new_pid=$!
 
