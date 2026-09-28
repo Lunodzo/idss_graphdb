@@ -34,6 +34,10 @@ REPEATS=${2:-1}
 E5_CUSTOMERS=${E5_CUSTOMERS:-5}
 E5_DAYS=${E5_DAYS:-30}
 E5_INTERVAL_MINUTES=${E5_INTERVAL_MINUTES:-15}
+# Diagnostic switches (1 = skip that part of the scenario in every repeat).
+E5_SKIP_WRITES=${E5_SKIP_WRITES:-0}
+E5_SKIP_SETTLE=${E5_SKIP_SETTLE:-0}
+E5_SKIP_DSO=${E5_SKIP_DSO:-0}
 DISCOVERY_TTL_SECONDS=${DISCOVERY_TTL_SECONDS:-10}
 SETTLE_TTL_SECONDS=${SETTLE_TTL_SECONDS:-20}
 
@@ -77,6 +81,9 @@ days=${E5_DAYS}
 interval_minutes=${E5_INTERVAL_MINUTES}
 discovery_ttl_seconds=${DISCOVERY_TTL_SECONDS}
 settle_ttl_seconds=${SETTLE_TTL_SECONDS}
+skip_writes=${E5_SKIP_WRITES}
+skip_settle=${E5_SKIP_SETTLE}
+skip_dso=${E5_SKIP_DSO}
 EOF
 
 # customer_key_for_peer <peer_id> -> deterministic mRID of that peer's first
@@ -151,6 +158,7 @@ for repeat in $(seq 1 "${REPEATS}"); do
     trade_buyer_key="trade-e5-${run_tag}-buyer"
     now_ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
+    if [[ "${E5_SKIP_WRITES}" != "1" ]]; then
     # Step 1-2: bids and offers are written locally (add is always local-only).
     client_output="${RUN_DIR}/client-output/${repeat}-add-offer.log"
     harness_run_query "${CLIENT_RESULTS_DIR}" "${client_output}" "${seller_address}" member \
@@ -162,6 +170,8 @@ for repeat in $(seq 1 "${REPEATS}"); do
         "add Bid ${bid_key} quantity=3.5 priceLimit=0.25 validFrom=${now_ts} validTo=${now_ts} status=open" 1
     record_row "${repeat}" "add_bid" "" member "${HARNESS_STATUS_LINE:-${HARNESS_ROWS} rows}" ""
 
+    fi
+
     # Step 3: discovered by distributed query (Q2).
     client_output="${RUN_DIR}/client-output/${repeat}-discover.log"
     harness_run_query "${CLIENT_RESULTS_DIR}" "${client_output}" "${buyer_address}" member \
@@ -170,6 +180,7 @@ for repeat in $(seq 1 "${REPEATS}"); do
     decision=$(harness_decision_for_client "${repeat_log_dir}" "${client_peer_id}")
     record_row "${repeat}" "discover_offers" "" member "${HARNESS_ROWS} rows" "${decision:-unknown}"
 
+    if [[ "${E5_SKIP_WRITES}" != "1" ]]; then
     # Step 4: matched, and recorded as a Trade at both counterparts (local writes).
     client_output="${RUN_DIR}/client-output/${repeat}-trade-seller.log"
     harness_run_query "${CLIENT_RESULTS_DIR}" "${client_output}" "${seller_address}" member \
@@ -190,10 +201,12 @@ for repeat in $(seq 1 "${REPEATS}"); do
     harness_run_query "${CLIENT_RESULTS_DIR}" "${client_output}" "${buyer_address}" member \
         "update Bid ${bid_key} status=matched" 1
     record_row "${repeat}" "update_bid_matched" "" member "${HARNESS_STATUS_LINE:-${HARNESS_ROWS} rows}" ""
+    fi
 
     # Step 5: the manager compiles settlement over billing periods of a day, a
     # week, and a month on the same dataset, so cost is a function of period
     # length rather than a single point.
+    if [[ "${E5_SKIP_SETTLE}" != "1" ]]; then
     for period_spec in "1_day|1" "1_week|7" "1_month|30"; do
         period_label=${period_spec%%|*}
         period_days=${period_spec#*|}
@@ -211,18 +224,21 @@ for repeat in $(seq 1 "${REPEATS}"); do
         record_row "${repeat}" "settle" "${period_label}" manager "${HARNESS_STATUS_LINE:-${HARNESS_ROWS} rows}" "" \
             "${phase_local}" "${phase_broadcast}" "${phase_write}" "${phase_total}"
     done
+    fi
 
     # Step 6: a DSO observer retrieves the aggregate it is permitted to see.
     # SettlementSummary falls under the observer wildcard aggregate rule in
     # server/policy.default.yaml, and an @sum query already returns only the
     # aggregated value regardless of decision, so no raw metering record
     # leaves the manager peer.
+    if [[ "${E5_SKIP_DSO}" != "1" ]]; then
     client_output="${RUN_DIR}/client-output/${repeat}-dso-aggregate.log"
     harness_run_query "${CLIENT_RESULTS_DIR}" "${client_output}" "${manager_address}" observer \
         "get SettlementSummary show @sum(meterReadingSum)" "${DISCOVERY_TTL_SECONDS}"
     client_peer_id=$(harness_extract_client_peer_id "${client_output}")
     decision=$(harness_decision_for_client "${repeat_log_dir}" "${client_peer_id}")
     record_row "${repeat}" "dso_aggregate" "" observer "${HARNESS_ROWS} rows" "${decision:-unknown}"
+    fi
 
     harness_stop_cluster
 done

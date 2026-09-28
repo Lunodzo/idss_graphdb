@@ -55,10 +55,18 @@ const maxConcurrentPeerQueries = 30
 const maxForwardPeers = 30
 const ttlReductionFactor = 0.75
 
+// logStepTiming records how long one step of query handling took, so slow
+// graph-database calls can be located from the peer logs (grep "timing uqi=").
+func logStepTiming(uqi, step string, start time.Time) {
+	logger.Infof("timing uqi=%s step=%s ms=%.1f", uqi, step, time.Since(start).Seconds()*1000)
+}
+
 // Function to handle and broadcast queries in the IDSS system
 func ExecuteAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT, decision access.Decision) {
 	// Try to get query details from the graph database, but fall back to message fields if not found
+	fetchStart := time.Now()
 	queryDetails, err := FetchQueryDetails(msg.Uqid, gm)
+	logStepTiming(msg.Uqid, "fetch_details", fetchStart)
 	if err != nil {
 		logger.Warnf("Could not fetch query details for %s: %v; using message fields directly", msg.Uqid, err)
 		// Continue with message fields as-is; they should be populated from the client or previous hop
@@ -101,7 +109,9 @@ func ExecuteAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		localStart := time.Now()
 		result, header, err := RunIDSSQueryWithDecision(msg.Query, kadDHT.Host().ID(), gm, decision)
+		logStepTiming(msg.Uqid, "local_query_1", localStart)
 		if err != nil {
 			logger.Errorf("Error executing local query: %v", err)
 			return
@@ -116,7 +126,9 @@ func ExecuteAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 		}
 
 		localResHolder = result
+		stateStart := time.Now()
 		UpdateQueryState(msg, common.QueryState_LOCALLY_EXECUTED, gm)
+		logStepTiming(msg.Uqid, "update_state", stateStart)
 		StoreResults(msg, localResHolder, gm)
 	}()
 
@@ -139,7 +151,9 @@ func ExecuteAndBroadcastQuery(conn network.Stream, msg *common.QueryMessage, con
 		defer wg.Done()
 
 		// Now update sender address to the current peer graph database
+		senderStart := time.Now()
 		err = UpdateQuerySenderAddress(msg, kadDHT.Host().ID().String(), gm)
+		logStepTiming(msg.Uqid, "update_sender", senderStart)
 		if err != nil {
 			logger.Errorf("Error updating sender address: %v", err)
 		}
@@ -443,7 +457,10 @@ func BroadcastAggregateQuery(msg *common.QueryMessage, parentStream network.Stre
 	forwardMsg := proto.Clone(msg).(*common.QueryMessage)
 	// Reduce the remaining wall-clock budget before forwarding so the current
 	// peer has time to process and return the downstream response.
-	if err := UpdateTTL(forwardMsg, gm); err != nil {
+	ttlStart := time.Now()
+	ttlErr := UpdateTTL(forwardMsg, gm)
+	logStepTiming(msg.Uqid, "update_ttl", ttlStart)
+	if err := ttlErr; err != nil {
 		logger.Errorf("Error updating TTL: %v", err)
 	}
 	logger.Infof("Broadcasting query with remaining TTL: %f", forwardMsg.Ttl)
@@ -547,7 +564,10 @@ func ReceiveAggregateResponse(stream network.Stream, ctx context.Context) (float
 
 // IDSS function to broadcast the query to connected peers. This function also filters out the originating and parent peers because they are already queried
 func BroadcastQuery(msg *common.QueryMessage, parentStream network.Stream, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT, finalHeader []string, decision access.Decision) {
-	if !ShouldContinueBroadcastingQuery(msg, gm) {
+	continueStart := time.Now()
+	shouldContinue := ShouldContinueBroadcastingQuery(msg, gm)
+	logStepTiming(msg.Uqid, "should_continue", continueStart)
+	if !shouldContinue {
 		logger.Infof("Query %s will not be broadcast further due to state or TTL", msg.Uqid)
 		if parentStream != nil {
 			localResults, localHeader, err := RunIDSSQueryWithDecision(msg.Query, kadDHT.Host().ID(), gm, decision)
@@ -602,7 +622,9 @@ func BroadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 	}
 	remoteResultsChan := make(chan remoteResult, len(eligiblePeers))
 	streamSlots := make(chan struct{}, maxConcurrentPeerQueries)
+	local2Start := time.Now()
 	localResults, finalHeader, err := RunIDSSQueryWithDecision(msg.Query, kadDHT.Host().ID(), gm, decision)
+	logStepTiming(msg.Uqid, "local_query_2", local2Start)
 	if err != nil {
 		logger.Errorf("Error executing local query: %v", err)
 		return
@@ -621,7 +643,10 @@ func BroadcastQuery(msg *common.QueryMessage, parentStream network.Stream, confi
 	logger.Infof("Query result - Header: %v, Data Rows: %d", finalHeader, len(localResults))
 	parentDuration := remainingQueryTime(msg)
 	forwardMsg := proto.Clone(msg).(*common.QueryMessage)
-	if err := UpdateTTL(forwardMsg, gm); err != nil {
+	ttl2Start := time.Now()
+	ttl2Err := UpdateTTL(forwardMsg, gm)
+	logStepTiming(msg.Uqid, "update_ttl", ttl2Start)
+	if err := ttl2Err; err != nil {
 		logger.Errorf("Error reducing TTL for forwarding: %v", err)
 		return
 	}

@@ -540,7 +540,9 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 		}
 	}
 
+	dupStart := time.Now()
 	duplicateQuery, err := broadcast.CheckDuplicateQuery(msg.Uqid, gm) // with gm, we check queries in the graph database for this peer
+	logger.Infof("timing uqi=%s step=duplicate_check ms=%.1f", msg.Uqid, time.Since(dupStart).Seconds()*1000)
 	if err != nil {
 		logger.Errorf("Error checking duplicate query: %v", err)
 		return
@@ -565,7 +567,9 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	logger.Infof("This is a new query on this peer")
 	logger.Infof("\nReceiver %s \nUQI: %s\nTTL: %f \nFrom: %s\nRequester: %s (%s)", kadDHT.Host().ID(), msg.Uqid, msg.Ttl, remotePeerID, msg.RequesterId, msg.RequesterRole) // for debugging
 	msg.State = &common.QueryState{State: common.QueryState_QUEUED}                                                                                                          // Set the query state to QUEUED
-	broadcast.StoreQueryInfo(msg, gm, remotePeerID)                                                                                                                          // Store the query info in the graph database
+	storeStart := time.Now()
+	broadcast.StoreQueryInfo(msg, gm, remotePeerID)
+	logger.Infof("timing uqi=%s step=store_query ms=%.1f", msg.Uqid, time.Since(storeStart).Seconds()*1000) // Store the query info in the graph database
 	if strings.HasPrefix(queryLower, "settle ") {
 		handleSettlementCommand(conn, msg, remotePeerID, config, gm, kadDHT)
 		return
