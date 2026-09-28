@@ -84,6 +84,11 @@ fi
 echo "[node ${NODE_RANK}] rank=${NODE_RANK} listen_ip=${LISTEN_IP} workdir=${WORKDIR}"
 
 DATA_ARGS=(--customers "${E_CUSTOMERS}" --days "${E_DAYS}" --interval-minutes "${E_INTERVAL_MINUTES}" -policy "${POLICY_FILE}" -pid "${PROTOCOL_ID}")
+# COMMUNITIES=K (from the submitting environment) splits all peers into K
+# energy communities by global peer index (see server/start_peers.sh); every
+# node numbers its peers from 1, so pass this node's offset.
+export COMMUNITIES=${COMMUNITIES:-0}
+export COMMUNITY_INDEX_BASE=$((NODE_RANK * PEERS_PER_NODE))
 
 # mDNS is disabled cluster-wide (see IDSS_DISABLE_MDNS above), so every peer
 # needs an explicit DHT bootstrap peer (-peer) to find anyone at all - unlike

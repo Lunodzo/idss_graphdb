@@ -9,7 +9,8 @@
 #   TOTAL_PEERS   total peer count across the whole cluster (NODES * PEERS_PER_NODE)
 # Optional:
 #   REPEATS, E3_CUSTOMERS, E3_DAYS, E3_INTERVAL_MINUTES, EXPERIMENTS
-#   (space-separated subset of "e1 e2 e3 e4 e5", default: all)
+#   (space-separated subset of "e1 e2 e3 e4 e5 e6", default: e1-e5;
+#   e6 needs COMMUNITIES=K > 0, which also changes how the cluster is launched)
 
 set -uo pipefail
 # The experiment scripts call python3 (timings, CSV summaries); make sure it is a modern one
@@ -79,6 +80,10 @@ for exp in ${EXPERIMENTS}; do
             ;;
         e5)
             ./run_e5_scenario.sh "${TOTAL_PEERS}" "${REPEATS}" || FAILED+=("e5")
+            ;;
+        e6)
+            # Needs a cluster launched with COMMUNITIES=K > 0.
+            ./run_e6_communities.sh "${TOTAL_PEERS}" "${COMMUNITIES:-0}" "${REPEATS}" || FAILED+=("e6")
             ;;
         *)
             echo "Unknown experiment '${exp}' in EXPERIMENTS, skipping" >&2

@@ -63,8 +63,16 @@ or environment variables before submitting):
 - `PEERS_PER_NODE` - peers per node (>= 100, per the current requirement).
 - `ml Go` / `ml Python` - run `ml avail Go` and `ml avail Python` on Sophia and
   use the exact module names your allocation provides.
-- `EXPERIMENTS` - space-separated subset of `e1 e2 e3 e4 e5` to run (default:
-  all five).
+- `EXPERIMENTS` - space-separated subset of `e1 e2 e3 e4 e5 e6` to run
+  (default: `e1`-`e5`).
+- `COMMUNITIES` - `K > 0` launches the cluster as K energy communities
+  (`ec-1`..`ec-K`; global peers 1..K are their managers, every other peer joins
+  `ec-((g-1) mod K + 1)`) and is required by `e6` (community-scoped
+  settlement). Leave it unset (0) for `e1`-`e5`, which assume the original
+  single-manager setup. Example:
+  `PEER_LOGS_LOCAL=1 COMMUNITIES=8 PEERS_PER_NODE=20 EXPERIMENTS=e6 ./submit.sh scale --nodes=20`.
+  Keep `K <= PEERS_PER_NODE` so every manager runs on node 0, whose logs the
+  driver reads live.
 - `REPEATS`, `E_CUSTOMERS`, `E_DAYS`, `E_INTERVAL_MINUTES`, `POLICY_FILE` -
   same knobs the local scripts expose. `E_DAYS` defaults to 30 when
   `PEERS_PER_NODE <= 10` and 1 otherwise (see "Peers per node" below); pass it

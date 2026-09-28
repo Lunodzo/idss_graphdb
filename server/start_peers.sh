@@ -53,9 +53,23 @@ START_PEER_DELAY_SECONDS=${START_PEER_DELAY_SECONDS:-0}
 # common.DBRoot()). Leave unset to keep the existing ./idss_graph_db default;
 # point it at node-local scratch for multi-node HPC runs.
 DB_PATH_ROOT=${DB_PATH_ROOT:-}
+# COMMUNITIES=K (K > 0) splits the peers into K energy communities, ec-1..ec-K,
+# by global peer index g = COMMUNITY_INDEX_BASE + INDEX: peers g = 1..K manage
+# ec-g, and every other peer joins ec-((g-1) mod K + 1). The manager_peer_index
+# argument is then ignored. COMMUNITY_INDEX_BASE makes g global when several
+# launchers each number their peers from 1 (multi-node runs, see
+# experiments/hpc/launch_node_peers.sh). COMMUNITIES=0 (default) keeps the
+# original single-manager, unscoped setup.
+COMMUNITIES=${COMMUNITIES:-0}
+COMMUNITY_INDEX_BASE=${COMMUNITY_INDEX_BASE:-0}
 
 if ! [[ "${PEER_INDEX_OFFSET}" =~ ^[0-9]+$ ]]; then
   echo "PEER_INDEX_OFFSET must be a non-negative integer" >&2
+  exit 1
+fi
+
+if ! [[ "${COMMUNITIES}" =~ ^[0-9]+$ && "${COMMUNITY_INDEX_BASE}" =~ ^[0-9]+$ ]]; then
+  echo "COMMUNITIES and COMMUNITY_INDEX_BASE must be non-negative integers" >&2
   exit 1
 fi
 
@@ -126,9 +140,19 @@ start_peer() {
   local metrics_port=$((BASE_METRICS_PORT + INDEX))
   local pprof_port=$((BASE_PPROF_PORT + INDEX))
 
+  # Community mode: role and community from the global peer index.
+  local community_args=()
+  if (( COMMUNITIES > 0 )); then
+    local global_index=$((COMMUNITY_INDEX_BASE + INDEX))
+    community_args=(-community "ec-$(( (global_index - 1) % COMMUNITIES + 1 ))")
+    if (( global_index <= COMMUNITIES )); then community_args+=(-manager); fi
+  fi
+
   for ((attempt=1; attempt<=START_PEER_RETRIES; attempt++)); do
     rm -f "${TMP_LOG}"
-    if [ "$INDEX" -eq "$MANAGER_PEER_INDEX" ] || { [ "$MANAGER_PEER_INDEX" -eq 0 ] && [ "$INDEX" -eq "$((PEER_INDEX_OFFSET + 1))" ]; }; then
+    if (( COMMUNITIES > 0 )); then
+      IDSS_METRICS_ADDR="${LISTEN_IP}:${metrics_port}" IDSS_PPROF_ADDR="${LISTEN_IP}:${pprof_port}" IDSS_LISTEN_ADDR="/ip4/${LISTEN_IP}/tcp/0" IDSS_DISABLE_MDNS="${DISABLE_MDNS}" IDSS_DB_PATH="${DB_PATH_ROOT}" GOMAXPROCS="${PEER_GOMAXPROCS:-1}" ./idss_server "${community_args[@]}" "${SERVER_ARGS[@]}" > "${TMP_LOG}" 2>&1 &
+    elif [ "$INDEX" -eq "$MANAGER_PEER_INDEX" ] || { [ "$MANAGER_PEER_INDEX" -eq 0 ] && [ "$INDEX" -eq "$((PEER_INDEX_OFFSET + 1))" ]; }; then
       IDSS_METRICS_ADDR="${LISTEN_IP}:${metrics_port}" IDSS_PPROF_ADDR="${LISTEN_IP}:${pprof_port}" IDSS_LISTEN_ADDR="/ip4/${LISTEN_IP}/tcp/0" IDSS_DISABLE_MDNS="${DISABLE_MDNS}" IDSS_DB_PATH="${DB_PATH_ROOT}" GOMAXPROCS="${PEER_GOMAXPROCS:-1}" ./idss_server -manager "${SERVER_ARGS[@]}" > "${TMP_LOG}" 2>&1 &
     else
       IDSS_METRICS_ADDR="${LISTEN_IP}:${metrics_port}" IDSS_PPROF_ADDR="${LISTEN_IP}:${pprof_port}" IDSS_LISTEN_ADDR="/ip4/${LISTEN_IP}/tcp/0" IDSS_DISABLE_MDNS="${DISABLE_MDNS}" IDSS_DB_PATH="${DB_PATH_ROOT}" GOMAXPROCS="${PEER_GOMAXPROCS:-1}" ./idss_server "${SERVER_ARGS[@]}" > "${TMP_LOG}" 2>&1 &

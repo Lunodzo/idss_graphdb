@@ -360,10 +360,19 @@ func main() {
 
 	// A go routine to refresh the DHT and periodically find and connect to peers
 	go kaddht.DiscoverAndConnectPeers(ctx, host, config, kadDHT)
-	go func() {
-		time.Sleep(5 * time.Second)
-		broadcastCustomerRegistrations(ctx, host, config, graphManager, kadDHT)
-	}()
+	if config.CommunityID != "" {
+		// Community mode: register with (or act as) this community's manager.
+		if config.IsManager {
+			startCommunityManager(ctx, host, kadDHT, config, graphManager)
+		} else {
+			go startCommunityMember(ctx, host, kadDHT, config, graphManager)
+		}
+	} else {
+		go func() {
+			time.Sleep(5 * time.Second)
+			broadcastCustomerRegistrations(ctx, host, config, graphManager, kadDHT)
+		}()
+	}
 
 	// Handle streams
 	host.SetStreamHandler(protocol.ID(config.ProtocolID), func(stream network.Stream) {
@@ -457,11 +466,19 @@ func handleRequest(conn network.Stream, remotePeerID string, ctx context.Context
 		// This aims to handle only query messages. Other message types can be added and handled accordingly
 		// The client will send a query message to the server
 		if msg.Type == common.MessageType_CUSTOMER_REGISTRATION {
-			handleCustomerRegistration(&msg, config, gm)
+			if config.CommunityID != "" {
+				handleCommunityRegistration(conn, &msg, remotePeerID, config, gm)
+			} else {
+				handleCustomerRegistration(&msg, config, gm)
+			}
 			continue
 		}
 		if msg.Type == common.MessageType_SETTLEMENT_REQUEST {
-			handleSettlementRequest(conn, &msg, gm, host)
+			if config.CommunityID != "" {
+				handleScopedSettlementRequest(conn, &msg, remotePeerID, config, gm, host, accessPolicy)
+			} else {
+				handleSettlementRequest(conn, &msg, gm, host)
+			}
 			continue
 		}
 		if msg.Type == common.MessageType_QUERY {
@@ -570,7 +587,7 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	storeStart := time.Now()
 	broadcast.StoreQueryInfo(msg, gm, remotePeerID)
 	logger.Infof("timing uqi=%s step=store_query ms=%.1f", msg.Uqid, time.Since(storeStart).Seconds()*1000) // Store the query info in the graph database
-	if strings.HasPrefix(queryLower, "settle ") {
+	if strings.HasPrefix(queryLower, "settle ") || strings.HasPrefix(queryLower, "settle-unscoped ") {
 		handleSettlementCommand(conn, msg, remotePeerID, config, gm, kadDHT)
 		return
 	}
@@ -694,12 +711,16 @@ func broadcastCustomerRegistrations(ctx context.Context, host host.Host, config 
 
 // handleSettlementCommand processes a settlement command from a manager client. It validates the command, parses the time range, and compiles the settlement summaries using the broadcast package.
 func handleSettlementCommand(conn network.Stream, msg *common.QueryMessage, remotePeerID string, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) {
+	if config.CommunityID != "" {
+		handleCommunitySettlementCommand(conn, msg, remotePeerID, config, gm, kadDHT)
+		return
+	}
 	if !config.IsManager || msg.RequesterRole != "manager" {
 		helpers.SendErrorMessage(conn, peer.ID(remotePeerID), "settle is available only to a manager client connected to a manager peer")
 		return
 	}
 	parts := strings.Fields(msg.Query)
-	if len(parts) != 3 {
+	if len(parts) != 3 || strings.ToLower(parts[0]) != "settle" {
 		helpers.SendErrorMessage(conn, peer.ID(remotePeerID), "invalid settle command: expected settle <from> <to>")
 		return
 	}

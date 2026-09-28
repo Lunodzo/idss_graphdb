@@ -81,6 +81,12 @@ type Config struct {
 	NumCustomers     int
 	ReadingDays      int
 	ReadingInterval  int
+	// CommunityID scopes registration and settlement to one energy community.
+	// Empty (the default) keeps the original unscoped behaviour.
+	CommunityID string
+	// CommunityManager optionally pins the manager's peer ID; otherwise a
+	// member discovers it through the DHT provider record of its community.
+	CommunityManager string
 }
 
 // Function to parse the flags and return the configuration
@@ -101,6 +107,8 @@ func ParseFlags(peerID string) (Config, error) {
 	flag.IntVar(&config.NumCustomers, "customers", 4, "Number of generated energy-community customers per peer.")
 	flag.IntVar(&config.ReadingDays, "days", 1, "Number of generated meter-reading days per peer.")
 	flag.IntVar(&config.ReadingInterval, "interval-minutes", 15, "Generated meter-reading interval in minutes.")
+	flag.StringVar(&config.CommunityID, "community", "", "Energy community this peer belongs to (with -manager: the community it manages). Empty keeps unscoped behaviour.")
+	flag.StringVar(&config.CommunityManager, "community-manager", "", "Optional: pin the peer ID of this community's manager instead of discovering it via the DHT.")
 
 	flag.Parse()
 	return config, nil
