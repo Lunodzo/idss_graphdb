@@ -105,14 +105,16 @@ COORD_DIR="${COORD_DIR}" TOTAL_PEERS="${TOTAL_PEERS}" REPEATS="${REPEATS}" \
     EXPERIMENTS="${EXPERIMENTS}" \
     "${SCRIPT_DIR}/run_distributed_experiments.sh" || DRIVER_STATUS=$?
 
-# Peer/DB state lives on ephemeral node-local and $TMPSHARE storage that Slurm
-# deletes at job end; copy the raw per-peer logs out before that happens.
-mkdir -p "${RESULTS_DIR}/hpc-peer-logs-${SLURM_JOB_ID}"
-cp -r "${COORD_DIR}/peer-logs" "${RESULTS_DIR}/hpc-peer-logs-${SLURM_JOB_ID}/" 2>/dev/null || true
-
 echo "Signalling all nodes to stop..."
 touch "${COORD_DIR}/stop"
 wait "${SRUN_PID}" || true
+
+# Peer/DB state lives on ephemeral node-local and $TMPSHARE storage that Slurm
+# deletes at job end; copy the raw per-peer logs out before that happens.
+# Copy after the nodes have stopped: with PEER_LOGS_LOCAL=1 each node copies
+# its peers' logs to the shared directory only on exit.
+mkdir -p "${RESULTS_DIR}/hpc-peer-logs-${SLURM_JOB_ID}"
+cp -r "${COORD_DIR}/peer-logs" "${RESULTS_DIR}/hpc-peer-logs-${SLURM_JOB_ID}/" 2>/dev/null || true
 
 echo "Done. Experiment CSVs are in ${RESULTS_DIR}; raw peer logs copied to ${RESULTS_DIR}/hpc-peer-logs-${SLURM_JOB_ID}."
 exit "${DRIVER_STATUS}"
