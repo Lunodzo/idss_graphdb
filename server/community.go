@@ -204,7 +204,11 @@ func startCommunityMember(ctx context.Context, h host.Host, kadDHT *dht.IpfsDHT,
 	}
 	started := time.Now()
 	for attempt := 1; ; attempt++ {
-		for _, candidate := range findCommunityManagers(ctx, h, kadDHT, key, config) {
+		candidates := findCommunityManagers(ctx, h, kadDHT, key, config)
+		if len(candidates) == 0 && attempt%10 == 0 {
+			logger.Infof("No manager found yet for %s (attempt %d, %.1f s)", config.CommunityID, attempt, time.Since(started).Seconds())
+		}
+		for _, candidate := range candidates {
 			accepted, regErr := registerWithManager(ctx, h, config, candidate, registrations)
 			if regErr == nil && accepted == len(registrations) {
 				membership.setManager(candidate.ID)
@@ -212,7 +216,7 @@ func startCommunityMember(ctx context.Context, h host.Host, kadDHT *dht.IpfsDHT,
 					candidate.ID, config.CommunityID, accepted, attempt, time.Since(started).Seconds())
 				return
 			}
-			logger.Debugf("Registration with %s for %s incomplete (%d/%d accepted): %v",
+			logger.Infof("Registration with %s for %s incomplete (%d/%d accepted): %v",
 				candidate.ID, config.CommunityID, accepted, len(registrations), regErr)
 		}
 		select {
@@ -317,6 +321,12 @@ func registerWithManager(ctx context.Context, h host.Host, config flags.Config, 
 			return accepted, fmt.Errorf("registration of %s rejected: %s", registration.Mrid, ack.Error)
 		}
 		accepted++
+		if accepted == 1 {
+			// The manager has admitted this peer to its registry: answer its
+			// settlement requests from now on, even while the remaining
+			// customers are still being registered (or retried).
+			membership.setManager(manager.ID)
+		}
 	}
 	return accepted, nil
 }
