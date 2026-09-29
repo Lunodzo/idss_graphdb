@@ -173,13 +173,21 @@ func startCommunityManager(ctx context.Context, h host.Host, kadDHT *dht.IpfsDHT
 			case <-time.After(3 * time.Second):
 			}
 		}
-		ticker := time.NewTicker(10 * time.Minute)
-		defer ticker.Stop()
+		// Re-announce often while the overlay is still forming: a provider
+		// record stored before later peers join can end up only on peers
+		// that are no longer among the key's closest, so lookups by
+		// late-joining members miss it (observed: members waited for the
+		// next re-announcement). Afterwards, refresh every 10 minutes.
+		announcedAt := time.Now()
 		for {
+			interval := 10 * time.Minute
+			if time.Since(announcedAt) < 10*time.Minute {
+				interval = 20 * time.Second
+			}
 			select {
 			case <-ctx.Done():
 				return
-			case <-ticker.C:
+			case <-time.After(interval):
 				if err := announce(); err != nil {
 					logger.Warnf("Re-announcing community %s failed: %v", config.CommunityID, err)
 				}
