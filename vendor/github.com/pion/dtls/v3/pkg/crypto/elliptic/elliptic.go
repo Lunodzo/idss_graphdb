@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 // Package elliptic provides elliptic curve cryptography for DTLS
@@ -27,7 +27,7 @@ const (
 type Keypair struct {
 	Curve      Curve
 	PublicKey  []byte
-	PrivateKey []byte
+	PrivateKey []byte //nolint:gosec // no real risk of exporting the private key.
 }
 
 // CurveType is used to represent the IANA registered curve types for TLS

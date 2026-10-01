@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package dtls
@@ -39,7 +39,7 @@ func (h *handshakeCache) push(data []byte, epoch, messageSequence uint16, typ ha
 	defer h.mu.Unlock()
 
 	h.cache = append(h.cache, &handshakeCacheItem{
-		data:            append([]byte{}, data...),
+		data:            data,
 		epoch:           epoch,
 		messageSequence: messageSequence,
 		typ:             typ,

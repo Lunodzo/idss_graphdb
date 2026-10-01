@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 // Package ccm implements a CCM, Counter with CBC-MAC
@@ -101,7 +101,7 @@ func MaxNonceLength(pdatalen int) int {
 }
 
 func (c *ccm) cbcRound(mac, data []byte) {
-	for i := 0; i < ccmBlockSize; i++ {
+	for i := range ccmBlockSize {
 		mac[i] ^= data[i]
 	}
 	c.b.Encrypt(mac, mac)

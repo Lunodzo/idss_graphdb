@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package extension
@@ -51,12 +51,19 @@ func (s *ServerName) Unmarshal(data []byte) error { //nolint:cyclop
 	}
 
 	var extData cryptobyte.String
-	val.ReadUint16LengthPrefixed(&extData)
+	if !val.ReadUint16LengthPrefixed(&extData) {
+		return errBufferTooSmall
+	}
 
 	var nameList cryptobyte.String
 	if !extData.ReadUint16LengthPrefixed(&nameList) || nameList.Empty() {
 		return errInvalidSNIFormat
 	}
+
+	if !extData.Empty() {
+		return errLengthMismatch
+	}
+
 	for !nameList.Empty() {
 		var nameType uint8
 		var serverName cryptobyte.String
