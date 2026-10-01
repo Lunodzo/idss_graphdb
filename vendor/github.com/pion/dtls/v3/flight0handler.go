@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package dtls
@@ -78,7 +78,7 @@ func flight0Parse(
 			}
 			state.namedCurve = ext.EllipticCurves[0]
 		case *extension.UseSRTP:
-			profile, ok := findMatchingSRTPProfile(ext.ProtectionProfiles, cfg.localSRTPProtectionProfiles)
+			profile, ok := findMatchingSRTPProfile(cfg.localSRTPProtectionProfiles, ext.ProtectionProfiles)
 			if !ok {
 				return 0, &alert.Alert{Level: alert.Fatal, Description: alert.InsufficientSecurity}, errServerNoMatchingSRTPProfile
 			}
@@ -100,6 +100,9 @@ func flight0Parse(
 			if cfg.connectionIDGenerator != nil {
 				state.remoteConnectionID = ext.CID
 			}
+		case *extension.SignatureAlgorithmsCert:
+			// Store the client's certificate signature schemes for later validation
+			state.remoteCertSignatureSchemes = ext.SignatureHashAlgorithms
 		}
 	}
 
@@ -176,7 +179,10 @@ func flight0Generate(
 	var zeroEpoch uint16
 	state.localEpoch.Store(zeroEpoch)
 	state.remoteEpoch.Store(zeroEpoch)
-	state.namedCurve = defaultNamedCurve
+	if len(cfg.ellipticCurves) < 1 {
+		return nil, nil, errEmptyEllipticCurves
+	}
+	state.namedCurve = cfg.ellipticCurves[0]
 
 	if err := state.localRandom.Populate(); err != nil {
 		return nil, nil, err

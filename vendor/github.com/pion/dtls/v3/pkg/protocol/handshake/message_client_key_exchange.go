@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package handshake
@@ -41,7 +41,10 @@ func (m *MessageClientKeyExchange) Marshal() (out []byte, err error) {
 	}
 
 	if m.PublicKey != nil {
-		out = append(out, byte(len(m.PublicKey)))
+		if len(m.PublicKey) > 255 {
+			return nil, errPublicKeyTooLong
+		}
+		out = append(out, byte(len(m.PublicKey))) //nolint:gosec // G115: public key length is validated to be <= 255 above.
 		out = append(out, m.PublicKey...)
 	}
 

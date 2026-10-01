@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package dtls
@@ -14,6 +14,7 @@ import (
 
 	"github.com/pion/dtls/v3/pkg/crypto/elliptic"
 	"github.com/pion/dtls/v3/pkg/crypto/signaturehash"
+	"github.com/pion/dtls/v3/pkg/protocol"
 	"github.com/pion/dtls/v3/pkg/protocol/alert"
 	"github.com/pion/dtls/v3/pkg/protocol/handshake"
 	"github.com/pion/logging"
@@ -97,6 +98,7 @@ type handshakeConfig struct {
 	localPSKIdentityHint         []byte
 	localCipherSuites            []CipherSuite             // Available CipherSuites
 	localSignatureSchemes        []signaturehash.Algorithm // Available signature schemes
+	localCertSignatureSchemes    []signaturehash.Algorithm // Available signature schemes for certificates
 	extendedMasterSecret         ExtendedMasterSecretType  // Policy for the Extended Master Support extension
 	localSRTPProtectionProfiles  []SRTPProtectionProfile   // Available SRTPProtectionProfiles, if empty no SRTP support
 	localSRTPMasterKeyIdentifier []byte
@@ -135,6 +137,9 @@ type handshakeConfig struct {
 	certificateRequestMessageHook func(handshake.MessageCertificateRequest) handshake.Message
 
 	resumeState *State
+
+	minVersion protocol.Version
+	maxVersion protocol.Version
 }
 
 type flightConn interface {
@@ -288,15 +293,13 @@ func (s *handshakeFSM) wait(ctx context.Context, conn flightConn) (handshakeStat
 	for {
 		select {
 		case state := <-conn.recvHandshake():
-			if state.isRetransmit {
-				close(state.done)
-				// ignore incoming retransmit hints, only rely on the timer-driven path below
+			if !state.isRetransmit {
+				// only reset retransmit interval on non-retransmit state
 				// https://github.com/pion/dtls/issues/758
-				continue
+				s.retransmitInterval = s.cfg.initialRetransmitInterval
 			}
 
 			nextFlight, alert, err := parse(ctx, conn, s.state, s.cache, s.cfg)
-			s.retransmitInterval = s.cfg.initialRetransmitInterval
 			close(state.done)
 			if alert != nil {
 				if alertErr := conn.notify(ctx, alert.Level, alert.Description); alertErr != nil {

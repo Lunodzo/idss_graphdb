@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package handshake
@@ -41,7 +41,7 @@ func (m *MessageHelloVerifyRequest) Marshal() ([]byte, error) {
 	out := make([]byte, 3+len(m.Cookie))
 	out[0] = m.Version.Major
 	out[1] = m.Version.Minor
-	out[2] = byte(len(m.Cookie))
+	out[2] = byte(len(m.Cookie)) //nolint:gosec // G115: cookie length is validated to be <= 255 above.
 	copy(out[3:], m.Cookie)
 
 	return out, nil
