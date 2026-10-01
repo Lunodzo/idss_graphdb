@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package dtls
@@ -63,7 +63,10 @@ func flight1Generate(
 	var zeroEpoch uint16
 	state.localEpoch.Store(zeroEpoch)
 	state.remoteEpoch.Store(zeroEpoch)
-	state.namedCurve = defaultNamedCurve
+	if len(cfg.ellipticCurves) < 1 {
+		return nil, nil, errEmptyEllipticCurves
+	}
+	state.namedCurve = cfg.ellipticCurves[0]
 	state.cookie = nil
 
 	if err := state.localRandom.Populate(); err != nil {
@@ -81,6 +84,12 @@ func flight1Generate(
 		&extension.RenegotiationInfo{
 			RenegotiatedConnection: 0,
 		},
+	}
+
+	if len(cfg.localCertSignatureSchemes) > 0 {
+		extensions = append(extensions, &extension.SignatureAlgorithmsCert{
+			SignatureHashAlgorithms: cfg.localCertSignatureSchemes,
+		})
 	}
 
 	var setEllipticCurveCryptographyClientHelloExtensions bool

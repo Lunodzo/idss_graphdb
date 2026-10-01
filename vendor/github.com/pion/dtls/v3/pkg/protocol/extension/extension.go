@@ -1,10 +1,12 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 // Package extension implements the extension values in the ClientHello/ServerHello
 package extension
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
 // TypeValue is the 2 byte value for a TLS Extension as registered in the IANA
 //
@@ -21,7 +23,15 @@ const (
 	UseSRTPTypeValue                      TypeValue = 14
 	ALPNTypeValue                         TypeValue = 16
 	UseExtendedMasterSecretTypeValue      TypeValue = 23
+	PreSharedKeyValue                     TypeValue = 41
+	EarlyDataIndicationTypeValue          TypeValue = 42
 	SupportedVersionsTypeValue            TypeValue = 43
+	CookieTypeValue                       TypeValue = 44
+	PskKeyExchangeModesTypeValue          TypeValue = 45
+	CertificateAuthoritiesTypeValue       TypeValue = 47
+	OIDFiltersTypeValue                   TypeValue = 48
+	PostHandshakeAuthTypeValue            TypeValue = 49
+	SignatureAlgorithmsCertTypeValue      TypeValue = 50
 	KeyShareTypeValue                     TypeValue = 51
 	ConnectionIDTypeValue                 TypeValue = 54
 	RenegotiationInfoTypeValue            TypeValue = 65281
@@ -75,6 +85,8 @@ func Unmarshal(buf []byte) ([]Extension, error) { //nolint:cyclop
 			err = unmarshalAndAppend(bufView, &SupportedPointFormats{})
 		case SupportedSignatureAlgorithmsTypeValue:
 			err = unmarshalAndAppend(bufView, &SupportedSignatureAlgorithms{})
+		case SignatureAlgorithmsCertTypeValue:
+			err = unmarshalAndAppend(bufView, &SignatureAlgorithmsCert{})
 		case UseSRTPTypeValue:
 			err = unmarshalAndAppend(bufView, &UseSRTP{})
 		case ALPNTypeValue:
@@ -89,6 +101,8 @@ func Unmarshal(buf []byte) ([]Extension, error) { //nolint:cyclop
 			err = unmarshalAndAppend(bufView, &SupportedVersions{})
 		case KeyShareTypeValue:
 			err = unmarshalAndAppend(bufView, &KeyShare{})
+		case CookieTypeValue:
+			err = unmarshalAndAppend(bufView, &CookieExt{})
 		default:
 		}
 

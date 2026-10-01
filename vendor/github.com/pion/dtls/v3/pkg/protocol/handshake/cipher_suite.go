@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package handshake
@@ -11,7 +11,7 @@ func decodeCipherSuiteIDs(buf []byte) ([]uint16, error) {
 	}
 	cipherSuitesCount := int(binary.BigEndian.Uint16(buf[0:])) / 2
 	rtrn := make([]uint16, cipherSuitesCount)
-	for i := 0; i < cipherSuitesCount; i++ {
+	for i := range cipherSuitesCount {
 		if len(buf) < (i*2 + 4) {
 			return nil, errBufferTooSmall
 		}
