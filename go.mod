@@ -11,7 +11,7 @@ require (
 )
 
 require (
-	github.com/pion/transport/v4 v4.0.1 // indirect
+	github.com/pion/transport/v4 v4.0.2 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/telemetry v0.0.0-20260109210033-bd525da824e2 // indirect
 )
@@ -31,7 +31,7 @@ require (
 	github.com/pion/ice/v4 v4.0.8 // indirect
 	github.com/pion/mdns/v2 v2.0.7 // indirect
 	github.com/pion/srtp/v3 v3.0.4 // indirect
-	github.com/pion/stun/v3 v3.0.0 // indirect
+	github.com/pion/stun/v3 v3.1.5 // indirect
 	github.com/pion/transport/v3 v3.0.7 // indirect
 	github.com/pion/turn/v4 v4.0.0 // indirect
 	github.com/pion/webrtc/v4 v4.0.13 // indirect
