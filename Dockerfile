@@ -1,8 +1,9 @@
-FROM golang:1.27.1-bookworm AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-bookworm AS builder
 
+ENV GOTOOLCHAIN=local
 WORKDIR /src
 
-COPY go.mod ./
+COPY go.mod go.sum ./
 COPY vendor ./vendor
 COPY broadcast ./broadcast
 COPY client ./client
@@ -11,7 +12,6 @@ COPY flags ./flags
 COPY helpers ./helpers
 COPY kaddht ./kaddht
 COPY server/*.go ./server/
-ENV GOTOOLCHAIN=local
 
 RUN CGO_ENABLED=0 go build -mod=vendor -o /out/idss-server ./server && \
     CGO_ENABLED=0 go build -mod=vendor -o /out/idss-client ./client
