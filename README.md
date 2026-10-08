@@ -20,7 +20,7 @@ The graph defines `owns`, `records`, `memberOf`, `places`, and `matches` edges. 
 
 ## Requirements
 
-- Go 1.23.6 or compatible Go 1.23 toolchain
+- Go 1.27.1 (go.mod requires ≥ 1.25.7)
 - Python 3
 - Git
 - Docker Engine with the Docker Compose plugin, for containerized execution

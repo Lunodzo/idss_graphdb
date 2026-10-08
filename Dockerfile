@@ -1,4 +1,4 @@
-FROM golang:1.23.6-bookworm AS builder
+FROM golang:1.27.1-bookworm AS builder
 
 WORKDIR /src
 
@@ -11,6 +11,7 @@ COPY flags ./flags
 COPY helpers ./helpers
 COPY kaddht ./kaddht
 COPY server/*.go ./server/
+ENV GOTOOLCHAIN=local
 
 RUN CGO_ENABLED=0 go build -mod=vendor -o /out/idss-server ./server && \
     CGO_ENABLED=0 go build -mod=vendor -o /out/idss-client ./client
