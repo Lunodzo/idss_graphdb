@@ -11,7 +11,7 @@ set -euo pipefail
 DATA=$(readlink -f "${1:?datadir}")
 SETTLE=${2:-10}
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
-POLICY=$(readlink -f "${3:-$REPO/server/policy.permissive.yaml}")
+POLICY=$(readlink -f "${3:-$REPO/server/policy.greenpower.yaml}")
 RUN=$(mktemp -d "${TMPDIR:-/tmp}/idss_gp_run.XXXXXX")
 mkdir -p "$RUN/logs" "$RUN/db" "$RUN/res"
 export IDSS_MAX_FORWARD=${IDSS_MAX_FORWARD:-0}
@@ -26,7 +26,7 @@ start_peer() {
   local name=$1; shift
   cp "$DATA/peers/$name.json" "$RUN/$name.json"   # the peer keeps its file; copy protects the dataset
   IDSS_LISTEN_ADDR=/ip4/127.0.0.1/tcp/0 IDSS_DISABLE_MDNS=1 IDSS_DB_PATH="$RUN/db" GOMAXPROCS=1 \
-    "$RUN/idss_server" -f "$RUN/$name.json" -partition "$name" -policy "$POLICY" "$@" > "$RUN/logs/$name.log" 2>&1 &
+    "$RUN/idss_server" -usecase gp -f "$RUN/$name.json" -partition "$name" -policy "$POLICY" "$@" > "$RUN/logs/$name.log" 2>&1 &
   PIDS+=($!)
 }
 

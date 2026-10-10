@@ -51,6 +51,10 @@ be produced over data that **stay with each DSO**, under **owner-defined sharing
    partitions answered / denied-by-policy / timed-out / unreachable.
 
 ## Implemented Green Power features
+- **Use-case switch**: start Green Power peers with `-usecase gp` (default `ec`). GP mode disables the
+  energy-community routines (customer-registration broadcast, community manager/member) and ignores
+  registration/settlement messages, requires a prepared partition file (`-f`), and uses
+  `server/policy.greenpower.yaml` unless `-policy` is given. Never change the `ec` default.
 - **Grouped queries** (`groupagg/`, `broadcast/idss_grouped.go`):
   `@group(keys=<i|decade(i)>,...; aggs=count|sum(i)|min(i)|max(i)|avg(i)|exposure(li,yi,from,to)) <EQL with show>`.
   Each peer returns one `PartitionPartial` (field 19) tagged with its `-partition` label; entries are

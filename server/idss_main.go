@@ -290,6 +290,25 @@ func main() {
 		flag.PrintDefaults()
 		return
 	}
+	switch config.UseCase {
+	case "ec":
+	case "gp":
+		if config.IsManager || config.CommunityID != "" {
+			logger.Fatalf("-manager and -community are energy-community options and cannot be used with -usecase gp")
+		}
+		// EC's default policy denies node kinds it does not list (all GP kinds).
+		// Unless -policy was given explicitly, use the Green Power policy.
+		if !flagWasSet("policy") {
+			config.PolicyPath = "policy.greenpower.yaml"
+		}
+		if _, err := os.Stat(config.Filename); err != nil {
+			logger.Fatalf("-usecase gp needs a prepared partition file (-f), e.g. from generate_cim_data.py: %v", err)
+		}
+	default:
+		logger.Fatalf("unknown -usecase %q (expected ec or gp)", config.UseCase)
+	}
+	logger.Infof("Use case: %s", config.UseCase)
+
 	if config.IsManager && config.PolicyPath == "policy.default.yaml" {
 		if _, err := os.Stat("policy.manager.yaml"); err == nil {
 			config.PolicyPath = "policy.manager.yaml"
@@ -361,7 +380,9 @@ func main() {
 
 	// A go routine to refresh the DHT and periodically find and connect to peers
 	go kaddht.DiscoverAndConnectPeers(ctx, host, config, kadDHT)
-	if config.CommunityID != "" {
+	if config.UseCase == "gp" {
+		// Green Power: no energy-community background routines.
+	} else if config.CommunityID != "" {
 		// Community mode: register with (or act as) this community's manager.
 		if config.IsManager {
 			startCommunityManager(ctx, host, kadDHT, config, graphManager)
@@ -466,6 +487,10 @@ func handleRequest(conn network.Stream, remotePeerID string, ctx context.Context
 
 		// This aims to handle only query messages. Other message types can be added and handled accordingly
 		// The client will send a query message to the server
+		if config.UseCase == "gp" && (msg.Type == common.MessageType_CUSTOMER_REGISTRATION || msg.Type == common.MessageType_SETTLEMENT_REQUEST) {
+			logger.Debugf("Ignoring energy-community message type %v in Green Power mode", msg.Type)
+			continue
+		}
 		if msg.Type == common.MessageType_CUSTOMER_REGISTRATION {
 			if config.CommunityID != "" {
 				handleCommunityRegistration(conn, &msg, remotePeerID, config, gm)
@@ -918,4 +943,15 @@ func CheckError(err error, message ...string) {
 	if err != nil {
 		logger.Fatalf("Error during operation '%s': %v", message, err)
 	}
+}
+
+// flagWasSet reports whether a command-line flag was given explicitly.
+func flagWasSet(name string) bool {
+	set := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			set = true
+		}
+	})
+	return set
 }
