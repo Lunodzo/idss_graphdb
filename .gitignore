@@ -3,3 +3,8 @@
 data/
 heap_*.pprof
 results/
+client/idss_client
+server/idss_server
+web
+.vscode/
+*.patch
