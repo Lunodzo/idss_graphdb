@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package dtls
@@ -6,6 +6,7 @@ package dtls
 import (
 	"bytes"
 	"context"
+	"crypto/fips140"
 	"errors"
 	"fmt"
 	"io"
@@ -22,16 +23,15 @@ import (
 	"github.com/pion/dtls/v3/pkg/protocol/handshake"
 	"github.com/pion/dtls/v3/pkg/protocol/recordlayer"
 	"github.com/pion/logging"
-	"github.com/pion/transport/v3/deadline"
-	"github.com/pion/transport/v3/netctx"
-	"github.com/pion/transport/v3/replaydetector"
+	"github.com/pion/transport/v4/deadline"
+	"github.com/pion/transport/v4/netctx"
+	"github.com/pion/transport/v4/replaydetector"
 )
 
 const (
 	initialTickerInterval = time.Second
 	cookieLength          = 20
 	sessionLength         = 32
-	defaultNamedCurve     = elliptic.X25519
 	inboundBufferSize     = 8192
 	// Default replay protection window is specified by RFC 6347 Section 4.1.2.6.
 	defaultReplayProtectionWindow = 64
@@ -65,14 +65,14 @@ type Conn struct {
 	nextConn       netctx.PacketConn // Embedded Conn, typically a udpconn we read/write from
 	fragmentBuffer *fragmentBuffer   // out-of-order and missing fragment handling
 	handshakeCache *handshakeCache   // caching of handshake messages for verifyData generation
-	decrypted      chan interface{}  // Decrypted Application Data or error, pull by calling `Read`
+	decrypted      chan any          // Decrypted Application Data or error, pull by calling `Read`
 	rAddr          net.Addr
 	state          State // Internal state
 
 	maximumTransmissionUnit int
 	paddingLengthGenerator  func(uint) uint
 
-	handshakeCompletedSuccessfully atomic.Value
+	handshakeCompletedSuccessfully atomic.Bool
 	handshakeMutex                 sync.Mutex
 	handshakeDone                  chan struct{}
 
@@ -99,6 +99,9 @@ type Conn struct {
 	handshakeConfig *handshakeConfig
 }
 
+// createConn creates a new DTLS connection.
+// Caller is responsible for validating the config before calling this function.
+//
 //nolint:cyclop
 func createConn(
 	nextConn net.PacketConn,
@@ -107,10 +110,6 @@ func createConn(
 	isClient bool,
 	resumeState *State,
 ) (*Conn, error) {
-	if err := validateConfig(config); err != nil {
-		return nil, err
-	}
-
 	if nextConn == nil {
 		return nil, errNilNextConn
 	}
@@ -152,8 +151,20 @@ func createConn(
 		return nil, err
 	}
 
+	// Parse certificate signature schemes only if explicitly configured
+	var certSignatureSchemes []signaturehash.Algorithm
+	if len(config.CertificateSignatureSchemes) > 0 {
+		certSignatureSchemes, err = signaturehash.ParseSignatureSchemes(
+			config.CertificateSignatureSchemes,
+			config.InsecureHashes,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	workerInterval := initialTickerInterval
-	if config.FlightInterval != 0 {
+	if config.FlightInterval > 0 {
 		workerInterval = config.FlightInterval
 	}
 
@@ -169,11 +180,33 @@ func createConn(
 		curves = defaultCurves
 	}
 
+	if fips140.Enabled() {
+		// On FIPS systems, filter out non-approved curves
+		filtered := make([]elliptic.Curve, 0, len(curves))
+		for _, c := range curves {
+			if c != elliptic.X25519 {
+				filtered = append(filtered, c)
+			}
+		}
+		curves = filtered
+	}
+
+	minVersion := config.minVersion
+	if !minVersion.Equal(protocol.Version1_2) || !minVersion.Equal(protocol.Version1_3) {
+		minVersion = protocol.Version1_2
+	}
+
+	maxVersion := config.minVersion
+	if !maxVersion.Equal(protocol.Version1_2) || !maxVersion.Equal(protocol.Version1_3) {
+		maxVersion = protocol.Version1_2
+	}
+
 	handshakeConfig := &handshakeConfig{
 		localPSKCallback:              config.PSK,
 		localPSKIdentityHint:          config.PSKIdentityHint,
 		localCipherSuites:             cipherSuites,
 		localSignatureSchemes:         signatureSchemes,
+		localCertSignatureSchemes:     certSignatureSchemes,
 		extendedMasterSecret:          config.ExtendedMasterSecret,
 		localSRTPProtectionProfiles:   config.SRTPProtectionProfiles,
 		localSRTPMasterKeyIdentifier:  config.SRTPMasterKeyIdentifier,
@@ -203,6 +236,8 @@ func createConn(
 		serverHelloMessageHook:        config.ServerHelloMessageHook,
 		certificateRequestMessageHook: config.CertificateRequestMessageHook,
 		resumeState:                   resumeState,
+		minVersion:                    minVersion,
+		maxVersion:                    maxVersion,
 	}
 
 	conn := &Conn{
@@ -214,7 +249,7 @@ func createConn(
 		maximumTransmissionUnit: mtu,
 		paddingLengthGenerator:  paddingLengthGenerator,
 
-		decrypted: make(chan interface{}, 1),
+		decrypted: make(chan any, 1),
 		log:       logger,
 
 		readDeadline:  deadline.New(),
@@ -317,6 +352,8 @@ func (c *Conn) HandshakeContext(ctx context.Context) error {
 }
 
 // Dial connects to the given network address and establishes a DTLS connection on top.
+//
+// Deprecated: Use DialWithOptions instead.
 func Dial(network string, rAddr *net.UDPAddr, config *Config) (*Conn, error) {
 	// net.ListenUDP is used rather than net.DialUDP as the latter prevents the
 	// use of net.PacketConn.WriteTo.
@@ -329,7 +366,19 @@ func Dial(network string, rAddr *net.UDPAddr, config *Config) (*Conn, error) {
 	return Client(pConn, rAddr, config)
 }
 
+// DialWithOptions connects to the given network address and establishes a DTLS connection on top.
+func DialWithOptions(network string, rAddr *net.UDPAddr, opts ...ClientOption) (*Conn, error) {
+	config, err := buildClientConfig(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return Dial(network, rAddr, config)
+}
+
 // Client establishes a DTLS connection over an existing connection.
+//
+// Deprecated: Use ClientWithOptions instead.
 func Client(conn net.PacketConn, rAddr net.Addr, config *Config) (*Conn, error) {
 	switch {
 	case config == nil:
@@ -338,11 +387,25 @@ func Client(conn net.PacketConn, rAddr net.Addr, config *Config) (*Conn, error) 
 		return nil, errPSKAndIdentityMustBeSetForClient
 	}
 
+	if err := validateConfig(config); err != nil {
+		return nil, err
+	}
+
 	return createConn(conn, rAddr, config, true, nil)
 }
 
-// Server listens for incoming DTLS connections.
-func Server(conn net.PacketConn, rAddr net.Addr, config *Config) (*Conn, error) {
+// ClientWithOptions establishes a DTLS connection over an existing connection.
+func ClientWithOptions(conn net.PacketConn, rAddr net.Addr, opts ...ClientOption) (*Conn, error) {
+	config, err := buildClientConfig(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return Client(conn, rAddr, config)
+}
+
+// serverWithConfig is an internal helper that accepts a *Config.
+func serverWithConfig(conn net.PacketConn, rAddr net.Addr, config *Config) (*Conn, error) {
 	if config == nil {
 		return nil, errNoConfigProvided
 	}
@@ -353,6 +416,31 @@ func Server(conn net.PacketConn, rAddr net.Addr, config *Config) (*Conn, error) 
 	}
 
 	return createConn(conn, rAddr, config, false, nil)
+}
+
+// Server listens for incoming DTLS connections.
+//
+// Deprecated: Use ServerWithOptions instead.
+func Server(conn net.PacketConn, rAddr net.Addr, config *Config) (*Conn, error) {
+	if config == nil {
+		return nil, errNoConfigProvided
+	}
+
+	if err := validateConfig(config); err != nil {
+		return nil, err
+	}
+
+	return serverWithConfig(conn, rAddr, config)
+}
+
+// ServerWithOptions listens for incoming DTLS connections.
+func ServerWithOptions(conn net.PacketConn, rAddr net.Addr, opts ...ServerOption) (*Conn, error) {
+	config, err := buildServerConfig(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return Server(conn, rAddr, config)
 }
 
 // Read reads data from the connection.
@@ -725,7 +813,7 @@ func (c *Conn) fragmentHandshake(dtlsHandshake *handshake.Handshake) ([][]byte, 
 }
 
 var poolReadBuffer = sync.Pool{ //nolint:gochecknoglobals
-	New: func() interface{} {
+	New: func() any {
 		b := make([]byte, inboundBufferSize)
 
 		return &b
@@ -793,8 +881,10 @@ func (c *Conn) readAndBuffer(ctx context.Context) error { //nolint:cyclop
 }
 
 func (c *Conn) handleQueuedPackets(ctx context.Context) error {
+	c.lock.Lock()
 	pkts := c.encryptedPackets
 	c.encryptedPackets = nil
+	c.lock.Unlock()
 
 	for _, p := range pkts {
 		_, _, alert, err := c.handleIncomingPacket(ctx, p.data, p.rAddr, false) // don't re-enqueue
@@ -818,6 +908,9 @@ func (c *Conn) handleQueuedPackets(ctx context.Context) error {
 }
 
 func (c *Conn) enqueueEncryptedPackets(packet addrPkt) bool {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
 	if len(c.encryptedPackets) < maxAppDataPacketQueueSize {
 		c.encryptedPackets = append(c.encryptedPackets, packet)
 
@@ -1077,14 +1170,12 @@ func (c *Conn) notify(ctx context.Context, level alert.Level, desc alert.Descrip
 	})
 }
 
-func (c *Conn) setHandshakeCompletedSuccessfully() {
-	c.handshakeCompletedSuccessfully.Store(struct{ bool }{true})
+func (c *Conn) setHandshakeCompletedSuccessfully() bool {
+	return c.handshakeCompletedSuccessfully.CompareAndSwap(false, true)
 }
 
 func (c *Conn) isHandshakeCompletedSuccessfully() bool {
-	boolean, _ := c.handshakeCompletedSuccessfully.Load().(struct{ bool })
-
-	return boolean.bool
+	return c.handshakeCompletedSuccessfully.Load()
 }
 
 //nolint:cyclop,gocognit,contextcheck
@@ -1099,8 +1190,7 @@ func (c *Conn) handshake(
 	done := make(chan struct{})
 	ctxRead, cancelRead := context.WithCancel(context.Background())
 	cfg.onFlightState = func(_ flightVal, s handshakeState) {
-		if s == handshakeFinished && !c.isHandshakeCompletedSuccessfully() {
-			c.setHandshakeCompletedSuccessfully()
+		if s == handshakeFinished && c.setHandshakeCompletedSuccessfully() {
 			close(done)
 		}
 	}

@@ -1,78 +1,41 @@
-HOW TO RUN
-Check the README!
+IDSS Energy Community Query Reference
 
-****************************************************************************************
-SAMPLE QUERIES get and lookup
-TRAVERSAL SYNTAX:
-<source role>:<relationship kind>:<destination role>:<destination kind>
+Run peers from this directory:
+  ./start_peers.sh 3
+  ./start_peers.sh 3 1
 
-Complex traversal syntax:
-get <node kind> where <condition>
- traverse <traversal spec> where <condition>
-    traverse <traversal spec> where <condition>
-        <Further traversals>
-    end
-end
+The optional second argument identifies the manager peer. Use the first peer address in logs with the client.
 
-NOTE: Traversal expressions define which parts of the graph should be collected 
-for the query. Reading from top to bottom each traversal expression defines a 
-traversal step. Each traversal step will add several columns to the 
-result if no explicit show clause is defined. 
+Traversal syntax:
+  <source role>:<relationship kind>:<destination role>:<destination kind>
 
-SAMPLE QUERIES
->> get Consumption traverse ::: where name = "Alice" (WORKING)
-	NOTE: Returns consumption records for Alice
->> lookup Client '3' traverse ::: (WORKING)
-	NOTE: Return client details and consumption records for Client with key 3
->> get Client traverse owner:belongs_to:usage:Consumption (WORKING)
-	NOTE: This will return all the clients and their consumption records
+Energy-community node kinds:
+  Customer, UsagePoint, EndDevice, GeneratingUnit, BatteryUnit,
+  MeterReading, Offer, Bid, Trade
 
+Relationships:
+  owns, records, memberOf, places, matches
 
-COUNT FUNCTION IN EQL
->> get Client where @count(owner:belongs_to:usage:Consumption) > 2 (WORKING)
->> get Client where @count(owner:belongs_to:usage:Consumption) > 4 (WORKING)
-		NOTE: All clients that have more than 4 connections (each) will be returned
->> get Consumption where @count(:::) > 0 (WORKING)
-		NOTE: Returns all the nodes in the graph who are connected to each other
-		and its count is greater than 0, so any connected node will be returned
+Queries:
+  get Customer
+  get Customer traverse owner:owns:asset:UsagePoint
+  get Customer traverse owner:owns:asset:UsagePoint traverse point:records:reading:MeterReading
+  get MeterReading where readingType = "activePower"
+  get Offer where status = "open"
+  get Trade
 
->> get Client where Power > 150 and @count(owner:belongs_to:usage:Consumption) > 5 (WORKING)
-		NOTE: Retrieve Clients with more than 5 Consumption Records with Power Greater than 150
+Aggregates:
+  get MeterReading where readingType = "activePower" show @sum(value)
+  get MeterReading where readingType = "activePower" show @avg(value)
+  get MeterReading where readingType = "activePower" show @min(value)
+  get MeterReading where readingType = "activePower" show @max(value)
 
->> get Client traverse owner:belongs_to:usage:Consumption where measurement >= 300 and measurement <= 800 (WORKING)
-		NOTE: Retrieve Clients with a Specific Consumption Measurement Range
+Requester roles are supplied by the client:
+  go run . -role member -s <server_multiaddress>
+  go run . -role manager -s <server_multiaddress>
+  go run . -role observer -s <server_multiaddress>
 
->> get Client where contract_number >= 200 and contract_number <= 500 and @count(owner:belongs_to:usage:Consumption where measurement > 600) >= 3 (WORKING)
-		NOTE: Retrieve Clients with at Least 3 High-Power Consumptions and Specific Contract Numbers. (Need to check specific conditions that will align with the data values)
+Manager-only settlement compilation:
+  settle <from RFC3339> <to RFC3339>, 10
 
->> get Client where @count(:belongs_to:usage:Consumption) > 1 and @count(owner:belongs_to::Client) > 1 (WORKING)
-		NOTE: Clients Who Have at Least 2 Shared Consumption Records with Other Clients. It will most likely return zero records because consumption records for clients are randomly generated
-
-
-OTHER QUERIES
-
->> get Client traverse owner:belongs_to:usage:Consumption where measurement > 700 and owner:belongs_to:usage:Consumption where measurement < 300
-		NOTE: Clients Who Have Mixed High and Low Power Consumption Records
-
->> get Client traverse owner:belongs_to:usage:Consumption where measurement >= 400 and measurement <= 900 traverse usage:belongs_to:owner:Client
-		NOTE:  Find Clients with Specific Consumption Patterns and Shared Edges 
-
-
-MORE QUERIES
-1. get Client where name like ".*Donald.*" (WORKING)
-2. get Client where (power > 500 and not (name endswith Ray)) or contract_number in [6779194, 1368692] (WORKING)
-3. get Consumption where (measurement / 1000) >= 900 (WORKING)
-
-SINGLE STEP TRAVERSAL
-4. get Client where name = "Kevin Levine" traverse :belongs_to:usage:Consumption where measurement > 5000 end show name (WORKING)
-
-MULTISTEP TRAVERSAL
-5. get Client where key = 1 traverse owner:belongs_to:usage:Consumption traverse :::Client end end (WORKING)
-    (In practice, this may create paths back to the same or other clients. A real system might require careful deduplication.)
-
-
-WITH CLAUSE
-6. get Client traverse :belongs_to:usage:Consumption end show name, @count(2, ::, "measurement > 500000") as HighMeasCount with ordering(ascending name), filtering(unique HighMeasCount), nulltraversal(true) (NOT WORKING) >> 	NOTE: Need to check @count syntax
-7. get Client with ordering(ascending Client:name) (Working)
-8. get Client show name with ordering(ascending name), 4 
-	NOTE: (Currently all are treated as strings)
+Local-only queries append -l. The add, update, and delete operations are always local and are not broadcast.

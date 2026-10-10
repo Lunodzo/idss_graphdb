@@ -1,156 +1,302 @@
-# InnoCyPES Distributed Data Storage Service (IDSS)
+# IDSS Energy Community
 
-IDSS is a distributed data storage and query execution service that allows clients 
-to submit queries to an overlay network of peers. The queries are executed in a 
-decentralised manner, with results merged and returned to the client. The system uses 
-a best-effort approach with a time-to-live (TTL) mechanism to ensure efficient query 
-execution.
+IDSS Energy Community is a decentralized data storage and query prototype for local energy communities. Each peer owns an embedded EliasDB graph, participates in a libp2p and Kademlia DHT overlay, and executes EQL queries locally or across the overlay. Protocol Buffers carry query and result messages over libp2p streams.
 
-## Features
-- Peer-to-peer overlay using libp2p and Kademlia DHT
-- Golang-based implementation with libp2p networking
-- Graph database using eliasdb
-- Distributed query execution (using EQL) across multiple peers in a decentralised manner
-- Query merging and result aggregation
-- Time-to-live (TTL) mechanism for query execution control
+Peers are honest-but-curious. The project provides query-time, per-peer policy enforcement but does not implement market clearing, pricing, blockchain or ledger integration, encryption at rest, or Byzantine fault tolerance.
 
-## Technologies Used
-| Technology | Purpose |
-|------------|---------|
-| **Golang** | Core implementation of the system |
-| **libp2p** | Peer-to-peer communication between nodes and their streams for message exchange |
-| **Kademlia DHT** | Distributed hash table for peer discovery and data routing. In this case, it is also used to broadcast queries and merge the results |
-| **EliasDB** | Graph-based database for database systems. Embedded on top of P2P overlay |
-| **Protocol Buffers (Protobuf)** | Data serialization for efficient query and result transfer |
-| **Streams (libp2p)** | Message exchange between peers |
-| **Bash Script** | Automating peer startup, data loading, and querying |
+## Energy Community Model
 
+Sample data is generated at peer startup by `server/generate_data.py`. Node keys act as CIM `mRID` values.
 
-# Exploring Danish Power Systems
-In this version of IDSS, we are exploring its implementation based on one of the use cases at Green Power Denmark, herein referred to as GPD. GDP is Denmark's green business organisation and acts as a voice for the Danish energy sector. Together with its members, they work to ensure that Denmark is electrified with green electricity as soon as possible. It has approximately 1,500 members and represents the energy industry, large and small owners and installers of energy technology, as well as the companies that operate the Danish electricity grid and trade in energy. Founded in 2022, through a merger of Dansk Energi, Wind Denmark and Dansk Solkraft. With this, GPD has become a custodian of the majority of datasets that are relevant to our use case. The current data flow goes between GPD and DSOs, while the  other data is collected from other external stakeholders.
+| Node kind | Purpose |
+|---|---|
+| `Customer` | Community participant, including a manager |
+| `UsagePoint`, `EndDevice` | Connection and metering assets |
+| `GeneratingUnit`, `BatteryUnit` | PV generation and storage assets |
+| `MeterReading` | Quarter-hourly active/reactive power, generation, and state-of-charge readings |
+| `Offer`, `Bid`, `Trade` | Local flexibility orders and concluded trades |
 
-# Use case description
-In the context of Asset Management, the reliability of Medium_Voltage_Cables (MVC) is crucial to the management of the distribution systems. MV refers thereby to the voltage range of 1 − 25kv, which contributes strongly to state-of-the-art reliability indicators, such as the System Average Interruption Duration Index (SAIDI) and the System Average Interruption Frequency Index (SAIFI). In addition, studies indicate an increase in age-related failure rates for paper-insulated lead-covered (PILC) cables. Furthermore, the increasing electrification of the mobility and heating sectors, in combination with increasing decentralised production, requires a modernisation of the MV cable network in general. Consequently, tools are required that prioritise investments properly. Data plays an important role in the success of these requirements. Although plenty of data already exists, how they are managed still limits the realisation of its full potential. A recommended data description is presented below, which could be adopted into several data models. In particular, this use case will be based on relational and graph databases. Hence, generic terms will be used interchangeably with those of relational and graph databases. Specifically, the terms entity, node and object will be used interchangeably. This is also the case with the words attributes, properties and characteristics. More description about the use case and its relevance is presented in our previous work [here](https://ieeexplore.ieee.org/abstract/document/10863105).
+The graph defines `owns`, `records`, `memberOf`, `places`, and `matches` edges. The data contract is in `server/energy_community_schema.json`. The generator supports `--num-customers`, `--days`, `--interval-minutes`, and `--seed`; startup derives the seed from the peer ID so a distributed query returns a real union of peer data.
 
-## Agnostic Data Model for Asset Management (MVC)
-In the context of reliability prediction of MVCs, there is an opportunity for DSOs to standardise data collection. This repository provides a data model created to facilitate this standardisation. The data model ensures that all data adheres to specified formats and relationships, fulfilling a prerequisite for decentralised data storage.
+## Requirements
 
-A simplified visualisation of the data schema is provided below:
-
-![image](https://github.com/H2020-InnoCyPES-ITN/Decentralised-Relational-Data-Model-for-Reliability-Studies-of-Medium-Voltage-Cables/assets/101191232/c25c021a-8931-4b33-aaed-9b638c2c58ba)
-
-The diagram is colour-coded to represent different components:
-
-- Yellow: Topics grid components
-- Blue: Cable events
-- Red: External cable event impacts
-- Green: Cable placement conditions
-
-# Key Entities/objects and Attributes/properties
-## DSOs
-The DSO entity is essential, it maps the DSO object into an object, in this way, different network characteristics and management decisions can be investigated. Further, it isn’t sufficient to model DSOs as a property of other objects, because this would limit the possibility to store DSO-specific properties, such as name, DSO supply area or reliability indices and others.
-
-## Substations
-To model substation connections within the MV cable network, a substation entity is created with attributes such as DSO-id, voltage levels, installation date, station type, and coordinates. As shown in the schema, the substation is a super-class from which the subclasses ”primary station” and ”secondary substation” are derived. In this way, all of the attributes of the substation entity are inherited, while specific attributes per sub-entity types can be stored as well, such as the ”primary parent station” for the ”secondary substation”.
-
-## MVC Systems
-The ”MVC systems” consist of the properties: station-from-id and station-to-id, which can thereby link to both main or/and secondary substation and link to high-level attributes such as operating DSO. Beyond that, to align operational parameters and to ensure naming conventions, further attributes are introduced, such as operating voltage, average and max loading.
-
-## MVC subsections
-The entity ”MVC subsections” links to the ”MV cable systems” (through its identifying key) entity and thus reflects that the system is divided into one or more subsections. Moreover, a list of subsection-specific parameters is added, such as conductor material and type, number of conductors, insulation, manufacturer, in-service date, length, and coordinates. Tracking the connection to other subsections is also possible. Lastly, two boolean attributes are introduced that reflect if the MV section was installed due to a repair and if the section is still in operation.
-
-## MVC Joints
-MV subsections are connected via cable joints. These can represent a "weak entity" in the cable system and present additional attributes such as joint type and location. They should thus be integrated into the data model as a separate entity.
-
-## Cable Failures and Repairs
-To model events that impact one specific MV cable subsection, such as failures and repairs, a cable event entity is created. Via a foreign key (reflection to relational DB), it links to the affected MV cable subsection and obtains date attributes, such as event start and event end. Next, the Sub-entities ”Cable Failures” and ”Cable repairs” can be created from the ”Cable Event” entity. The failures contain attributes such as failure type, cause and location, whereas the repairs link to repair specifications and the related failure event.
-
-## External Events
-Despite events that always involve the cable, the data schema also includes external events, such as digging activities and weather-based events, including lightning, heatwaves, cold waves, floods, etc., that might have an impact on the cable reliability and thus need to be reflected in the database schema. Consequently, it is proposed that the creation of an entity called ”external events” from which all subsequent external event types inherit their start and end times. Due to different ways of storing geographical information, e.g. polygons for digging activities and point coordinates for lightning, the location attributes are saved on the sub-entity level. Furthermore, for each external event type, more specific attributes are added, such as utility and digging type for the digging activities or number of strokes and intensity for lightning.
-
-## Cable external event impacts
-One key requirement for predicting the reliability of MV cables is to query external events that have affected them. To reflect this, an entity ”Cable External Event Impacts” is created that links MV subsections to external events. The definition of a cable being affected by an event is then defined, given the location and time.
-
-## Location-Based Drivers
-Other static entities, such as roads, rails, water bodies, ground water level, etc., might also influence the reliable operation of the MV cables if they are in proximity. Because they are location-specific, they can be summarised in the entity of ”location-based drivers”. More attributes can be added on a sub-entity level, such as road, rail, or waterbody type. This study proposes to add environmental observation to the entity of location-based drivers. In this way, favourable or unfavourable conditions with regard to environmental parameters such as temperature, humidity or precipitation can also be tracked and taken into account.
-
-## Cable Placement Conditions
-Within the ”Cable Placement Conditions” entity, the previously described location based drivers are spatially linked to the MV cable subsections. Consequently, this facilitates data retrieval of the location-specific placement conditions of the cables.
-
-## Derived Attributes and Properties
-Many data requests related to reliability prediction of MV cables require aggregated information on either MV cable subsection, MV cable system, or at the cable failure level. Therefore the computation of derived attributes, such as number of subsections or joints per MV cable system can be beneficial for several reasons. First, the computation of derived attributes can be more efficient than doing the same computation externally. Further it can be expected that if the derived attributes are used in multiple queries or reports, computing them in SQL (Structured Query Language) can improve code re-usability and maintainability. Moreover, the derived attributes can help to maintain Data integrity, as a computation within the DBMS (Data Base Management System), can ensure that the computations are based directly on the source data. One use case for derived attributes is given by the aggregation of information on the MV cable system level. For example the length of a MV cable system can be derived from the individual lengths of the respective subsections. Also in the context of cable events the formulation of derived attributes is feasible, taking into account external events as well as cable placement conditions. Therefore, features such as the number of digging activities affecting one cable system as well as the number of crossing roads of a cable system can be easily derived by using the provided data schema. It should also be emphasised that the presented model design allows the formulation of nested derived attributes, such as the number of failures at the main station level. Further, the number of subsections or joints per MV cable system can be computed on the basis of the existing entity relations.
-
-
-
-# Installation and Setup
-## Dependencies
-Before running IDSS, ensure you have the following installed:
-- Golang (1.23.1) [Check how to install](https://go.dev/doc/install)
-- Python3 (It should be installed within your Linux Distribution, it should be okay to simply update/upgrade)
+- Go 1.27.1 (go.mod requires ≥ 1.25.7)
+- Python 3
 - Git
-## Clone the repository 
+- Docker Engine with the Docker Compose plugin, for containerized execution
+
+`go.mod` and `go.sum` are Go dependency set. The repository vendors its Go modules, so builds use:
+
 ```sh
-git clone https://github.com/Lunodzo/idss_graphdb.git
-```
-## Install dependencies
-```sh
-conda install -c conda-forge faker
-```
-For testing, it is also mandatory to install pythons faker package. Depending on your package manager, you may use one of the following commands
-```sh
-pip install faker
+go test -mod=vendor ./...
 ```
 
-or
-```sh
-go mod tidy
-```
 
-# Running the Peer Node(s)
-Peer node can be launched in two ways: first, by running each node separately. When this is done, each node should run on its terminal. Second, by using the `start_peers.sh` script.
+## Run Peers
 
-## Launch peer nodes separately
+Build and start peers locally:
+
 ```sh
 cd server
-go run .
+./start_peers.sh 3
 ```
-or 
+
+`start_peers.sh` is the single supported local launcher. The retired `launch_peers.sh` is no longer used.
+
+An optional second argument makes one peer the community manager:
+
 ```sh
-go run idss_main.go
+./start_peers.sh 3 1
 ```
-## Launch peer nodes using a bash script
-Within the `server` directory, run the bash script by specifying the number of peers you want to run
+
+Pass generator options through the launcher to simulate larger communities or datasets. These settings apply independently to every peer:
+
 ```sh
-./start_peers.sh <number_of_peers>
+# 100 peers, each with 1,000 customers and 30 days of 15-minute readings
+./start_peers.sh 100 --customers 1000 --days 30 --interval-minutes 15
+
+# 100 peers with peer 1 as manager and a smaller one-day dataset
+./start_peers.sh 100 1 --customers 100 --days 1 --interval-minutes 15
 ```
-Each node will generate its folder directory for the database in `idss_graph_db`, and will generate its own log file in the `log` directory.
 
-Sample graph nodes and edges are generated using `generate_data.py`, and the data model is mapped by the generated `.json` file during peer launching.
+Large runs require sufficient CPU, memory, disk space, and open-file limits. Start with a smaller dataset to establish a baseline, then increase peer and customer counts separately.
 
-Note: At least two peers should be started for an overlay to work since a connection among peers must be established.
+The manager peer loads `policy.manager.yaml` when it exists, otherwise `policy.default.yaml`. It keeps membership registration copies and settlement summaries locally; it is not a central raw-data store. Peer logs include the first peer multiaddress for the client.
 
-# Running queries
-All queries are submitted by the IDSS client. A client will connect to any peer that is 
-running in an overlay. To be able to connect, a client needs to know only the address of 
-one of the peers that can be found in the log file.
+Run one peer directly:
 
-From the IDSS root directory, change the directory to the client to proceed.
+```sh
+cd server
+go run . -manager
+```
+
+### Community Topologies
+
+The optional `manager_peer_index` selects one manager only. For example, this starts ten peers with peer 1 as the manager and nine customer peers:
+
+```sh
+./start_peers.sh 10 1
+```
+
+To run ten managers with additional customer peers, start the binaries separately after building them. Each manager keeps its own membership registry and settlement summaries; customer data remains on the customer peers.
+
+```sh
+cd server
+go build -o idss_server .
+for manager in $(seq 1 10); do
+  ./idss_server -manager > "logs/manager-${manager}.log" 2>&1 &
+done
+for customer in $(seq 1 50); do
+  ./idss_server > "logs/customer-${customer}.log" 2>&1 &
+done
+```
+
+The current protocol does not assign a customer to one particular manager. A customer peer shares its mandatory `Customer` registration with managers it reaches through the overlay; each manager remains a peer rather than a central store.
+
+For a manager-only community, start a single manager peer. Its self-registered `Customer` node is the community's only member:
+
+```sh
+cd server
+go run . -manager
+```
+
+To start several manager-only peers, use the first loop above and omit the customer loop. Those manager peers discover one another, and each has only its own self-registration unless other registration messages arrive.
+
+## Docker
+
+Build and run a three-peer overlay on Linux or WSL with Docker Desktop WSL integration:
+
+```sh
+docker compose up --build --scale peer=3
+```
+
+The Compose configuration uses host networking to preserve existing ephemeral-port and mDNS discovery behavior. Stop peers with:
+
+```sh
+docker compose down
+```
+
+Use `docker compose down -v` to remove generated peer data. Run the client container with a peer multiaddress from the logs:
+
+```sh
+docker compose run --rm client -s <server_multiaddress>
+```
+
+Client JSON results are saved to `client/results` on the host.
+
+## Access Policies
+
+Each peer loads `server/policy.default.yaml` by default. Use `-policy <path>` to choose a peer-specific policy:
+
+```sh
+go run . -policy policy.default.yaml
+```
+
+Rules grant raw records (`allow`), aggregate/count-only results (`aggregate`), or no local contribution (`deny`). Exact-kind rules override wildcard rules; equally specific matching rules choose the most restrictive decision.
+
+```yaml
+default: deny
+rules:
+  - kind: Customer
+    roles: [member, manager, observer]
+    decision: allow
+  - kind: MeterReading
+    roles: [manager, observer]
+    decision: aggregate
+  - kind: "*"
+    roles: [observer]
+    decision: aggregate
+```
+
+`Customer` registration, settlement aggregates, and concluded trades are mandatory sharing classes. Fine-grained readings, asset details, and open orders are discretionary. A peer querying data from itself bypasses its own policy.
+
+`server/policy.permissive.yaml` grants `allow` to every kind and role. It isolates the cost of query execution from the cost of policy evaluation (see `experiments/run_e4_governance.sh`) and is not intended for a real deployment.
+
+## Submit Queries
+
+Run the client from `client/`, supplying a peer multiaddress and requesting peer role. The role defaults to `member`.
 
 ```sh
 cd client
-go run . -s <server_address>
+go run . -role <member|manager|observer> -s <server_multiaddress>
 ```
-A client should be able to connect. Proceed with query submission. Samples are given below. A number after the comma represents a TTL value (A time that you are willing to wait.
+
+Every query is followed by a TTL in seconds. Local queries include `-l`; `add`, `update`, and `delete` always execute locally and do not enter the broadcast path.
+
 ```sh
-get Client, 3
-get Consumption, 7
+# Member: registration and community orders
+get Customer, 3
+get Offer where status = "open", 7
+
+# Observer: aggregate-only telemetry
+get MeterReading where readingType = "activePower" show @sum(value), 7
+
+# Manager: settlement records and compilation
+get Trade, 7
+settle 2026-09-06T00:00:00Z 2026-09-07T00:00:00Z, 10
+
+# Local graph query
+get Customer traverse owner:owns:asset:UsagePoint -l, 3
 ```
-More advanced queries following EQL syntax are included in the `info.txt` file. A limited support of 
-Aggregate functions like `min`, `max`, `sum` and `avg` will also be finalised soon.
 
-## Query results
-Query results are stored in the `results` directory. A directory that is generated once a query is submitted 
-to an overlay. An `.xml` file named after your client ID, with the time at which a query was submitted, contains the 
-results set following the submitted query.
+Traversal syntax is `<source role>:<relationship kind>:<destination role>:<destination kind>`. For example:
 
-## License Details
+```sh
+get Customer traverse owner:owns:asset:UsagePoint traverse point:records:reading:MeterReading, 7
+```
+
+Distributed result queries may add a local projection and row limit:
+
+```sh
+get Trade fields mRID,volume,price,timeStamp limit 100, 3
+```
+
+Result frames larger than 4 KiB are compressed automatically and large result sets are
+streamed in chunks. Forwarding selects a deterministic subset of the local DHT routing
+table sized to the query's remaining TTL budget (`selectForwardPeers` in
+`broadcast/idss_broadcast.go`): 20 peers per hop when 750&nbsp;ms or less remain, 40 up to
+1.5&nbsp;s, 60 up to 3&nbsp;s, and 30 (`maxForwardPeers`) beyond that. It records visited peers
+in the query so a peer is never forwarded to twice, and applies the 0.75 remaining time
+reduction before forwarding. TTL is an end-to-end wall-clock budget in seconds; peers
+stop work when the original deadline expires. Aggregate queries remain preferable for
+large telemetry scans because peers return partial values instead of raw rows.
+
+Distributed aggregate functions `@sum`, `@avg`, `@min`, and `@max` are implemented. Query results are written as JSON files under `client/results`.
+
+## Metrics and Experiments
+
+Prometheus metrics are exposed at `http://127.0.0.1:2112/metrics`. Metrics include query totals and duration, responding peers, returned rows, and policy decisions. A peer's own overlay ping RTT and success rate, independent of query-level TTL completeness, are exposed as JSON at `http://127.0.0.1:2112/overlay-metrics` (set `IDSS_OVERLAY_PING_COUNT` to change pings per peer, default 3). With the local multi-peer launcher, only one peer can bind these host ports at a time; `start_peers.sh` assigns each peer its own port starting at `BASE_METRICS_PORT`/`BASE_PPROF_PORT`.
+
+Run peer-count and TTL experiments:
+
+```sh
+./experiments/run_scaling.sh <max_peers> <repeats>
+```
+
+The script runs fixed EC queries from two through `max_peers` peers at adaptive TTL values starting at 1. Each invocation creates a unique UTC directory under `experiments/results/`, so later runs do not overwrite earlier evidence. Each run stores its `scaling.csv`, `forwarding.csv`, peer-launch logs, client logs, client JSON results, and `metadata.txt`. The cumulative `experiments/results/all-results.csv` appends rows from every run and is the recommended input for publication plots. Each row contains run ID, peer count, query label, TTL, elapsed time, responding peers, and returned rows. `forwarding.csv` records peer-to-peer query sends, intermediate results, and closed streams from server logs.
+
+### E1-E5 Experiment Suite
+
+`experiments/lib.sh` holds shared helpers (cluster launch/teardown, query timing, wire-byte and policy-decision extraction) sourced by five scripts, one per research question. Every script writes a timestamped run directory under `experiments/results/` with a `metadata.txt`, an experiment-specific CSV, and appends to a cumulative `e*-all-results.csv`; each also prints a mean-based summary from `experiments/summarize_csv.py`.
+
+```sh
+# E1: query cost vs. community size. Q1-Q5 at a single generous TTL, peer count 2..N.
+./experiments/run_e1_scale.sh <max_peers> [repeats]
+
+# E2: time budget vs. completeness. Fixed peer count, TTL swept across an explicit list.
+./experiments/run_e2_ttl.sh <peer_count> [repeats]
+
+# E3: aggregation savings. Q3 (raw MeterReading) vs Q4 (@sum) at one configuration,
+# elapsed time and wire bytes (client/idss_client.go logs "Wire bytes received").
+./experiments/run_e3_aggregation.sh <peer_count> <customers> <days> [interval_minutes] [repeats]
+
+# E4: governance correctness and cost. Q1-Q4 x {member,manager,observer} against
+# server/policy.default.yaml, then again against server/policy.permissive.yaml.
+# experiments/check_e4_decisions.py checks each recorded decision against the
+# policy file and confirms a "deny" decision does not suppress propagation.
+./experiments/run_e4_governance.sh <peer_count> [repeats]
+
+# E5: the end-to-end community scenario with one manager peer. A seller and a
+# buyer member write an Offer/Bid locally, a distributed query discovers the
+# open Offer, the match is recorded as a Trade at both counterparts (local
+# writes), the manager compiles settlement over 1-day/1-week/1-month billing
+# periods (reporting broadcast.CompileSettlement's phase breakdown from its
+# "Settlement phase=" log lines), and a DSO observer retrieves the aggregate
+# it is permitted to see via an @sum query over SettlementSummary.
+./experiments/run_e5_scenario.sh <peer_count> [repeats]
+```
+
+Each script accepts environment-variable overrides for TTL, dataset size, and timeouts; run a script with no arguments to see its usage line, or read its header comment for the exact knobs.
+
+### Large-Dataset Experiments
+
+The scaling script changes peer count but uses the generator defaults unless its launcher is extended with dataset options. To test a large dataset per peer, launch the network directly with explicit generator settings, then submit queries from a separate client terminal:
+
+### Web Experiment Console
+
+Start the browser-based experiment controller from the repository root:
+
+```sh
+go run ./experiments/web
+```
+
+Open `http://localhost:8080`. The console adds peers to the currently running set instead of replacing it, configures customers/days/interval size for each added batch, and runs queries while reporting elapsed time, responding peers, and returned rows. The controller stores launcher logs under `experiments/web-runtime/`.
+
+For command-line additive startup, set `PEER_INDEX_OFFSET` to the number of existing peers and preserve their logs:
+
+```sh
+cd server
+PEER_INDEX_OFFSET=20 PRESERVE_EXISTING_LOGS=1 ./start_peers.sh 5 --customers 4 --days 1 --interval-minutes 15
+```
+
+This adds peers 21-25 and leaves peers 1-20 running. Stop managed peers explicitly with `stop_clusters.sh` or the web console; do not use the scaling script for a persistent peer set because it intentionally tears down each experiment.
+
+```sh
+# Three peers; each peer generates 100 customers and 30 days of 15-minute readings
+cd server
+./start_peers.sh 3 --customers 100 --days 30 --interval-minutes 15
+```
+
+Use the first peer address from the launcher log:
+
+```sh
+cd client
+go run . -role manager -s <first_peer_address>
+```
+
+Useful large-result queries are:
+
+```text
+get Customer, 5
+get MeterReading where readingType = "activePower", 7
+get MeterReading where readingType = "activePower" show @sum(value), 7
+get Customer traverse owner:owns:asset:UsagePoint traverse point:records:reading:MeterReading, 7
+```
+
+At a 15-minute interval, one day contains 96 intervals. Reading volume is approximately:
+
+```text
+customers x days x 96 x reading types
+```
+
+For example, 100 customers, 30 days, and four reading types produce about 1,152,000 `MeterReading` nodes per peer, before counting customers, assets, offers, bids, and trades. Start with `--customers 10 --days 1`, then increase one dimension at a time. Stop the network from the server terminal with `./stop_clusters.sh` before starting another large run.

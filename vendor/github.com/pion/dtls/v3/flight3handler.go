@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package dtls
@@ -288,6 +288,12 @@ func flight3Generate(
 		},
 	}
 
+	if len(cfg.localCertSignatureSchemes) > 0 {
+		extensions = append(extensions, &extension.SignatureAlgorithmsCert{
+			SignatureHashAlgorithms: cfg.localCertSignatureSchemes,
+		})
+	}
+
 	if state.namedCurve != 0 {
 		extensions = append(extensions, []extension.Extension{
 			&extension.SupportedEllipticCurves{
@@ -301,7 +307,8 @@ func flight3Generate(
 
 	if len(cfg.localSRTPProtectionProfiles) > 0 {
 		extensions = append(extensions, &extension.UseSRTP{
-			ProtectionProfiles: cfg.localSRTPProtectionProfiles,
+			ProtectionProfiles:  cfg.localSRTPProtectionProfiles,
+			MasterKeyIdentifier: cfg.localSRTPMasterKeyIdentifier,
 		})
 	}
 

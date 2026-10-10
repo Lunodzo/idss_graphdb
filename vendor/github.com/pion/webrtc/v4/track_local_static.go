@@ -33,6 +33,7 @@ type TrackLocalStaticRTP struct {
 	codec             RTPCodecCapability
 	payloader         func(RTPCodecCapability) (rtp.Payloader, error)
 	id, rid, streamID string
+	rtpTimestamp      *uint32
 }
 
 // NewTrackLocalStaticRTP returns a TrackLocalStaticRTP.
@@ -66,6 +67,13 @@ func WithRTPStreamID(rid string) func(*TrackLocalStaticRTP) {
 func WithPayloader(h func(RTPCodecCapability) (rtp.Payloader, error)) func(*TrackLocalStaticRTP) {
 	return func(s *TrackLocalStaticRTP) {
 		s.payloader = h
+	}
+}
+
+// WithRTPTimestamp set the initial RTP timestamp for the track.
+func WithRTPTimestamp(timestamp uint32) func(*TrackLocalStaticRTP) {
+	return func(s *TrackLocalStaticRTP) {
+		s.rtpTimestamp = &timestamp
 	}
 }
 
@@ -186,6 +194,11 @@ func (s *TrackLocalStaticRTP) writeRTP(packet *rtp.Packet) error {
 	for _, b := range s.bindings {
 		packet.Header.SSRC = uint32(b.ssrc)
 		packet.Header.PayloadType = uint8(b.payloadType)
+		// b.writeStream.WriteRTP below expects header and payload separately, so value of Packet.PaddingSize
+		// would be lost. Copy it to Packet.Header.PaddingSize to avoid that problem.
+		if packet.PaddingSize != 0 && packet.Header.PaddingSize == 0 {
+			packet.Header.PaddingSize = packet.PaddingSize
+		}
 		if _, err := b.writeStream.WriteRTP(&packet.Header, packet.Payload); err != nil {
 			writeErrs = append(writeErrs, err)
 		}
@@ -282,14 +295,21 @@ func (s *TrackLocalStaticSample) Bind(t TrackLocalContext) (RTPCodecParameters, 
 	}
 
 	s.sequencer = rtp.NewRandomSequencer()
-	s.packetizer = rtp.NewPacketizer(
-		rtpOutboundMTU,
-		0, // Value is handled when writing
-		0, // Value is handled when writing
+
+	options := []rtp.PacketizerOption{}
+
+	if s.rtpTrack.rtpTimestamp != nil {
+		options = append(options, rtp.WithTimestamp(*s.rtpTrack.rtpTimestamp))
+	}
+
+	s.packetizer = rtp.NewPacketizerWithOptions(
+		outboundMTU,
 		payloader,
 		s.sequencer,
 		codec.ClockRate,
+		options...,
 	)
+
 	s.clockRate = float64(codec.RTPCodecCapability.ClockRate)
 
 	return codec, nil

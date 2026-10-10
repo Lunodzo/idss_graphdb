@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package dtls
@@ -22,42 +22,38 @@ type CipherSuiteID = ciphersuite.ID
 
 // Supported Cipher Suites.
 const (
+
+	// nolint: godot
 	// AES-128-CCM
-	//nolint:revive,stylecheck
-	TLS_ECDHE_ECDSA_WITH_AES_128_CCM CipherSuiteID = ciphersuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM
-	//nolint:revive,stylecheck
-	TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 CipherSuiteID = ciphersuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8
+	TLS_ECDHE_ECDSA_WITH_AES_128_CCM   CipherSuiteID = ciphersuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM   // nolint: revive,staticcheck,lll
+	TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 CipherSuiteID = ciphersuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 // nolint: revive,staticcheck,lll
 
+	// nolint: godot
 	// AES-128-GCM-SHA256
-	//nolint:revive,stylecheck
-	TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 CipherSuiteID = ciphersuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
-	//nolint:revive,stylecheck
-	TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 CipherSuiteID = ciphersuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 CipherSuiteID = ciphersuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 // nolint: revive,staticcheck,lll
+	TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256   CipherSuiteID = ciphersuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256   // nolint: revive,staticcheck,lll
 
-	//nolint:revive,stylecheck
-	TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 CipherSuiteID = ciphersuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
-	//nolint:revive,stylecheck
-	TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 CipherSuiteID = ciphersuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 CipherSuiteID = ciphersuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 // nolint: revive,staticcheck,lll
+	TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384   CipherSuiteID = ciphersuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384   // nolint: revive,staticcheck,lll
 
+	// nolint: godot
 	// AES-256-CBC-SHA
-	//nolint:revive,stylecheck
-	TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA CipherSuiteID = ciphersuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
-	//nolint:revive,stylecheck
-	TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA CipherSuiteID = ciphersuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+	TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA CipherSuiteID = ciphersuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA // nolint: revive,staticcheck,lll
+	TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA   CipherSuiteID = ciphersuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA   // nolint: revive,staticcheck,lll
 
-	//nolint:revive,stylecheck
-	TLS_PSK_WITH_AES_128_CCM CipherSuiteID = ciphersuite.TLS_PSK_WITH_AES_128_CCM
-	//nolint:revive,stylecheck
-	TLS_PSK_WITH_AES_128_CCM_8 CipherSuiteID = ciphersuite.TLS_PSK_WITH_AES_128_CCM_8
-	//nolint:revive,stylecheck
-	TLS_PSK_WITH_AES_256_CCM_8 CipherSuiteID = ciphersuite.TLS_PSK_WITH_AES_256_CCM_8
-	//nolint:revive,stylecheck
-	TLS_PSK_WITH_AES_128_GCM_SHA256 CipherSuiteID = ciphersuite.TLS_PSK_WITH_AES_128_GCM_SHA256
-	//nolint:revive,stylecheck
-	TLS_PSK_WITH_AES_128_CBC_SHA256 CipherSuiteID = ciphersuite.TLS_PSK_WITH_AES_128_CBC_SHA256
+	TLS_PSK_WITH_AES_128_CCM        CipherSuiteID = ciphersuite.TLS_PSK_WITH_AES_128_CCM        // nolint: revive,staticcheck,lll
+	TLS_PSK_WITH_AES_128_CCM_8      CipherSuiteID = ciphersuite.TLS_PSK_WITH_AES_128_CCM_8      // nolint: revive,staticcheck,lll
+	TLS_PSK_WITH_AES_256_CCM_8      CipherSuiteID = ciphersuite.TLS_PSK_WITH_AES_256_CCM_8      // nolint: revive,staticcheck,lll
+	TLS_PSK_WITH_AES_128_GCM_SHA256 CipherSuiteID = ciphersuite.TLS_PSK_WITH_AES_128_GCM_SHA256 // nolint: revive,staticcheck,lll
+	TLS_PSK_WITH_AES_128_CBC_SHA256 CipherSuiteID = ciphersuite.TLS_PSK_WITH_AES_128_CBC_SHA256 // nolint: revive,staticcheck,lll
 
-	//nolint:revive,stylecheck
-	TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 CipherSuiteID = ciphersuite.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256
+	TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 CipherSuiteID = ciphersuite.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 // nolint: revive,staticcheck,lll
+
+	// nolint: godot
+	// ChaCha20-Poly1305-SHA256
+	TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 CipherSuiteID = ciphersuite.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 // nolint: revive,staticcheck,lll
+	TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256   CipherSuiteID = ciphersuite.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256   // nolint: revive,staticcheck,lll
+	TLS_PSK_WITH_CHACHA20_POLY1305_SHA256         CipherSuiteID = ciphersuite.TLS_PSK_WITH_CHACHA20_POLY1305_SHA256         // nolint: revive,staticcheck,lll
 )
 
 // CipherSuiteAuthenticationType controls what authentication method is using during the handshake for a CipherSuite.
@@ -160,6 +156,12 @@ func cipherSuiteForID(id CipherSuiteID, customCiphers func() []CipherSuite) Ciph
 		return &ciphersuite.TLSEcdheRsaWithAes256GcmSha384{}
 	case TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256:
 		return ciphersuite.NewTLSEcdhePskWithAes128CbcSha256()
+	case TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:
+		return &ciphersuite.TLSEcdheEcdsaWithChacha20Poly1305Sha256{}
+	case TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:
+		return &ciphersuite.TLSEcdheRsaWithChacha20Poly1305Sha256{}
+	case TLS_PSK_WITH_CHACHA20_POLY1305_SHA256:
+		return &ciphersuite.TLSPskWithChacha20Poly1305Sha256{}
 	}
 
 	if customCiphers != nil {
@@ -178,6 +180,8 @@ func defaultCipherSuites() []CipherSuite {
 	return []CipherSuite{
 		&ciphersuite.TLSEcdheEcdsaWithAes128GcmSha256{},
 		&ciphersuite.TLSEcdheRsaWithAes128GcmSha256{},
+		&ciphersuite.TLSEcdheEcdsaWithChacha20Poly1305Sha256{},
+		&ciphersuite.TLSEcdheRsaWithChacha20Poly1305Sha256{},
 		&ciphersuite.TLSEcdheEcdsaWithAes256CbcSha{},
 		&ciphersuite.TLSEcdheRsaWithAes256CbcSha{},
 		&ciphersuite.TLSEcdheEcdsaWithAes256GcmSha384{},
@@ -199,6 +203,9 @@ func allCipherSuites() []CipherSuite {
 		&ciphersuite.TLSPskWithAes128GcmSha256{},
 		&ciphersuite.TLSEcdheEcdsaWithAes256GcmSha384{},
 		&ciphersuite.TLSEcdheRsaWithAes256GcmSha384{},
+		&ciphersuite.TLSEcdheEcdsaWithChacha20Poly1305Sha256{},
+		&ciphersuite.TLSEcdheRsaWithChacha20Poly1305Sha256{},
+		&ciphersuite.TLSPskWithChacha20Poly1305Sha256{},
 	}
 }
 

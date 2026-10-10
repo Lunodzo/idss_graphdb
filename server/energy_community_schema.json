@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IDSS Energy Community Graph Data",
+  "type": "object",
+  "required": ["nodes", "edges"],
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "key", "mRID"],
+        "properties": {
+          "kind": {"enum": ["Customer", "UsagePoint", "EndDevice", "GeneratingUnit", "BatteryUnit", "MeterReading", "Offer", "Bid", "Trade"]},
+          "key": {"type": "string"},
+          "mRID": {"type": "string"}
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "kind", "end1key", "end1kind", "end1role", "end2key", "end2kind", "end2role"],
+        "properties": {
+          "kind": {"enum": ["owns", "records", "memberOf", "places", "matches"]}
+        }
+      }
+    }
+  }
+}

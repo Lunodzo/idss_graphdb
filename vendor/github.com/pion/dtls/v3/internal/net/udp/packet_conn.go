@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 // Package udp implements DTLS specific UDP networking primitives.
@@ -26,7 +26,7 @@ import (
 
 	idtlsnet "github.com/pion/dtls/v3/internal/net"
 	dtlsnet "github.com/pion/dtls/v3/pkg/net"
-	"github.com/pion/transport/v3/deadline"
+	"github.com/pion/transport/v4/deadline"
 )
 
 const (
@@ -157,17 +157,30 @@ type ListenConfig struct {
 	// the identifier is not already associated with the connection, it will be
 	// added.
 	ConnectionIdentifier func([]byte) (string, bool)
+
+	// Internal listen config used to open the UDP socket.
+	ListenConfig net.ListenConfig
 }
 
 // Listen creates a new listener based on the ListenConfig.
+//
+//nolint:contextcheck
 func (lc *ListenConfig) Listen(network string, laddr *net.UDPAddr) (dtlsnet.PacketListener, error) {
 	if lc.Backlog == 0 {
 		lc.Backlog = defaultListenBacklog
 	}
 
-	conn, err := net.ListenUDP(network, laddr)
+	laddrStr := ":0"
+	if laddr != nil {
+		laddrStr = laddr.String()
+	}
+	innerConn, err := lc.ListenConfig.ListenPacket(context.Background(), network, laddrStr)
 	if err != nil {
 		return nil, err
+	}
+	conn, ok := innerConn.(*net.UDPConn)
+	if !ok {
+		return nil, errors.New("listen packet not a *net.UDPConn") //nolint:err113
 	}
 
 	packetListener := &listener{

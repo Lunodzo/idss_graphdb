@@ -1,0 +1,23 @@
+services:
+  peer:
+    build:
+      context: .
+    network_mode: host
+    volumes:
+      - idss-data:/app/server/idss_graph_db
+    init: true
+
+  client:
+    build:
+      context: .
+    profiles: [client]
+    network_mode: host
+    working_dir: /app/client
+    entrypoint: ["/app/client/idss-client"]
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./client/results:/app/client/results
+
+volumes:
+  idss-data:

@@ -1,0 +1,26 @@
+default: deny
+rules:
+  - kind: Customer
+    roles: [member, manager, observer]
+    decision: allow
+  - kind: Trade
+    roles: [manager]
+    decision: allow
+  - kind: Trade
+    roles: [member, observer]
+    decision: aggregate
+  - kind: MeterReading
+    roles: [manager, observer]
+    decision: aggregate
+  - kind: MeterReading
+    roles: [member]
+    decision: deny
+  - kind: Offer
+    roles: [member, manager]
+    decision: allow
+  - kind: Bid
+    roles: [member, manager]
+    decision: allow
+  - kind: "*"
+    roles: [observer]
+    decision: aggregate

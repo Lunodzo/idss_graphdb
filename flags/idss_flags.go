@@ -76,6 +76,17 @@ type Config struct {
 	ListenAddresses  addrList
 	ProtocolID       string
 	Filename         string
+	PolicyPath       string
+	IsManager        bool
+	NumCustomers     int
+	ReadingDays      int
+	ReadingInterval  int
+	// CommunityID scopes registration and settlement to one energy community.
+	// Empty (the default) keeps the original unscoped behaviour.
+	CommunityID string
+	// CommunityManager optionally pins the manager's peer ID; otherwise a
+	// member discovers it through the DHT provider record of its community.
+	CommunityManager string
 }
 
 // Function to parse the flags and return the configuration
@@ -91,6 +102,13 @@ func ParseFlags(peerID string) (Config, error) {
 	// Dynamically set the filename based on the peer ID
 	defaultFileName := "./idss_graph_db/" + peerID + "/" + peerID + "_data.json" // Will be used to store the graph data incase file name is not provided
 	flag.StringVar(&config.Filename, "f", defaultFileName, "JSON file containing the graph data for this peer.") // JSON file containing the graph data for this peer
+	flag.StringVar(&config.PolicyPath, "policy", "policy.default.yaml", "YAML file containing this peer's query access policy.")
+	flag.BoolVar(&config.IsManager, "manager", false, "Starts this peer as an energy-community manager.")
+	flag.IntVar(&config.NumCustomers, "customers", 4, "Number of generated energy-community customers per peer.")
+	flag.IntVar(&config.ReadingDays, "days", 1, "Number of generated meter-reading days per peer.")
+	flag.IntVar(&config.ReadingInterval, "interval-minutes", 15, "Generated meter-reading interval in minutes.")
+	flag.StringVar(&config.CommunityID, "community", "", "Energy community this peer belongs to (with -manager: the community it manages). Empty keeps unscoped behaviour.")
+	flag.StringVar(&config.CommunityManager, "community-manager", "", "Optional: pin the peer ID of this community's manager instead of discovering it via the DHT.")
 
 	flag.Parse()
 	return config, nil

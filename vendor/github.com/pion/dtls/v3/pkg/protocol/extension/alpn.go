@@ -1,9 +1,11 @@
-// SPDX-FileCopyrightText: 2023 The Pion community <https://pion.ly>
+// SPDX-FileCopyrightText: 2026 The Pion community <https://pion.ly>
 // SPDX-License-Identifier: MIT
 
 package extension
 
 import (
+	"slices"
+
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -49,12 +51,19 @@ func (a *ALPN) Unmarshal(data []byte) error {
 	}
 
 	var extData cryptobyte.String
-	val.ReadUint16LengthPrefixed(&extData)
+	if !val.ReadUint16LengthPrefixed(&extData) {
+		return errLengthMismatch
+	}
 
 	var protoList cryptobyte.String
 	if !extData.ReadUint16LengthPrefixed(&protoList) || protoList.Empty() {
 		return ErrALPNInvalidFormat
 	}
+
+	if !extData.Empty() {
+		return errLengthMismatch
+	}
+
 	for !protoList.Empty() {
 		var proto cryptobyte.String
 		if !protoList.ReadUint8LengthPrefixed(&proto) || proto.Empty() {
@@ -72,10 +81,8 @@ func ALPNProtocolSelection(supportedProtocols, peerSupportedProtocols []string) 
 		return "", nil
 	}
 	for _, s := range supportedProtocols {
-		for _, c := range peerSupportedProtocols {
-			if s == c {
-				return s, nil
-			}
+		if slices.Contains(peerSupportedProtocols, s) {
+			return s, nil
 		}
 	}
 

@@ -13,6 +13,7 @@ package broadcast
 
 import (
     "encoding/json"
+	"fmt"
     "os"
     "os/exec"
     "path/filepath"
@@ -26,17 +27,17 @@ import (
 )
 
 // Function to generate fake data and initialize the graph database
-func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage.Storage, graphManager *graph.Manager) error {
-    // If a prepared partition file exists (e.g. produced by generate_cim_data.py),
-    // load it as-is and keep it, so that runs are reproducible and comparable
-    // with the central baseline and ground truth.
+func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage.Storage, graphManager *graph.Manager, numCustomers int, readingDays int, readingInterval int) error {
+    // Green Power use case: if a prepared partition file exists (e.g. produced by
+    // generate_cim_data.py), load it as-is and keep it, so that runs are
+    // reproducible and comparable with the central baseline and ground truth.
     if _, statErr := os.Stat(dataFilePath); statErr == nil {
         logger.Info("Loading prepared partition file: ", dataFilePath)
         return LoadGraphData(dataFilePath, dbPath, graphDB, graphManager)
     }
 
-    // Otherwise, execute python script to generate fake data
-    err := generateData(dataFilePath)
+    // Otherwise (energy-community use case), execute python script to generate fake data
+    err := generateData(dataFilePath, numCustomers, readingDays, readingInterval)
     if err != nil {
         logger.Fatal("Failed to generate data: ", err)
         return err
@@ -63,18 +64,22 @@ func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage
 }
 
 // Function to generate fake data using a python script
-func generateData(dataFilePath string) error {
+func generateData(dataFilePath string, numCustomers int, readingDays int, readingInterval int) error {
     // Ensure the directory exists
     if err := os.MkdirAll(filepath.Dir(dataFilePath), os.ModePerm); err != nil {
         logger.Error("Failed to create directory for JSON file: ", err)
         return err
     }
 
-    // Pass configurable parameters (adjust as needed)
+    peerID := filepath.Base(filepath.Dir(dataFilePath))
+
+    // Generate deterministic data unique to this peer.
     cmd := exec.Command("python3", "generate_data.py", dataFilePath,
-        "--num-clients", "1",
-        "--num-consumptions", "1",
-        "--edges-per-client", "1")
+        "--num-customers", fmt.Sprint(numCustomers),
+        "--days", fmt.Sprint(readingDays),
+        "--interval-minutes", fmt.Sprint(readingInterval),
+        "--seed", peerID)
+    cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
     err := cmd.Run()
     if err != nil {
         logger.Fatal("Data generation command execution failed: ", err)

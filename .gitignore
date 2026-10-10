@@ -1,10 +1,33 @@
+# Runtime output from local peer launches
+/server/idss_server
+/server/logs/
+/server/idss_graph_db/
+/server/heap_before_init.pprof
+/server/heap_after_init.pprof
 
-# Green Power use case: generated data and profiles
-data/
+# Client and experiment output
+/client/idss_client
+/client/results/
+/experiments/results/
+
+# Generated Python bytecode
+server/__pycache__/
+*.py[cod]
+
+# Local experiment/web-console runtime artifacts
+experiments/scaling*
+experiments/web-runtime/launcher*
+experiments/web-runtime/idss-client
+.vscode/settings.json
+
+# Stray local build output
+/web
+experiments/results_pre*/
+experiments/local_suite_*.log
+
+# Green Power use case: generated data, results and local files
+/data/
 heap_*.pprof
-results/
-client/idss_client
-server/idss_server
-web
+/results/
 .vscode/
 *.patch
