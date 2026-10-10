@@ -1,0 +1,10 @@
+# S2: shares with both, but never discloses installation year or loading.
+default: deny
+requesters:
+  __COORDINATOR__: coordinator
+  __RESEARCHER__: researcher
+hidden: [inServiceYear, maxLoadingPct]
+rules:
+  - kind: "*"
+    roles: [coordinator, researcher]
+    decision: allow

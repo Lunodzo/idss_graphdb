@@ -1,34 +1,35 @@
 # Green Power use case (-usecase gp): default policy for every partition.
-# Allows the CIM MV-cable and public-register kinds to all requester roles, so
-# that experiments measure query cost without access restrictions. Per-DSO
-# policies (aggregate-only, hidden attributes, coordinator-only) are separate
-# files passed with -policy.
+# Allows the CIM MV-cable and public-register kinds to every verified requester
+# (role "*" matches all roles, including "public"), so that experiments measure
+# query cost without access restrictions. Per-DSO policies (coordinator-only,
+# denied roles, hidden attributes) are separate files passed with -policy; see
+# experiments/gp/policies/.
 default: deny
 rules:
   - kind: Organisation
-    roles: [member, manager, observer]
+    roles: ["*"]
     decision: allow
   - kind: Substation
-    roles: [member, manager, observer]
+    roles: ["*"]
     decision: allow
   - kind: AssetContainer
-    roles: [member, manager, observer]
+    roles: ["*"]
     decision: allow
   - kind: ACLineSegment
-    roles: [member, manager, observer]
+    roles: ["*"]
     decision: allow
   - kind: Junction
-    roles: [member, manager, observer]
+    roles: ["*"]
     decision: allow
   - kind: FailureEvent
-    roles: [member, manager, observer]
+    roles: ["*"]
     decision: allow
   - kind: WorkOrder
-    roles: [member, manager, observer]
+    roles: ["*"]
     decision: allow
   - kind: ActivityRecord
-    roles: [member, manager, observer]
+    roles: ["*"]
     decision: allow
   - kind: MeasurementValue
-    roles: [member, manager, observer]
+    roles: ["*"]
     decision: allow

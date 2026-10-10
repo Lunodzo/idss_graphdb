@@ -44,6 +44,8 @@ message QueryMessage {
     // Green Power use case (fields from 19 upwards)
     repeated PartitionPartial partition_partials = 19; // Grouped partials and status, one entry per data partition
     repeated Row join_events = 20; // @join queries: public events (phase 1) shipped to every peer for the local join
+    bytes requester_pubkey = 21;    // libp2p public key of the requester (identity.Sign)
+    bytes requester_signature = 22; // signature over uqid, query and requester_id
 }
 
 // PartitionPartial carries one data partition's contribution to a grouped

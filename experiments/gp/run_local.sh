@@ -10,6 +10,9 @@
 # KILL="dso04 dso05" stops those partitions' peers before querying (peer-loss
 # test); the client then expects every partition in the dataset's manifest.json
 # and the checker compares against the ground truth without the lost DSOs.
+# SCENARIO=S1_coordinator_only|S2_mixed applies per-partition policies from
+# experiments/gp/policies/<scenario>/; REQUESTER=coordinator|researcher|anonymous
+# selects the signed identity the client queries with (default coordinator).
 set -euo pipefail
 DATA=$(readlink -f "${1:?datadir}")
 SETTLE=${2:-10}
@@ -25,11 +28,35 @@ PIDS=()
 cleanup() { kill "${PIDS[@]}" 2>/dev/null || true; wait 2>/dev/null || true; }
 trap cleanup EXIT
 
+# Requester identities (stable keys -> peer IDs that policies can list).
+declare -A REQ_ID
+for r in coordinator researcher anonymous; do
+  REQ_ID[$r]=$("$RUN/idss_client" -key "$RUN/$r.key" -print-id)
+done
+REQUESTER=${REQUESTER:-coordinator}
+[[ -n "${REQ_ID[$REQUESTER]:-}" ]] || { echo "unknown REQUESTER=$REQUESTER"; exit 1; }
+
+# Policy for a partition: scenario-specific file, else the default policy.
+policy_for() {
+  local name=$1 dir="$REPO/experiments/gp/policies/${SCENARIO:-}" src="$POLICY"
+  if [[ -n "${SCENARIO:-}" ]]; then
+    [[ -d "$dir" ]] || { echo "unknown SCENARIO=$SCENARIO" >&2; exit 1; }
+    if [[ -f "$dir/$name.yaml" ]]; then src="$dir/$name.yaml"
+    elif [[ "$name" == dso* && -f "$dir/dso.yaml" ]]; then src="$dir/dso.yaml"
+    elif [[ "$name" == public_* && -f "$dir/public.yaml" ]]; then src="$dir/public.yaml"
+    fi
+  fi
+  mkdir -p "$RUN/policies"
+  sed -e "s/__COORDINATOR__/${REQ_ID[coordinator]}/g" -e "s/__RESEARCHER__/${REQ_ID[researcher]}/g" "$src" > "$RUN/policies/$name.yaml"
+  echo "$RUN/policies/$name.yaml"
+}
+
 start_peer() {
   local name=$1; shift
   cp "$DATA/peers/$name.json" "$RUN/$name.json"   # the peer keeps its file; copy protects the dataset
+  local pol; pol=$(policy_for "$name")
   IDSS_LISTEN_ADDR=/ip4/127.0.0.1/tcp/0 IDSS_DISABLE_MDNS=1 IDSS_DB_PATH="$RUN/db" GOMAXPROCS=1 \
-    "$RUN/idss_server" -usecase gp -f "$RUN/$name.json" -partition "$name" -policy "$POLICY" "$@" > "$RUN/logs/$name.log" 2>&1 &
+    "$RUN/idss_server" -usecase gp -f "$RUN/$name.json" -partition "$name" -policy "$pol" "$@" > "$RUN/logs/$name.log" 2>&1 &
   PIDS+=($!)
 }
 
@@ -42,7 +69,8 @@ for _ in $(seq 1 120); do
 done
 [[ -n "$SEED" ]] || { echo "seed peer did not start"; exit 1; }
 for name in "${NAMES[@]:1}"; do start_peer "$name" -peer "$SEED"; done
-echo "Started ${#NAMES[@]} peers; seed ${NAMES[0]}; waiting until every peer has loaded its partition"
+echo "Started ${#NAMES[@]} peers; seed ${NAMES[0]}; scenario ${SCENARIO:-default}; requester $REQUESTER (${REQ_ID[$REQUESTER]})"
+echo "Waiting until every peer has loaded its partition"
 for _ in $(seq 1 1200); do   # up to 10 minutes (large partitions load slowly)
   ready=$( (grep -l "Serving IDSS stream protocol" "$RUN"/logs/*.log 2>/dev/null || true) | wc -l)
   [[ "$ready" -eq "${#NAMES[@]}" ]] && break; sleep 0.5
@@ -75,7 +103,7 @@ TTL=${TTL:-10}
   for q in "${QIDS[@]}"; do echo "${QTEXT[$q]}, $TTL"; sleep $((TTL + 2)); done
   echo exit
 } | IDSS_CLIENT_RESULTS_DIR="$RUN/res" timeout $((${#QIDS[@]} * (TTL + 2) + 30)) \
-    "$RUN/idss_client" -s "$SEED" -role observer -expected "$DATA/manifest.json" 2>&1 |
+    "$RUN/idss_client" -s "$SEED" -key "$RUN/$REQUESTER.key" -expected "$DATA/manifest.json" 2>&1 |
   grep -E "Got|Partitions|Time spent|rror" || true
 
 mapfile -t RES < <(ls -tr "$RUN"/res/*.json)
@@ -85,13 +113,14 @@ fi
 declare -A FILE
 for i in "${!QIDS[@]}"; do FILE[${QIDS[$i]}]=${RES[$i]}; done
 status=0
-ALLOW=""; [[ -n "${KILL:-}" ]] && ALLOW="--allow-missing"
+ALLOW=""; [[ -n "${KILL:-}${SCENARIO:-}" ]] && ALLOW="--allow-missing"
 CHECK="python3 $REPO/experiments/gp/check_ground_truth.py $DATA/ground_truth.json"
 for q in Q1 Q3 Q5 Q6; do $CHECK $q "${FILE[$q]}" $ALLOW || status=1; done
-if [[ -z "${KILL:-}" ]]; then
-  $CHECK Q4 "${FILE[Q4n]}" "${FILE[Q4d]}" || status=1
-else
-  echo "Q4: skipped under peer loss (rates need every partition)"
-fi
+$CHECK Q4 "${FILE[Q4n]}" "${FILE[Q4d]}" $ALLOW || status=1
+for q in "${QIDS[@]}"; do   # partitions that did not answer, with reasons
+  python3 -c "import json,sys; d=json.load(open(sys.argv[1]))
+for m in d.get('manifest', []):
+    if m['status'] != 'ANSWERED': print(f\"  {sys.argv[2]}: {m['partition']} {m['status']} ({m.get('detail', '')})\")" "${FILE[$q]}" "$q"
+done
 echo "Run directory (logs, results): $RUN"
 exit $status

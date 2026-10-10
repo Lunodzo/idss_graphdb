@@ -40,6 +40,7 @@ import (
 	"flag"
 	"fmt"
 	"idss/graphdb/common"
+	"idss/graphdb/identity"
 	"io"
 	"os"
 	"os/signal"
@@ -173,10 +174,12 @@ func main() {
 	serverAddrFlag := flag.String("s", "", "Server multiaddress")
 	IDSSProtocol := flag.String("p", "/lan/kad/1.0.0", "IDSS protocol") // By default use the local network protocol
 	requesterRole := flag.String("role", "member", "Requester role: member, manager, or observer")
+	keyFlag := flag.String("key", "", "Requester key file (created if missing); gives this client a stable peer ID that DSO policies can list")
+	printID := flag.Bool("print-id", false, "Print this client's peer ID (from -key) and exit")
 	expectedFlag := flag.String("expected", "", "Grouped queries: partitions expected to answer, as a comma-separated list or a generator manifest.json")
 	flag.Parse()
 
-	if *serverAddrFlag == "" {
+	if *serverAddrFlag == "" && !*printID {
 		log.Fatal("Please provide the server's multiaddress using the -s flag.")
 	}
 
@@ -194,9 +197,25 @@ func main() {
 	defer cancel()
 
 	// Generate key pair for the server/host
-	priv, _, err := crypto.GenerateKeyPair(crypto.RSA, 2048)
-	if err != nil {
-		log.Fatal("Error generating RSA key pair:", err)
+	var priv crypto.PrivKey
+	if *keyFlag != "" {
+		priv, err = identity.LoadOrCreateKey(*keyFlag)
+		if err != nil {
+			log.Fatal("Error loading requester key:", err)
+		}
+	} else {
+		priv, _, err = crypto.GenerateKeyPair(crypto.RSA, 2048)
+		if err != nil {
+			log.Fatal("Error generating RSA key pair:", err)
+		}
+	}
+	if *printID {
+		id, err := peer.IDFromPrivateKey(priv)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(id.String())
+		return
 	}
 
 	// Dynamic port allocation
@@ -310,6 +329,12 @@ func main() {
 		log.Info("Stream opened.")
 
 		// Marshal and send the QueryMessage
+		// Sign the query so that every peer can verify who asked (Green Power
+		// peers deny unsigned or tampered queries; energy-community peers ignore it).
+		if err := identity.Sign(&msg, priv); err != nil {
+			log.Error("Error signing query:", err)
+			continue
+		}
 		msgBytes, err := proto.Marshal(&msg)
 		if err != nil {
 			log.Error("Error marshalling query message:", err)

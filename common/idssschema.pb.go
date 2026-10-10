@@ -218,10 +218,12 @@ type QueryMessage struct {
 	SettlementResult     *SettlementResult      `protobuf:"bytes,17,opt,name=settlement_result,json=settlementResult,proto3" json:"settlement_result,omitempty"`             // The result of the settlement request
 	RespondingPeerIds    []string               `protobuf:"bytes,18,rep,name=responding_peer_ids,json=respondingPeerIds,proto3" json:"responding_peer_ids,omitempty"`        // List of peer IDs that have responded to the query
 	// Green Power use case (fields from 19 upwards)
-	PartitionPartials []*PartitionPartial `protobuf:"bytes,19,rep,name=partition_partials,json=partitionPartials,proto3" json:"partition_partials,omitempty"` // Grouped partials and status, one entry per data partition
-	JoinEvents        []*Row              `protobuf:"bytes,20,rep,name=join_events,json=joinEvents,proto3" json:"join_events,omitempty"`                      // @join queries: public events (phase 1) shipped to every peer for the local join
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	PartitionPartials  []*PartitionPartial `protobuf:"bytes,19,rep,name=partition_partials,json=partitionPartials,proto3" json:"partition_partials,omitempty"`    // Grouped partials and status, one entry per data partition
+	JoinEvents         []*Row              `protobuf:"bytes,20,rep,name=join_events,json=joinEvents,proto3" json:"join_events,omitempty"`                         // @join queries: public events (phase 1) shipped to every peer for the local join
+	RequesterPubkey    []byte              `protobuf:"bytes,21,opt,name=requester_pubkey,json=requesterPubkey,proto3" json:"requester_pubkey,omitempty"`          // libp2p public key of the requester (identity.Sign)
+	RequesterSignature []byte              `protobuf:"bytes,22,opt,name=requester_signature,json=requesterSignature,proto3" json:"requester_signature,omitempty"` // signature over uqid, query and requester_id
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *QueryMessage) Reset() {
@@ -390,6 +392,20 @@ func (x *QueryMessage) GetPartitionPartials() []*PartitionPartial {
 func (x *QueryMessage) GetJoinEvents() []*Row {
 	if x != nil {
 		return x.JoinEvents
+	}
+	return nil
+}
+
+func (x *QueryMessage) GetRequesterPubkey() []byte {
+	if x != nil {
+		return x.RequesterPubkey
+	}
+	return nil
+}
+
+func (x *QueryMessage) GetRequesterSignature() []byte {
+	if x != nil {
+		return x.RequesterSignature
 	}
 	return nil
 }
@@ -794,7 +810,7 @@ var File_idssschema_proto protoreflect.FileDescriptor
 
 const file_idssschema_proto_rawDesc = "" +
 	"\n" +
-	"\x10idssschema.proto\x12\x06common\"\xbe\x06\n" +
+	"\x10idssschema.proto\x12\x06common\"\x9a\a\n" +
 	"\fQueryMessage\x12'\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x13.common.MessageTypeR\x04type\x12\x14\n" +
 	"\x05query\x18\x02 \x01(\tR\x05query\x12\x12\n" +
@@ -819,7 +835,9 @@ const file_idssschema_proto_rawDesc = "" +
 	"\x13responding_peer_ids\x18\x12 \x03(\tR\x11respondingPeerIds\x12G\n" +
 	"\x12partition_partials\x18\x13 \x03(\v2\x18.common.PartitionPartialR\x11partitionPartials\x12,\n" +
 	"\vjoin_events\x18\x14 \x03(\v2\v.common.RowR\n" +
-	"joinEvents\"\x95\x02\n" +
+	"joinEvents\x12)\n" +
+	"\x10requester_pubkey\x18\x15 \x01(\fR\x0frequesterPubkey\x12/\n" +
+	"\x13requester_signature\x18\x16 \x01(\fR\x12requesterSignature\"\x95\x02\n" +
 	"\x10PartitionPartial\x12!\n" +
 	"\fpartition_id\x18\x01 \x01(\tR\vpartitionId\x12\x17\n" +
 	"\apeer_id\x18\x02 \x01(\tR\x06peerId\x127\n" +

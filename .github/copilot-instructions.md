@@ -69,6 +69,15 @@ be produced over data that **stay with each DSO**, under **owner-defined sharing
 - **Q4 failure rate** = numerator `@group(keys=0,decade(1); aggs=count)` over failures by insulation and
   installation decade, divided (in the checker/report) by the denominator
   `@group(keys=0,decade(1); aggs=exposure(2,1,2013,2023)) get ACLineSegment ...` (km-years).
+- **Verified requester and per-DSO policy (task 16)** (`identity/`, `access/`): the client signs every
+  query (`identity.Sign`: uqid, query, requester ID; the deadline is not signed because each hop
+  shortens it). In GP mode every peer verifies the signature (`identity.Verify`), takes the role from
+  its own policy (`requesters:` map; unlisted = `public`), never from the message, and evaluates the
+  EC rules (`allow`/`aggregate`/`deny` per kind; role `"*"` matches all). `hidden:` attributes may not
+  be group keys or aggregates (that partition answers DENIED for that query only). Unverified or
+  denied partitions still forward. Client: `-key <file>` (stable identity), `-print-id`.
+  Scenarios: `experiments/gp/policies/` (`SCENARIO=S1_coordinator_only|S2_mixed`,
+  `REQUESTER=coordinator|researcher|anonymous` in `run_local.sh`).
 - **Storage**: GP peers use EliasDB memory storage by default (`-storage disk|memory`); disk storage
   spends most of its load time in EliasDB's full-text index (49 s vs 5 s for 6.3k nodes).
 - **Expected partitions**: `idss_client -expected <manifest.json | dso01,dso02,...>` adds any partition

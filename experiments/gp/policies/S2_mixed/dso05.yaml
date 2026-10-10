@@ -1,0 +1,9 @@
+# S2: this DSO shares with the coordinator only.
+default: deny
+requesters:
+  __COORDINATOR__: coordinator
+  __RESEARCHER__: researcher
+rules:
+  - kind: "*"
+    roles: [coordinator]
+    decision: allow

@@ -3,7 +3,7 @@ mode: agent
 description: "Task 16 – signed query originator and per-peer access policy (policy at source)"
 ---
 
-> **ON HOLD (10 Oct 2026): being revised after the EC_Test merge (protobuf fields now start at 19; reuse `access/`, `responding_peer_ids` and the EC HPC scripts). Do not run this prompt until this notice is removed.**
+> **DONE (10 Oct 2026) – implemented by Claude; do not run.** Signed requester in `identity/` (protobuf fields 21–22), roles and hidden attributes in `access/`, scenarios in `experiments/gp/policies/`. Kept for reference only.
 
 # Task 16: Signed originator and per-peer access policy
 

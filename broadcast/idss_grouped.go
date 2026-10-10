@@ -26,6 +26,7 @@ import (
 	"idss/graphdb/gpjoin"
 	"idss/graphdb/groupagg"
 	"idss/graphdb/helpers"
+	"idss/graphdb/identity"
 
 	"github.com/krotik/eliasdb/graph"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
@@ -60,11 +61,18 @@ func isEmptyResultError(err error) bool {
 //
 // keep, when not nil, filters the local rows before grouping (used by @join
 // queries to keep only rows matching the shipped public events).
-func LocalGroupedEntry(spec groupagg.Spec, eqlQuery string, decision access.Decision, partition string, self peer.ID, gm *graph.Manager, keep func([][]interface{}) ([][]interface{}, error)) (*common.PartitionPartial, []string) {
+//
+// denyReason explains a Deny decision in the manifest. hidden, when not nil,
+// reports attributes this peer never discloses: a query whose group keys or
+// aggregates use such a column is declined by this partition only.
+func LocalGroupedEntry(spec groupagg.Spec, eqlQuery string, decision access.Decision, denyReason string, hidden func(string) bool, partition string, self peer.ID, gm *graph.Manager, keep func([][]interface{}) ([][]interface{}, error)) (*common.PartitionPartial, []string) {
 	entry := &common.PartitionPartial{PartitionId: partition, PeerId: self.String()}
 	if decision == access.Deny {
 		entry.Status = common.PartitionPartial_DENIED
-		entry.Detail = "denied by local access policy"
+		entry.Detail = denyReason
+		if entry.Detail == "" {
+			entry.Detail = "denied by local access policy"
+		}
 		return entry, nil
 	}
 	rows, header, err := RunIDSSQuery(eqlQuery, self, gm)
@@ -72,6 +80,11 @@ func LocalGroupedEntry(spec groupagg.Spec, eqlQuery string, decision access.Deci
 		entry.Status = common.PartitionPartial_ERROR
 		entry.Detail = err.Error()
 		return entry, nil
+	}
+	if col := HiddenColumnUsed(spec, header, hidden); col != "" {
+		entry.Status = common.PartitionPartial_DENIED
+		entry.Detail = "query uses hidden attribute " + col
+		return entry, header
 	}
 	if keep != nil && len(rows) > 0 {
 		if rows, err = keep(rows); err != nil {
@@ -91,6 +104,39 @@ func LocalGroupedEntry(spec groupagg.Spec, eqlQuery string, decision access.Deci
 		entry.Partials = append(entry.Partials, &common.Row{Data: r})
 	}
 	return entry, header
+}
+
+// HiddenColumnUsed returns the label of the first group key or aggregate column
+// whose attribute is hidden by the local policy, or "" if none is.
+func HiddenColumnUsed(spec groupagg.Spec, header []string, hidden func(string) bool) string {
+	if hidden == nil {
+		return ""
+	}
+	check := func(col int) string {
+		if col < len(header) && hidden(header[col]) {
+			return header[col]
+		}
+		return ""
+	}
+	for _, k := range spec.Keys {
+		if c := check(k.Col); c != "" {
+			return c
+		}
+	}
+	for _, a := range spec.Aggs {
+		if a.Func == "count" {
+			continue
+		}
+		if c := check(a.Col); c != "" {
+			return c
+		}
+		if a.Func == "exposure" {
+			if c := check(a.YearCol); c != "" {
+				return c
+			}
+		}
+	}
+	return ""
 }
 
 // UnionEntries merges partition entries. An ANSWERED entry for a partition wins
@@ -169,7 +215,7 @@ func ManifestSummary(entries []*common.PartitionPartial) string {
 // HandleGroupedQuery executes a @group query on this peer, forwards it, and
 // either returns the union of partition entries to the parent or, at the
 // originator, the finalised result plus the manifest to the client.
-func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT, decision access.Decision) {
+func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT, decision access.Decision, denyReason string, hidden func(string) bool) {
 	start := time.Now()
 	self := kadDHT.Host().ID()
 	fail := func(err error) { helpers.SendErrorMessage(conn, conn.Conn().RemotePeer(), err.Error()) }
@@ -231,7 +277,7 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		local, header = LocalGroupedEntry(spec, eqlQuery, decision, partition, self, gm, keep)
+		local, header = LocalGroupedEntry(spec, eqlQuery, decision, denyReason, hidden, partition, self, gm, keep)
 	}()
 	remote, respondingPeers := forwardGrouped(msg, conn, config, gm, kadDHT)
 	wg.Wait()
@@ -311,8 +357,15 @@ func collectJoinEvents(msg *common.QueryMessage, joinType string, config flags.C
 		RequesterRole: msg.RequesterRole,
 		State:         &common.QueryState{State: common.QueryState_QUEUED},
 	}
+	// Phase 1 is requested by the originator peer itself: sign it with the
+	// peer's own key (the client's signature covers the original query only).
+	if priv := kadDHT.Host().Peerstore().PrivKey(self); priv != nil {
+		if err := identity.Sign(p1, priv); err != nil {
+			return nil, fmt.Errorf("signing phase-1 query: %v", err)
+		}
+	}
 	StoreQueryInfo(p1, gm, self.String())
-	local, _ := LocalGroupedEntry(spec, eqlQuery, access.Allow, PartitionLabel(config, self), self, gm, nil)
+	local, _ := LocalGroupedEntry(spec, eqlQuery, access.Allow, "", nil, PartitionLabel(config, self), self, gm, nil)
 	remote, _ := forwardGrouped(p1, nil, config, gm, kadDHT)
 	entries := UnionEntries([]*common.PartitionPartial{local}, remote)
 	logger.Infof("Join phase 1 partitions: %s", ManifestSummary(entries))

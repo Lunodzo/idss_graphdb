@@ -46,6 +46,34 @@ type Rule struct {
 type Policy struct {
 	Default string `yaml:"default"`
 	Rules   []Rule `yaml:"rules"`
+	// Requesters maps verified requester peer IDs to roles (Green Power use
+	// case). Requesters not listed get the role "public".
+	Requesters map[string]string `yaml:"requesters"`
+	// Hidden lists attributes this peer never discloses: grouped queries may
+	// not use them as keys or aggregates (Green Power use case).
+	Hidden []string `yaml:"hidden"`
+}
+
+// PublicRole is the role of a verified requester that the policy does not list.
+const PublicRole = "public"
+
+// RoleFor returns the role the policy assigns to a requester peer ID.
+func (p *Policy) RoleFor(requesterID string) string {
+	if role, ok := p.Requesters[requesterID]; ok && role != "" {
+		return role
+	}
+	return PublicRole
+}
+
+// IsHidden reports whether an attribute (or a result column label such as
+// "Maxloadingpct") is hidden by this policy. Matching ignores case.
+func (p *Policy) IsHidden(attr string) bool {
+	for _, h := range p.Hidden {
+		if strings.EqualFold(h, attr) {
+			return true
+		}
+	}
+	return false
 }
 
 func LoadPolicy(path string) (*Policy, error) {
@@ -118,7 +146,7 @@ func (p *Policy) matchingDecisions(kind string, role string) []Decision {
 
 func containsRole(roles []string, role string) bool {
 	for _, candidate := range roles {
-		if candidate == role {
+		if candidate == role || candidate == "*" { // "*" matches every role
 			return true
 		}
 	}

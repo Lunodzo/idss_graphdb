@@ -1,0 +1,8 @@
+# S1: only the industry coordinator may query this DSO's data.
+default: deny
+requesters:
+  __COORDINATOR__: coordinator
+rules:
+  - kind: "*"
+    roles: [coordinator]
+    decision: allow

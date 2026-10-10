@@ -22,9 +22,9 @@ REL_TOL = 1e-9
 
 def load(path):
     res = json.load(open(path))
-    manifest = res.get("manifest", [])
+    manifest = res.get("manifest") or []
     missing = sorted(m["partition"] for m in manifest if m["status"] != "ANSWERED")
-    rows = [r for r in res["rows"] if r != res.get("header")]
+    rows = [r for r in (res.get("rows") or []) if r != res.get("header")]
     return rows, manifest, missing
 
 
@@ -66,8 +66,9 @@ def main():
         drows, dmanifest, dmissing = load(args[3])
         missing = sorted(set(missing) | set(dmissing))
         if missing:
-            print(f"Q4: cannot be checked with missing partitions {missing} (no per-DSO ground truth)")
-            return 1
+            print(f"Q4: {'skipped' if allow_missing else 'NOT CHECKED'} - missing partitions {missing} "
+                  f"(rates need every partition; no per-DSO ground truth)")
+            return 0 if allow_missing else 1
         num = {f"{r[0]}|{r[1]}": int(float(r[2])) for r in rows}
         den = {f"{r[0]}|{r[1]}": float(r[2]) for r in drows}
         ok = num == {k: v for k, v in gt["Q4_failures"].items()}

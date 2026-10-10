@@ -38,6 +38,7 @@ import (
 	"idss/graphdb/gpjoin"
 	"idss/graphdb/groupagg"
 	"idss/graphdb/helpers"
+	"idss/graphdb/identity"
 	"idss/graphdb/kaddht"
 	"io"
 	"os"
@@ -583,7 +584,7 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	defer func() {
 		common.QueryDuration.Observe(time.Since(startTime).Seconds())
 	}()
-	if !isValidRequesterRole(msg.RequesterRole) {
+	if config.UseCase != "gp" && !isValidRequesterRole(msg.RequesterRole) {
 		err := fmt.Errorf("invalid requester role %q: expected member, manager, or observer", msg.RequesterRole)
 		logger.Errorf("Rejecting query %s from requester %s: %v", msg.Uqid, msg.RequesterId, err)
 		helpers.SendErrorMessage(conn, peer.ID(remotePeerID), err.Error())
@@ -618,9 +619,31 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 		return
 	}
 	decision := access.Allow
+	denyReason := ""
 	queryTrimmed := strings.TrimSpace(msg.Query)
 	queryLower := strings.ToLower(queryTrimmed)
-	if !isDataModification(queryLower) && msg.RequesterId != kadDHT.Host().ID().String() {
+	if config.UseCase == "gp" && msg.RequesterId != kadDHT.Host().ID().String() {
+		// Green Power: the requester must be verified, and its role comes from
+		// this peer's policy (requesters map), never from the message.
+		if err := identity.Verify(msg); err != nil {
+			decision = access.Deny
+			denyReason = "unverified requester: " + err.Error()
+		} else {
+			role := accessPolicy.RoleFor(msg.RequesterId)
+			kinds := helpers.ExtractQueryKinds(msg.Query)
+			decision = accessPolicy.Evaluate(kinds, role)
+			if decision == access.Deny {
+				denyReason = fmt.Sprintf("policy denies role %q for %v", role, kinds)
+			}
+			// Hidden attributes are enforced column by column for grouped
+			// queries; plain record queries are reduced to counts.
+			if decision == access.Allow && len(accessPolicy.Hidden) > 0 && !groupagg.IsGrouped(queryTrimmed) && !gpjoin.IsJoin(queryTrimmed) {
+				decision = access.AggregateOnly
+			}
+			logger.Infof("Access decision for requester %s (role %s), kinds %v: %s", msg.RequesterId, role, kinds, decision)
+		}
+		common.PolicyDecisionTotal.WithLabelValues(decision.String()).Inc()
+	} else if !isDataModification(queryLower) && msg.RequesterId != kadDHT.Host().ID().String() {
 		kinds := helpers.ExtractQueryKinds(msg.Query)
 		decision = accessPolicy.Evaluate(kinds, msg.RequesterRole)
 		common.PolicyDecisionTotal.WithLabelValues(decision.String()).Inc()
@@ -642,7 +665,7 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	// match inside an EQL query. A denied partition still forwards the query
 	// and reports itself as DENIED in the manifest.
 	if groupagg.IsGrouped(queryTrimmed) || gpjoin.IsJoin(queryTrimmed) {
-		broadcast.HandleGroupedQuery(conn, msg, config, gm, kadDHT, decision)
+		broadcast.HandleGroupedQuery(conn, msg, config, gm, kadDHT, decision, denyReason, accessPolicy.IsHidden)
 		return
 	}
 

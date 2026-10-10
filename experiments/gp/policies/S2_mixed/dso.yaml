@@ -1,0 +1,9 @@
+# S2: coordinator and researcher may query this DSO's data.
+default: deny
+requesters:
+  __COORDINATOR__: coordinator
+  __RESEARCHER__: researcher
+rules:
+  - kind: "*"
+    roles: [coordinator, researcher]
+    decision: allow
