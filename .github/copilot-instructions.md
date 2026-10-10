@@ -1,12 +1,29 @@
 # Copilot instructions – IDSS, Green Power Denmark use case (CIRED 2027)
 
 ## Scope and branches
-- Work **only** on branch `green_power_usecase`. Never merge from or into `main` or `EC_Test`.
-  Those branches, and the legacy code paths kept here (`server/generate_data.py`, Client/Consumption
-  nodes), belong to the **energy-community (EC) use case**. Keep them working; do not delete or
-  rewrite them. New behaviour for this use case is added **alongside**, selected by the data file
-  or by an explicit query prefix.
+- Work on branch `green_power_usecase`. Since 10 Oct 2026 it **contains EC_Test** (merged
+  deliberately): shared infrastructure (access policy, responding-peer list, duplicate-query and
+  concurrency fixes, bounded forwarding, HPC scripts, web console, Go 1.25.7) plus EC-specific code
+  (communities, settlement, Customer/Trade/MeterReading data, experiments E1–E6).
+- Do **not** modify EC-specific code or EC experiments; the energy-community use case must keep
+  working. Add Green Power (GP) behaviour alongside, selected by the data file or an explicit query
+  prefix. Future syncs from `EC_Test` are done by Claude, not by Copilot; never run `git merge`.
+- Never run `go mod tidy`, `go mod vendor`, `go get` or toolchain changes unless asked.
 - Push with `git push origin green_power_usecase` only.
+
+## Shared infrastructure to reuse (do not duplicate)
+- `access/` – role-based policy (`allow` / `aggregate` / `deny` per node kind), YAML files
+  `server/policy.*.yaml`. GP extends it (GP node kinds, hidden attributes, verified requester);
+  it does not write a second policy engine.
+- `QueryMessage.responding_peer_ids` (field 18) – basis for the GP completeness manifest.
+- Protobuf: EC uses `QueryMessage` fields 13–18 (`requester_id`, `requester_role`,
+  `customer_registration`, `settlement_request`, `settlement_result`, `responding_peer_ids`).
+  **GP fields start at 19.** Never renumber or reuse existing fields.
+- Forwarding: `selectForwardPeers` forwards to a random subset of peers bounded by the time budget.
+  For GP exactness experiments set `IDSS_MAX_FORWARD=0` (flood) or rely on the manifest to report
+  partitions that were not reached.
+- `requester_id` is a plain string set by the submitter; it is **not** authenticated. GP adds a
+  signature check before any policy decision.
 
 ## What this branch demonstrates
 A CIM-based medium-voltage (MV) cable asset and failure model deployed on the IDSS/G-IDSS

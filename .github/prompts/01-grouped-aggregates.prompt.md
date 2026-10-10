@@ -2,6 +2,9 @@
 mode: agent
 description: "Task 6 – grouped, decomposable aggregates merged exactly across peers"
 ---
+
+> **ON HOLD (10 Oct 2026): being revised after the EC_Test merge (protobuf fields now start at 19; reuse `access/`, `responding_peer_ids` and the EC HPC scripts). Do not run this prompt until this notice is removed.**
+
 # Task 6: Grouped, decomposable aggregates
 
 Read `.github/copilot-instructions.md` first and follow its design rules.

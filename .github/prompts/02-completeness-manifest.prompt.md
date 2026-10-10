@@ -2,6 +2,9 @@
 mode: agent
 description: "Task 7 – result manifest: answered / denied / timed-out / unreachable partitions"
 ---
+
+> **ON HOLD (10 Oct 2026): being revised after the EC_Test merge (protobuf fields now start at 19; reuse `access/`, `responding_peer_ids` and the EC HPC scripts). Do not run this prompt until this notice is removed.**
+
 # Task 7: Completeness manifest
 
 Read `.github/copilot-instructions.md` first. Requires Task 6 (partition-tagged partials).

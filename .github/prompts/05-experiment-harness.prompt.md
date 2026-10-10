@@ -2,6 +2,9 @@
 mode: agent
 description: "Tasks 8–9 – baseline queries, CSV output, launch scripts, checker and timing harness"
 ---
+
+> **ON HOLD (10 Oct 2026): being revised after the EC_Test merge (protobuf fields now start at 19; reuse `access/`, `responding_peer_ids` and the EC HPC scripts). Do not run this prompt until this notice is removed.**
+
 # Tasks 8–9: Experiment harness
 
 Read `.github/copilot-instructions.md` first.

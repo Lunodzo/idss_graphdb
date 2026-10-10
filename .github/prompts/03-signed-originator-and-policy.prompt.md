@@ -2,6 +2,9 @@
 mode: agent
 description: "Task 16 – signed query originator and per-peer access policy (policy at source)"
 ---
+
+> **ON HOLD (10 Oct 2026): being revised after the EC_Test merge (protobuf fields now start at 19; reuse `access/`, `responding_peer_ids` and the EC HPC scripts). Do not run this prompt until this notice is removed.**
+
 # Task 16: Signed originator and per-peer access policy
 
 Read `.github/copilot-instructions.md` first. Requires Tasks 6 and 7.
