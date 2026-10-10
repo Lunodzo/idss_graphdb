@@ -343,11 +343,27 @@ func main() {
 	dbPath := fmt.Sprintf("%s/%s", common.DBRoot(), host.ID().String()) // Peer specific database path
 	logger.Info("Database path: ", dbPath)
 
-	graphDB, err := graphstorage.NewDiskGraphStorage(dbPath, false) // Create a new disk graph storage
-	if err != nil {
-		logger.Fatalf("Error creating graph database: %v", err)
-		return
+	storageKind := config.Storage
+	if storageKind == "" {
+		storageKind = "disk"
+		if config.UseCase == "gp" {
+			storageKind = "memory"
+		}
 	}
+	var graphDB graphstorage.Storage
+	switch storageKind {
+	case "disk":
+		graphDB, err = graphstorage.NewDiskGraphStorage(dbPath, false) // Create a new disk graph storage
+		if err != nil {
+			logger.Fatalf("Error creating graph database: %v", err)
+			return
+		}
+	case "memory":
+		graphDB = graphstorage.NewMemoryGraphStorage(host.ID().String())
+	default:
+		logger.Fatalf("unknown -storage %q (expected disk or memory)", storageKind)
+	}
+	logger.Infof("Graph storage: %s", storageKind)
 	defer graphDB.Close()
 
 	graphManager := graph.NewGraphManager(graphDB) // Create a new graph manager

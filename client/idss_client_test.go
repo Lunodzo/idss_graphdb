@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"os"
+	"reflect"
+	"testing"
+)
 
 func TestSplitQueryAndTTL(t *testing.T) {
 	for _, c := range []struct {
@@ -26,5 +30,28 @@ func TestManifestSummary(t *testing.T) {
 	got := manifestSummary([]ManifestEntry{{Partition: "dso01", Status: "ANSWERED"}, {Partition: "dso04", Status: "TIMEOUT"}})
 	if got != "answered 1/2; timeout [dso04]" {
 		t.Fatalf("summary = %q", got)
+	}
+}
+
+func TestLoadExpectedAndCompleteManifest(t *testing.T) {
+	dir := t.TempDir()
+	path := dir + "/manifest.json"
+	if err := os.WriteFile(path, []byte(`{"partitions": {"dso02": {}, "dso01": {}, "public_weather": {}}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got, err := loadExpectedPartitions(path)
+	if err != nil || !reflect.DeepEqual(got, []string{"dso01", "dso02", "public_weather"}) {
+		t.Fatalf("from manifest: %v %v", got, err)
+	}
+	got, _ = loadExpectedPartitions(" dso01, dso02 ,")
+	if !reflect.DeepEqual(got, []string{"dso01", "dso02"}) {
+		t.Fatalf("from list: %v", got)
+	}
+	m := completeManifest([]ManifestEntry{{Partition: "dso01", Status: "ANSWERED"}}, []string{"dso01", "dso02"})
+	if len(m) != 2 || m[1].Partition != "dso02" || m[1].Status != "UNREACHABLE" {
+		t.Fatalf("completeManifest = %+v", m)
+	}
+	if s := manifestSummary(m); s != "answered 1/2; unreachable [dso02]" {
+		t.Fatalf("summary = %q", s)
 	}
 }

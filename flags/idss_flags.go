@@ -91,6 +91,10 @@ type Config struct {
 	// default) or "gp" (Green Power MV cable reliability). In "gp" mode the
 	// energy-community background routines and message types are disabled.
 	UseCase string
+	// Storage selects the EliasDB storage: "disk" or "memory". Empty: disk for
+	// the energy-community use case, memory for Green Power (prepared data is
+	// reloaded every run, and disk indexing makes large loads very slow).
+	Storage string
 	// Partition labels this peer's data partition in grouped (@group) query
 	// results and manifests (Green Power use case). Empty: the peer ID.
 	Partition string
@@ -115,6 +119,7 @@ func ParseFlags(peerID string) (Config, error) {
 	flag.IntVar(&config.ReadingDays, "days", 1, "Number of generated meter-reading days per peer.")
 	flag.IntVar(&config.ReadingInterval, "interval-minutes", 15, "Generated meter-reading interval in minutes.")
 	flag.StringVar(&config.UseCase, "usecase", "ec", "Use case: ec (energy community, default) or gp (Green Power MV cable reliability).")
+	flag.StringVar(&config.Storage, "storage", "", "Graph storage: disk or memory (default: disk for -usecase ec, memory for -usecase gp).")
 	flag.StringVar(&config.Partition, "partition", "", "Label of this peer's data partition in grouped query results (default: peer ID).")
 	flag.StringVar(&config.CommunityID, "community", "", "Energy community this peer belongs to (with -manager: the community it manages). Empty keeps unscoped behaviour.")
 	flag.StringVar(&config.CommunityManager, "community-manager", "", "Optional: pin the peer ID of this community's manager instead of discovering it via the DHT.")

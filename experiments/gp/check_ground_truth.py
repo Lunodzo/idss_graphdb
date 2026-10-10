@@ -3,10 +3,12 @@
 
 Usage: check_ground_truth.py <ground_truth.json> <Q1|Q3> <result.json> [--allow-missing]
 
-Q1: rows "year,count"; Q3: rows "DSO name,faultCause,count". Exit code 0 when the
-result equals the ground truth restricted to the DSOs whose partitions answered
-(per the result manifest), 1 otherwise. A result whose manifest lists missing
-partitions fails unless --allow-missing is given.
+Q1: rows "year,count"; Q3: rows "DSO name,faultCause,count". The result is
+compared with the ground truth restricted to the DSO partitions that answered
+(partition dsoNN holds DSO-NN), so a run with missing partitions is still
+checked exactly. Without --allow-missing, any missing partition is a failure;
+with it, the result must equal the restricted ground truth and the manifest
+must name every missing DSO partition.
 """
 import json
 import sys
@@ -22,12 +24,17 @@ def main():
     manifest = res.get("manifest", [])
     missing = [m["partition"] for m in manifest if m["status"] != "ANSWERED"]
     rows = [r for r in res["rows"] if r != res.get("header")]
+    missing_dsos = {f"DSO-{p[3:]}" for p in missing if p.startswith("dso")}
     if q == "Q1":
         got = {r[0]: int(float(r[1])) for r in rows}
-        want = {k: v for k, v in gt["Q1"].items()}
+        want = {}
+        for key, n in gt["Q1_dso"].items():
+            dso, year = key.split("|")
+            if dso not in missing_dsos:
+                want[year] = want.get(year, 0) + n
     elif q == "Q3":
         got = {f"{r[0]}|{r[1]}": int(float(r[2])) for r in rows}
-        want = dict(gt["Q3"])
+        want = {k: v for k, v in gt["Q3"].items() if k.split("|")[0] not in missing_dsos}
     else:
         print(f"unsupported query {q}")
         return 2

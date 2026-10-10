@@ -60,8 +60,14 @@ be produced over data that **stay with each DSO**, under **owner-defined sharing
   Each peer returns one `PartitionPartial` (field 19) tagged with its `-partition` label; entries are
   unioned by partition and folded only at the originator. The client prints the manifest
   ("answered 8/8") and stores it in the result JSON.
+- **Storage**: GP peers use EliasDB memory storage by default (`-storage disk|memory`); disk storage
+  spends most of its load time in EliasDB's full-text index (49 s vs 5 s for 6.3k nodes).
+- **Expected partitions**: `idss_client -expected <manifest.json | dso01,dso02,...>` adds any partition
+  that never reported to the manifest as `UNREACHABLE (not reached)`.
 - **Live check**: `experiments/gp/run_local.sh <datadir>` starts one peer per partition, runs Q1 and
   Q3 and compares them with `ground_truth.json` (`experiments/gp/check_ground_truth.py`).
+  `KILL="dso04"` stops partitions before querying (peer-loss test; checked against the ground truth
+  without the lost DSOs).
 - In the interactive client, the TTL is the number after the **last** comma (`<query>, 10`).
 
 ## Data model (EliasDB import format)

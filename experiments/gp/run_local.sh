@@ -7,6 +7,9 @@
 #
 # Peers forward to every routing-table peer (IDSS_MAX_FORWARD=0) so that results
 # can be compared exactly; set IDSS_MAX_FORWARD yourself to test bounded fan-out.
+# KILL="dso04 dso05" stops those partitions' peers before querying (peer-loss
+# test); the client then expects every partition in the dataset's manifest.json
+# and the checker compares against the ground truth without the lost DSOs.
 set -euo pipefail
 DATA=$(readlink -f "${1:?datadir}")
 SETTLE=${2:-10}
@@ -47,17 +50,25 @@ done
 [[ "$ready" -eq "${#NAMES[@]}" ]] || { echo "only $ready/${#NAMES[@]} peers ready"; exit 1; }
 echo "All peers serving; settling ${SETTLE}s for routing tables"
 sleep "$SETTLE"
+declare -A PID_OF
+for i in "${!NAMES[@]}"; do PID_OF[${NAMES[$i]}]=${PIDS[$i]}; done
+for name in ${KILL:-}; do
+  [[ "$name" == "${NAMES[0]}" ]] && { echo "cannot kill the seed/entry peer ${NAMES[0]}"; exit 1; }
+  echo "Stopping $name (peer loss)"; kill "${PID_OF[$name]}"
+done
+[[ -n "${KILL:-}" ]] && sleep 2
 
 Q1='@group(keys=0; aggs=count) get FailureEvent show failureYear'
 Q3='@group(keys=0,1; aggs=count) get FailureEvent traverse failure:AFFECTS:asset:ACLineSegment traverse segment:CONTAINS:container:AssetContainer traverse asset:OWNS:owner:Organisation end end end show 4:n:name, 1:n:faultCause'
 TTL=${TTL:-10}
 (sleep 5; echo "$Q1, $TTL"; sleep $((TTL + 2)); echo "$Q3, $TTL"; sleep $((TTL + 2)); echo exit) |
-  IDSS_CLIENT_RESULTS_DIR="$RUN/res" timeout $((3 * TTL + 30)) "$RUN/idss_client" -s "$SEED" -role observer 2>&1 |
+  IDSS_CLIENT_RESULTS_DIR="$RUN/res" timeout $((3 * TTL + 30)) "$RUN/idss_client" -s "$SEED" -role observer -expected "$DATA/manifest.json" 2>&1 |
   grep -E "Got|Partitions|Time spent|rror" || true
 
 mapfile -t RES < <(ls -tr "$RUN"/res/*.json)
 status=0
-python3 "$REPO/experiments/gp/check_ground_truth.py" "$DATA/ground_truth.json" Q1 "${RES[0]}" || status=1
-python3 "$REPO/experiments/gp/check_ground_truth.py" "$DATA/ground_truth.json" Q3 "${RES[1]}" || status=1
+ALLOW=""; [[ -n "${KILL:-}" ]] && ALLOW="--allow-missing"
+python3 "$REPO/experiments/gp/check_ground_truth.py" "$DATA/ground_truth.json" Q1 "${RES[0]}" $ALLOW || status=1
+python3 "$REPO/experiments/gp/check_ground_truth.py" "$DATA/ground_truth.json" Q3 "${RES[1]}" $ALLOW || status=1
 echo "Run directory (logs, results): $RUN"
 exit $status

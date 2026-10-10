@@ -44,6 +44,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -104,6 +105,51 @@ func splitQueryAndTTL(input string) (string, float64, error) {
 	return input, 1, nil // default TTL
 }
 
+// loadExpectedPartitions reads the -expected option: a generator manifest.json
+// (its "partitions" keys) or a comma-separated list of partition labels.
+func loadExpectedPartitions(spec string) ([]string, error) {
+	spec = strings.TrimSpace(spec)
+	if spec == "" {
+		return nil, nil
+	}
+	if b, err := os.ReadFile(spec); err == nil {
+		var m struct {
+			Partitions map[string]json.RawMessage `json:"partitions"`
+		}
+		if err := json.Unmarshal(b, &m); err != nil {
+			return nil, fmt.Errorf("reading %s: %v", spec, err)
+		}
+		out := make([]string, 0, len(m.Partitions))
+		for name := range m.Partitions {
+			out = append(out, name)
+		}
+		sort.Strings(out)
+		return out, nil
+	}
+	var out []string
+	for _, p := range strings.Split(spec, ",") {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out, nil
+}
+
+// completeManifest adds an UNREACHABLE entry for every expected partition that
+// did not report at all, so that partitions nobody reached are never silent.
+func completeManifest(m []ManifestEntry, expected []string) []ManifestEntry {
+	seen := map[string]bool{}
+	for _, e := range m {
+		seen[e.Partition] = true
+	}
+	for _, p := range expected {
+		if !seen[p] {
+			m = append(m, ManifestEntry{Partition: p, Status: "UNREACHABLE", Detail: "not reached"})
+		}
+	}
+	return m
+}
+
 func manifestSummary(m []ManifestEntry) string {
 	byStatus := map[string][]string{}
 	for _, e := range m {
@@ -127,10 +173,16 @@ func main() {
 	serverAddrFlag := flag.String("s", "", "Server multiaddress")
 	IDSSProtocol := flag.String("p", "/lan/kad/1.0.0", "IDSS protocol") // By default use the local network protocol
 	requesterRole := flag.String("role", "member", "Requester role: member, manager, or observer")
+	expectedFlag := flag.String("expected", "", "Grouped queries: partitions expected to answer, as a comma-separated list or a generator manifest.json")
 	flag.Parse()
 
 	if *serverAddrFlag == "" {
 		log.Fatal("Please provide the server's multiaddress using the -s flag.")
+	}
+
+	expectedPartitions, err := loadExpectedPartitions(*expectedFlag)
+	if err != nil {
+		log.Fatal("Invalid -expected: ", err)
 	}
 
 	if *IDSSProtocol == "global" {
@@ -344,7 +396,8 @@ func main() {
 			log.Infof("Responding peers: %d", respondingPeerCount)
 			log.Infof("Wire bytes received: %d", totalWireBytes)
 			log.Infof("Time spent: %s", timeTaken)
-			if len(manifest) > 0 {
+			if len(manifest) > 0 || len(expectedPartitions) > 0 {
+				manifest = completeManifest(manifest, expectedPartitions)
 				log.Infof("Partitions: %s", manifestSummary(manifest))
 			}
 
