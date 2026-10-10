@@ -27,7 +27,15 @@ import (
 
 // Function to generate fake data and initialize the graph database
 func GenFakeDataAndInit(dataFilePath string, dbPath string, graphDB graphstorage.Storage, graphManager *graph.Manager) error {
-    // Execute python script to generate fake data
+    // If a prepared partition file exists (e.g. produced by generate_cim_data.py),
+    // load it as-is and keep it, so that runs are reproducible and comparable
+    // with the central baseline and ground truth.
+    if _, statErr := os.Stat(dataFilePath); statErr == nil {
+        logger.Info("Loading prepared partition file: ", dataFilePath)
+        return LoadGraphData(dataFilePath, dbPath, graphDB, graphManager)
+    }
+
+    // Otherwise, execute python script to generate fake data
     err := generateData(dataFilePath)
     if err != nil {
         logger.Fatal("Failed to generate data: ", err)
