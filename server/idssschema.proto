@@ -43,6 +43,7 @@ message QueryMessage {
     repeated string responding_peer_ids = 18; // List of peer IDs that have responded to the query
     // Green Power use case (fields from 19 upwards)
     repeated PartitionPartial partition_partials = 19; // Grouped partials and status, one entry per data partition
+    repeated Row join_events = 20; // @join queries: public events (phase 1) shipped to every peer for the local join
 }
 
 // PartitionPartial carries one data partition's contribution to a grouped

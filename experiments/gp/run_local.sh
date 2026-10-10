@@ -58,17 +58,40 @@ for name in ${KILL:-}; do
 done
 [[ -n "${KILL:-}" ]] && sleep 2
 
-Q1='@group(keys=0; aggs=count) get FailureEvent show failureYear'
-Q3='@group(keys=0,1; aggs=count) get FailureEvent traverse failure:AFFECTS:asset:ACLineSegment traverse segment:CONTAINS:container:AssetContainer traverse asset:OWNS:owner:Organisation end end end show 4:n:name, 1:n:faultCause'
+# Report queries (see .github/copilot-instructions.md). Q4 = Q4n / Q4d.
+TRAV="traverse failure:AFFECTS:asset:ACLineSegment traverse segment:CONTAINS:container:AssetContainer traverse asset:OWNS:owner:Organisation end end end"
+declare -a QIDS=(Q1 Q3 Q4n Q4d Q5 Q6)
+declare -A QTEXT=(
+  [Q1]="@group(keys=0; aggs=count) get FailureEvent show failureYear"
+  [Q3]="@group(keys=0,1; aggs=count) get FailureEvent $TRAV show 4:n:name, 1:n:faultCause"
+  [Q4n]="@group(keys=0,decade(1); aggs=count) get FailureEvent traverse failure:AFFECTS:asset:ACLineSegment end show 2:n:insulation, 2:n:inServiceYear"
+  [Q4d]="@group(keys=0,decade(1); aggs=exposure(2,1,2013,2023)) get ACLineSegment show insulation, inServiceYear, lengthKm"
+  [Q5]="@join(type=digging; window=30; cols=1,2,3,4,5) @group(keys=0; aggs=count) get FailureEvent $TRAV show 4:n:name, 1:n:failureDay, 2:n:minLat, 2:n:maxLat, 2:n:minLon, 2:n:maxLon"
+  [Q6]="@join(type=weather; window=3; cols=1,2,3) @group(keys=0; aggs=count) get FailureEvent $TRAV show 4:n:name, 1:n:failureDay, 2:n:lat, 2:n:lon"
+)
 TTL=${TTL:-10}
-(sleep 5; echo "$Q1, $TTL"; sleep $((TTL + 2)); echo "$Q3, $TTL"; sleep $((TTL + 2)); echo exit) |
-  IDSS_CLIENT_RESULTS_DIR="$RUN/res" timeout $((3 * TTL + 30)) "$RUN/idss_client" -s "$SEED" -role observer -expected "$DATA/manifest.json" 2>&1 |
+{
+  sleep 5
+  for q in "${QIDS[@]}"; do echo "${QTEXT[$q]}, $TTL"; sleep $((TTL + 2)); done
+  echo exit
+} | IDSS_CLIENT_RESULTS_DIR="$RUN/res" timeout $((${#QIDS[@]} * (TTL + 2) + 30)) \
+    "$RUN/idss_client" -s "$SEED" -role observer -expected "$DATA/manifest.json" 2>&1 |
   grep -E "Got|Partitions|Time spent|rror" || true
 
 mapfile -t RES < <(ls -tr "$RUN"/res/*.json)
+if [[ ${#RES[@]} -ne ${#QIDS[@]} ]]; then
+  echo "expected ${#QIDS[@]} results, got ${#RES[@]}"; exit 1
+fi
+declare -A FILE
+for i in "${!QIDS[@]}"; do FILE[${QIDS[$i]}]=${RES[$i]}; done
 status=0
 ALLOW=""; [[ -n "${KILL:-}" ]] && ALLOW="--allow-missing"
-python3 "$REPO/experiments/gp/check_ground_truth.py" "$DATA/ground_truth.json" Q1 "${RES[0]}" $ALLOW || status=1
-python3 "$REPO/experiments/gp/check_ground_truth.py" "$DATA/ground_truth.json" Q3 "${RES[1]}" $ALLOW || status=1
+CHECK="python3 $REPO/experiments/gp/check_ground_truth.py $DATA/ground_truth.json"
+for q in Q1 Q3 Q5 Q6; do $CHECK $q "${FILE[$q]}" $ALLOW || status=1; done
+if [[ -z "${KILL:-}" ]]; then
+  $CHECK Q4 "${FILE[Q4n]}" "${FILE[Q4d]}" || status=1
+else
+  echo "Q4: skipped under peer loss (rates need every partition)"
+fi
 echo "Run directory (logs, results): $RUN"
 exit $status

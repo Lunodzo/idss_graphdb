@@ -60,12 +60,21 @@ be produced over data that **stay with each DSO**, under **owner-defined sharing
   Each peer returns one `PartitionPartial` (field 19) tagged with its `-partition` label; entries are
   unioned by partition and folded only at the originator. The client prints the manifest
   ("answered 8/8") and stores it in the result JSON.
+- **Join queries (Q5, Q6)** (`gpjoin/`):
+  `@join(type=digging|weather; window=<days>; cols=<failureDay,geometry...>) @group(...) <EQL>`.
+  Phase 1: the originator collects the public events with an internal grouped query. Phase 2: the
+  events travel in `QueryMessage.join_events` (field 20) and each peer filters its own rows locally;
+  join columns may not be group keys or aggregates (`gpjoin.CheckNoGeometryLeak`), so geometry and
+  failure days never leave a DSO peer. Predicates are identical to the generator's ground truth.
+- **Q4 failure rate** = numerator `@group(keys=0,decade(1); aggs=count)` over failures by insulation and
+  installation decade, divided (in the checker/report) by the denominator
+  `@group(keys=0,decade(1); aggs=exposure(2,1,2013,2023)) get ACLineSegment ...` (km-years).
 - **Storage**: GP peers use EliasDB memory storage by default (`-storage disk|memory`); disk storage
   spends most of its load time in EliasDB's full-text index (49 s vs 5 s for 6.3k nodes).
 - **Expected partitions**: `idss_client -expected <manifest.json | dso01,dso02,...>` adds any partition
   that never reported to the manifest as `UNREACHABLE (not reached)`.
-- **Live check**: `experiments/gp/run_local.sh <datadir>` starts one peer per partition, runs Q1 and
-  Q3 and compares them with `ground_truth.json` (`experiments/gp/check_ground_truth.py`).
+- **Live check**: `experiments/gp/run_local.sh <datadir>` starts one peer per partition, runs Q1, Q3,
+  Q4, Q5 and Q6 and compares them with `ground_truth.json` (`experiments/gp/check_ground_truth.py`).
   `KILL="dso04"` stops partitions before querying (peer-loss test; checked against the ground truth
   without the lost DSOs).
 - In the interactive client, the TTL is the number after the **last** comma (`<query>, 10`).

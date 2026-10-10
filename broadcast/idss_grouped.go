@@ -23,6 +23,7 @@ import (
 	"idss/graphdb/access"
 	"idss/graphdb/common"
 	"idss/graphdb/flags"
+	"idss/graphdb/gpjoin"
 	"idss/graphdb/groupagg"
 	"idss/graphdb/helpers"
 
@@ -56,7 +57,10 @@ func isEmptyResultError(err error) bool {
 
 // LocalGroupedEntry runs the EQL part of a grouped query on this peer and
 // returns its partition entry together with the local result header.
-func LocalGroupedEntry(spec groupagg.Spec, eqlQuery string, decision access.Decision, partition string, self peer.ID, gm *graph.Manager) (*common.PartitionPartial, []string) {
+//
+// keep, when not nil, filters the local rows before grouping (used by @join
+// queries to keep only rows matching the shipped public events).
+func LocalGroupedEntry(spec groupagg.Spec, eqlQuery string, decision access.Decision, partition string, self peer.ID, gm *graph.Manager, keep func([][]interface{}) ([][]interface{}, error)) (*common.PartitionPartial, []string) {
 	entry := &common.PartitionPartial{PartitionId: partition, PeerId: self.String()}
 	if decision == access.Deny {
 		entry.Status = common.PartitionPartial_DENIED
@@ -68,6 +72,13 @@ func LocalGroupedEntry(spec groupagg.Spec, eqlQuery string, decision access.Deci
 		entry.Status = common.PartitionPartial_ERROR
 		entry.Detail = err.Error()
 		return entry, nil
+	}
+	if keep != nil && len(rows) > 0 {
+		if rows, err = keep(rows); err != nil {
+			entry.Status = common.PartitionPartial_ERROR
+			entry.Detail = err.Error()
+			return entry, header
+		}
 	}
 	partials, err := groupagg.Local(spec, rows)
 	if err != nil {
@@ -161,12 +172,58 @@ func ManifestSummary(entries []*common.PartitionPartial) string {
 func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT, decision access.Decision) {
 	start := time.Now()
 	self := kadDHT.Host().ID()
-	spec, eqlQuery, err := groupagg.Parse(msg.Query)
+	fail := func(err error) { helpers.SendErrorMessage(conn, conn.Conn().RemotePeer(), err.Error()) }
+
+	groupQuery := msg.Query
+	var join *gpjoin.Spec
+	if gpjoin.IsJoin(msg.Query) {
+		js, rest, err := gpjoin.Parse(msg.Query)
+		if err != nil {
+			fail(err)
+			return
+		}
+		join, groupQuery = &js, rest
+	}
+	spec, eqlQuery, err := groupagg.Parse(groupQuery)
 	if err != nil {
-		helpers.SendErrorMessage(conn, conn.Conn().RemotePeer(), err.Error())
+		fail(err)
 		return
 	}
+	if join != nil {
+		if err := gpjoin.CheckNoGeometryLeak(*join, spec); err != nil {
+			fail(err)
+			return
+		}
+	}
 	partition := PartitionLabel(config, self)
+	myAddr := kadDHT.Host().Addrs()[0].Encapsulate(multiaddr.StringCast("/p2p/" + self.String())).String()
+	isOriginator := msg.Originator == myAddr
+
+	// @join phase 1 (originator only): collect the public events, which are
+	// then shipped with the query so every peer joins locally.
+	var keep func([][]interface{}) ([][]interface{}, error)
+	if join != nil {
+		if isOriginator && len(msg.JoinEvents) == 0 {
+			p1 := time.Now()
+			events, err := collectJoinEvents(msg, join.Type, config, gm, kadDHT)
+			if err != nil {
+				fail(fmt.Errorf("join phase 1: %v", err))
+				return
+			}
+			msg.JoinEvents = events
+			logger.Infof("Join %s phase 1: %d %s events in %v", msg.Uqid, len(events), join.Type, time.Since(p1))
+		}
+		rows := make([][]string, len(msg.JoinEvents))
+		for i, r := range msg.JoinEvents {
+			rows[i] = r.Data
+		}
+		events, err := gpjoin.ParseEvents(join.Type, rows)
+		if err != nil {
+			fail(err)
+			return
+		}
+		keep = gpjoin.NewMatcher(*join, events).Filter
+	}
 
 	var wg sync.WaitGroup
 	var local *common.PartitionPartial
@@ -174,7 +231,7 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		local, header = LocalGroupedEntry(spec, eqlQuery, decision, partition, self, gm)
+		local, header = LocalGroupedEntry(spec, eqlQuery, decision, partition, self, gm, keep)
 	}()
 	remote, respondingPeers := forwardGrouped(msg, conn, config, gm, kadDHT)
 	wg.Wait()
@@ -183,8 +240,7 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 	entries := UnionEntries([]*common.PartitionPartial{local}, remote)
 	respondingPeers = append([]string{self.String()}, respondingPeers...)
 
-	myAddr := kadDHT.Host().Addrs()[0].Encapsulate(multiaddr.StringCast("/p2p/" + self.String())).String()
-	if msg.Originator != myAddr {
+	if !isOriginator {
 		reply := &common.QueryMessage{
 			Type:              common.MessageType_RESULT,
 			RecordCount:       int32(len(entries)),
@@ -197,7 +253,7 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 
 	merged, err := FoldEntries(spec, entries)
 	if err != nil {
-		helpers.SendErrorMessage(conn, conn.Conn().RemotePeer(), err.Error())
+		fail(err)
 		return
 	}
 	outHeader, rows := groupagg.Finalise(spec, header, merged)
@@ -224,6 +280,52 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 		PartitionPartials: manifest,
 	}
 	sendGroupedReply(conn, reply)
+}
+
+// collectJoinEvents runs the phase-1 grouped query for a join type (every
+// distinct public event is one group) over the overlay and returns the event
+// rows. Phase 1 uses at most 40 % of the remaining query time.
+func collectJoinEvents(msg *common.QueryMessage, joinType string, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) ([]*common.Row, error) {
+	query, err := gpjoin.EventQuery(joinType)
+	if err != nil {
+		return nil, err
+	}
+	spec, eqlQuery, err := groupagg.Parse(query)
+	if err != nil {
+		return nil, err
+	}
+	budget := time.Duration(float64(remainingQueryTime(msg)) * 0.4)
+	if budget <= 0 {
+		return nil, fmt.Errorf("no time left for phase 1")
+	}
+	self := kadDHT.Host().ID()
+	p1 := &common.QueryMessage{
+		Type:          common.MessageType_QUERY,
+		Query:         query,
+		Uqid:          msg.Uqid + "-events",
+		Ttl:           float32(budget.Seconds()),
+		Timestamp:     time.Now().Add(budget).UTC().Format(time.RFC3339Nano),
+		Originator:    msg.Originator,
+		Sender:        self.String(),
+		RequesterId:   msg.RequesterId,
+		RequesterRole: msg.RequesterRole,
+		State:         &common.QueryState{State: common.QueryState_QUEUED},
+	}
+	StoreQueryInfo(p1, gm, self.String())
+	local, _ := LocalGroupedEntry(spec, eqlQuery, access.Allow, PartitionLabel(config, self), self, gm, nil)
+	remote, _ := forwardGrouped(p1, nil, config, gm, kadDHT)
+	entries := UnionEntries([]*common.PartitionPartial{local}, remote)
+	logger.Infof("Join phase 1 partitions: %s", ManifestSummary(entries))
+	merged, err := FoldEntries(spec, entries)
+	if err != nil {
+		return nil, err
+	}
+	_, rows := groupagg.Finalise(spec, nil, merged)
+	out := make([]*common.Row, len(rows))
+	for i, r := range rows {
+		out[i] = &common.Row{Data: r[:len(spec.Keys)]} // key cells = the event; drop the count
+	}
+	return out, nil
 }
 
 func sendGroupedReply(conn network.Stream, reply *common.QueryMessage) {

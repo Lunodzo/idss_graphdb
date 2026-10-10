@@ -35,6 +35,7 @@ import (
 	"idss/graphdb/broadcast"
 	"idss/graphdb/common"
 	"idss/graphdb/flags"
+	"idss/graphdb/gpjoin"
 	"idss/graphdb/groupagg"
 	"idss/graphdb/helpers"
 	"idss/graphdb/kaddht"
@@ -571,7 +572,7 @@ func handleCustomerRegistration(msg *common.QueryMessage, config flags.Config, g
 func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID string, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT, host host.Host, accessPolicy *access.Policy) {
 	startTime := time.Now()
 	queryType := "distributed"
-	if groupagg.IsGrouped(msg.Query) {
+	if groupagg.IsGrouped(msg.Query) || gpjoin.IsJoin(msg.Query) {
 		queryType = "grouped"
 	} else if strings.Contains(msg.Query, "@sum(") || strings.Contains(msg.Query, "@avg(") || strings.Contains(msg.Query, "@min(") || strings.Contains(msg.Query, "@max(") {
 		queryType = "aggregate"
@@ -640,7 +641,7 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	// local-query check below, whose substring tests ("add", "-l", ...) could
 	// match inside an EQL query. A denied partition still forwards the query
 	// and reports itself as DENIED in the manifest.
-	if groupagg.IsGrouped(queryTrimmed) {
+	if groupagg.IsGrouped(queryTrimmed) || gpjoin.IsJoin(queryTrimmed) {
 		broadcast.HandleGroupedQuery(conn, msg, config, gm, kadDHT, decision)
 		return
 	}

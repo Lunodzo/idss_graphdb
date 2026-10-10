@@ -219,6 +219,7 @@ type QueryMessage struct {
 	RespondingPeerIds    []string               `protobuf:"bytes,18,rep,name=responding_peer_ids,json=respondingPeerIds,proto3" json:"responding_peer_ids,omitempty"`        // List of peer IDs that have responded to the query
 	// Green Power use case (fields from 19 upwards)
 	PartitionPartials []*PartitionPartial `protobuf:"bytes,19,rep,name=partition_partials,json=partitionPartials,proto3" json:"partition_partials,omitempty"` // Grouped partials and status, one entry per data partition
+	JoinEvents        []*Row              `protobuf:"bytes,20,rep,name=join_events,json=joinEvents,proto3" json:"join_events,omitempty"`                      // @join queries: public events (phase 1) shipped to every peer for the local join
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -382,6 +383,13 @@ func (x *QueryMessage) GetRespondingPeerIds() []string {
 func (x *QueryMessage) GetPartitionPartials() []*PartitionPartial {
 	if x != nil {
 		return x.PartitionPartials
+	}
+	return nil
+}
+
+func (x *QueryMessage) GetJoinEvents() []*Row {
+	if x != nil {
+		return x.JoinEvents
 	}
 	return nil
 }
@@ -786,7 +794,7 @@ var File_idssschema_proto protoreflect.FileDescriptor
 
 const file_idssschema_proto_rawDesc = "" +
 	"\n" +
-	"\x10idssschema.proto\x12\x06common\"\x90\x06\n" +
+	"\x10idssschema.proto\x12\x06common\"\xbe\x06\n" +
 	"\fQueryMessage\x12'\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x13.common.MessageTypeR\x04type\x12\x14\n" +
 	"\x05query\x18\x02 \x01(\tR\x05query\x12\x12\n" +
@@ -809,7 +817,9 @@ const file_idssschema_proto_rawDesc = "" +
 	"\x12settlement_request\x18\x10 \x01(\v2\x19.common.SettlementRequestR\x11settlementRequest\x12E\n" +
 	"\x11settlement_result\x18\x11 \x01(\v2\x18.common.SettlementResultR\x10settlementResult\x12.\n" +
 	"\x13responding_peer_ids\x18\x12 \x03(\tR\x11respondingPeerIds\x12G\n" +
-	"\x12partition_partials\x18\x13 \x03(\v2\x18.common.PartitionPartialR\x11partitionPartials\"\x95\x02\n" +
+	"\x12partition_partials\x18\x13 \x03(\v2\x18.common.PartitionPartialR\x11partitionPartials\x12,\n" +
+	"\vjoin_events\x18\x14 \x03(\v2\v.common.RowR\n" +
+	"joinEvents\"\x95\x02\n" +
 	"\x10PartitionPartial\x12!\n" +
 	"\fpartition_id\x18\x01 \x01(\tR\vpartitionId\x12\x17\n" +
 	"\apeer_id\x18\x02 \x01(\tR\x06peerId\x127\n" +
@@ -897,15 +907,16 @@ var file_idssschema_proto_depIdxs = []int32{
 	6,  // 4: common.QueryMessage.settlement_request:type_name -> common.SettlementRequest
 	7,  // 5: common.QueryMessage.settlement_result:type_name -> common.SettlementResult
 	4,  // 6: common.QueryMessage.partition_partials:type_name -> common.PartitionPartial
-	1,  // 7: common.PartitionPartial.status:type_name -> common.PartitionPartial.Status
-	9,  // 8: common.PartitionPartial.partials:type_name -> common.Row
-	2,  // 9: common.QueryState.state:type_name -> common.QueryState.State
-	9,  // 10: common.QueryState.result:type_name -> common.Row
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	9,  // 7: common.QueryMessage.join_events:type_name -> common.Row
+	1,  // 8: common.PartitionPartial.status:type_name -> common.PartitionPartial.Status
+	9,  // 9: common.PartitionPartial.partials:type_name -> common.Row
+	2,  // 10: common.QueryState.state:type_name -> common.QueryState.State
+	9,  // 11: common.QueryState.result:type_name -> common.Row
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_idssschema_proto_init() }
