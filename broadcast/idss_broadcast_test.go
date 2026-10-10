@@ -50,7 +50,7 @@ func TestSelectForwardPeersAdaptsToBudget(t *testing.T) {
 		budget time.Duration
 		want   int
 	}{
-		{500 * time.Millisecond, 20},
+		{500 * time.Millisecond, 30}, // limit for budgets <= 750 ms (selectForwardPeers)
 		{1 * time.Second, 40},
 		{2 * time.Second, 40},
 		{5 * time.Second, maxForwardPeers},
