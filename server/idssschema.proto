@@ -41,6 +41,26 @@ message QueryMessage {
     SettlementRequest settlement_request = 16; // The settlement request details
     SettlementResult settlement_result = 17; // The result of the settlement request
     repeated string responding_peer_ids = 18; // List of peer IDs that have responded to the query
+    // Green Power use case (fields from 19 upwards)
+    repeated PartitionPartial partition_partials = 19; // Grouped partials and status, one entry per data partition
+}
+
+// PartitionPartial carries one data partition's contribution to a grouped
+// (@group) query, tagged by partition so that every partition is counted
+// exactly once, plus its status for the completeness manifest.
+message PartitionPartial {
+    enum Status {
+        ANSWERED = 0;     // partials present (possibly zero groups)
+        DENIED = 1;       // the partition's policy refused the request
+        TIMEOUT = 2;      // no reply before the deadline
+        UNREACHABLE = 3;  // stream could not be opened, or partition never reached
+        ERROR = 4;        // local execution or decoding failed
+    }
+    string partition_id = 1;   // data partition label (e.g. dso01, public_weather)
+    string peer_id = 2;        // libp2p peer ID hosting the partition
+    Status status = 3;
+    string detail = 4;         // reason for a non-ANSWERED status
+    repeated Row partials = 5; // groupagg.Encode rows: key cells followed by value slots
 }
 
 message CustomerRegistration {

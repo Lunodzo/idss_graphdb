@@ -50,6 +50,16 @@ be produced over data that **stay with each DSO**, under **owner-defined sharing
 6. **No silent partial results.** Every distributed result carries a manifest:
    partitions answered / denied-by-policy / timed-out / unreachable.
 
+## Implemented Green Power features
+- **Grouped queries** (`groupagg/`, `broadcast/idss_grouped.go`):
+  `@group(keys=<i|decade(i)>,...; aggs=count|sum(i)|min(i)|max(i)|avg(i)|exposure(li,yi,from,to)) <EQL with show>`.
+  Each peer returns one `PartitionPartial` (field 19) tagged with its `-partition` label; entries are
+  unioned by partition and folded only at the originator. The client prints the manifest
+  ("answered 8/8") and stores it in the result JSON.
+- **Live check**: `experiments/gp/run_local.sh <datadir>` starts one peer per partition, runs Q1 and
+  Q3 and compares them with `ground_truth.json` (`experiments/gp/check_ground_truth.py`).
+- In the interactive client, the TTL is the number after the **last** comma (`<query>, 10`).
+
 ## Data model (EliasDB import format)
 Nodes: `{"kind", "key", "mRID", ...attributes}`. Edges: `{"key","kind","end1key","end1kind",
 "end1role","end1cascading","end2key","end2kind","end2role","end2cascading"}`.

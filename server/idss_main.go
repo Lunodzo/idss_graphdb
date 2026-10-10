@@ -35,6 +35,7 @@ import (
 	"idss/graphdb/broadcast"
 	"idss/graphdb/common"
 	"idss/graphdb/flags"
+	"idss/graphdb/groupagg"
 	"idss/graphdb/helpers"
 	"idss/graphdb/kaddht"
 	"io"
@@ -529,7 +530,9 @@ func handleCustomerRegistration(msg *common.QueryMessage, config flags.Config, g
 func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID string, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT, host host.Host, accessPolicy *access.Policy) {
 	startTime := time.Now()
 	queryType := "distributed"
-	if strings.Contains(msg.Query, "@sum(") || strings.Contains(msg.Query, "@avg(") || strings.Contains(msg.Query, "@min(") || strings.Contains(msg.Query, "@max(") {
+	if groupagg.IsGrouped(msg.Query) {
+		queryType = "grouped"
+	} else if strings.Contains(msg.Query, "@sum(") || strings.Contains(msg.Query, "@avg(") || strings.Contains(msg.Query, "@min(") || strings.Contains(msg.Query, "@max(") {
 		queryType = "aggregate"
 	} else if strings.Contains(strings.ToLower(msg.Query), "-l") {
 		queryType = "local"
@@ -589,6 +592,15 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	logger.Infof("timing uqi=%s step=store_query ms=%.1f", msg.Uqid, time.Since(storeStart).Seconds()*1000) // Store the query info in the graph database
 	if strings.HasPrefix(queryLower, "settle ") || strings.HasPrefix(queryLower, "settle-unscoped ") {
 		handleSettlementCommand(conn, msg, remotePeerID, config, gm, kadDHT)
+		return
+	}
+
+	// Green Power use case: grouped, decomposable aggregates. Routed before the
+	// local-query check below, whose substring tests ("add", "-l", ...) could
+	// match inside an EQL query. A denied partition still forwards the query
+	// and reports itself as DENIED in the manifest.
+	if groupagg.IsGrouped(queryTrimmed) {
+		broadcast.HandleGroupedQuery(conn, msg, config, gm, kadDHT, decision)
 		return
 	}
 

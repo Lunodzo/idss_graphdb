@@ -73,9 +73,53 @@ type Result struct {
 }
 
 type QueryResponse struct {
-	ResultCount int        `json:"resultCount"`
-	Header      []string   `json:"header,omitempty"`
-	Rows        [][]string `json:"rows"`
+	ResultCount int             `json:"resultCount"`
+	Header      []string        `json:"header,omitempty"`
+	Rows        [][]string      `json:"rows"`
+	Manifest    []ManifestEntry `json:"manifest,omitempty"`
+}
+
+// ManifestEntry is one data partition's status for a grouped (@group) query.
+type ManifestEntry struct {
+	Partition string `json:"partition"`
+	Peer      string `json:"peer"`
+	Status    string `json:"status"`
+	Detail    string `json:"detail,omitempty"`
+}
+
+// splitQueryAndTTL separates an optional trailing ",<ttl>" from the query. Only
+// the last comma is considered, and only when what follows is a number, so
+// queries containing commas (show clauses, @group(keys=0,1; ...)) stay intact.
+func splitQueryAndTTL(input string) (string, float64, error) {
+	input = strings.TrimSpace(input)
+	if i := strings.LastIndex(input, ","); i >= 0 {
+		tail := strings.TrimSpace(input[i+1:])
+		if ttl, err := strconv.ParseFloat(tail, 64); err == nil {
+			if ttl <= 0 {
+				return "", 0, fmt.Errorf("TTL must be positive, got %v", ttl)
+			}
+			return strings.TrimSpace(input[:i]), ttl, nil
+		}
+	}
+	return input, 1, nil // default TTL
+}
+
+func manifestSummary(m []ManifestEntry) string {
+	byStatus := map[string][]string{}
+	for _, e := range m {
+		byStatus[e.Status] = append(byStatus[e.Status], e.Partition)
+	}
+	missing := []string{}
+	for _, st := range []string{"DENIED", "TIMEOUT", "UNREACHABLE", "ERROR"} {
+		if ids := byStatus[st]; len(ids) > 0 {
+			missing = append(missing, fmt.Sprintf("%s %v", strings.ToLower(st), ids))
+		}
+	}
+	s := fmt.Sprintf("answered %d/%d", len(byStatus["ANSWERED"]), len(m))
+	if len(missing) > 0 {
+		s += "; " + strings.Join(missing, "; ")
+	}
+	return s
 }
 
 func main() {
@@ -182,16 +226,10 @@ func main() {
 		}
 
 		// Split the input into query and TTL
-		parts := strings.Split(input, ",")
-		query := strings.TrimSpace(parts[0])
-		var ttl float64 = 1 // Default TTL
-		if len(parts) >= 2 {
-			ttlStr := strings.TrimSpace(parts[1])
-			ttl, err = strconv.ParseFloat(ttlStr, 64)
-			if err != nil {
-				log.Error("Invalid TTL value:", err)
-				continue
-			}
+		query, ttl, err := splitQueryAndTTL(input)
+		if err != nil {
+			log.Error("Invalid TTL value:", err)
+			continue
 		}
 
 		// Define UQI
@@ -242,6 +280,7 @@ func main() {
 		var errorMsg string
 		var respondingPeerCount int
 		var totalWireBytes int
+		var manifest []ManifestEntry
 
 		for {
 			responseBytes, wireSize, err := readDelimitedMessage(stream)
@@ -266,11 +305,17 @@ func main() {
 				errorMsg = part.Error // Capture error for FAILED state
 				break
 			}
+			for _, e := range part.PartitionPartials {
+				manifest = append(manifest, ManifestEntry{Partition: e.PartitionId, Peer: e.PeerId, Status: e.Status.String(), Detail: e.Detail})
+			}
 			if len(part.RespondingPeerIds) > respondingPeerCount {
 				respondingPeerCount = len(part.RespondingPeerIds)
 			}
 
 			// Accumulate rows, extract header from first chunk if present
+			if len(header) == 0 && len(part.Labels) > 0 {
+				header = part.Labels // grouped (@group) results carry their column names here
+			}
 			for _, row := range part.Result {
 				data := row.Data
 				if len(header) == 0 && isHeaderRow(data) { // Assume first non-empty is header
@@ -299,9 +344,12 @@ func main() {
 			log.Infof("Responding peers: %d", respondingPeerCount)
 			log.Infof("Wire bytes received: %d", totalWireBytes)
 			log.Infof("Time spent: %s", timeTaken)
+			if len(manifest) > 0 {
+				log.Infof("Partitions: %s", manifestSummary(manifest))
+			}
 
 			// Check if it's a status message or query result
-			queryResponse := QueryResponse{ResultCount: dataNonHeaders, Header: header, Rows: allRows}
+			queryResponse := QueryResponse{ResultCount: dataNonHeaders, Header: header, Rows: allRows, Manifest: manifest}
 			isStatus := len(allRows) == 1 && allRows[0][0] == "Status" // Adjusted for accumulated rows
 
 			if isStatus {
