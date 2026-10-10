@@ -1,0 +1,5 @@
+
+# Green Power use case: generated data and profiles
+data/
+heap_*.pprof
+results/
