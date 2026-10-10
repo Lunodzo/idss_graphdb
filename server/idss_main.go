@@ -625,6 +625,7 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	if config.UseCase == "gp" && msg.RequesterId != kadDHT.Host().ID().String() {
 		// Green Power: the requester must be verified, and its role comes from
 		// this peer's policy (requesters map), never from the message.
+		accessStart := time.Now()
 		if err := identity.Verify(msg); err != nil {
 			decision = access.Deny
 			denyReason = "unverified requester: " + err.Error()
@@ -642,6 +643,8 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 			}
 			logger.Infof("Access decision for requester %s (role %s), kinds %v: %s", msg.RequesterId, role, kinds, decision)
 		}
+		// Signature check + policy evaluation, reported as access-control overhead.
+		logger.Infof("timing uqi=%s step=gp_access ms=%.3f", msg.Uqid, time.Since(accessStart).Seconds()*1000)
 		common.PolicyDecisionTotal.WithLabelValues(decision.String()).Inc()
 	} else if !isDataModification(queryLower) && msg.RequesterId != kadDHT.Host().ID().String() {
 		kinds := helpers.ExtractQueryKinds(msg.Query)

@@ -13,6 +13,9 @@
 # SCENARIO=S1_coordinator_only|S2_mixed applies per-partition policies from
 # experiments/gp/policies/<scenario>/; REQUESTER=coordinator|researcher|anonymous
 # selects the signed identity the client queries with (default coordinator).
+# Metrics: WARMUP=<n> REPEATS=<n> rounds of all queries; OUT_CSV=<file> appends
+# one row per query execution (experiments/gp/collect_metrics.py); TAGS="k=v ..."
+# adds columns; KEEP_RUN=0 deletes the run directory afterwards.
 set -euo pipefail
 DATA=$(readlink -f "${1:?datadir}")
 SETTLE=${2:-10}
@@ -86,41 +89,36 @@ for name in ${KILL:-}; do
 done
 [[ -n "${KILL:-}" ]] && sleep 2
 
-# Report queries (see .github/copilot-instructions.md). Q4 = Q4n / Q4d.
-TRAV="traverse failure:AFFECTS:asset:ACLineSegment traverse segment:CONTAINS:container:AssetContainer traverse asset:OWNS:owner:Organisation end end end"
-declare -a QIDS=(Q1 Q3 Q4n Q4d Q5 Q6)
-declare -A QTEXT=(
-  [Q1]="@group(keys=0; aggs=count) get FailureEvent show failureYear"
-  [Q3]="@group(keys=0,1; aggs=count) get FailureEvent $TRAV show 4:n:name, 1:n:faultCause"
-  [Q4n]="@group(keys=0,decade(1); aggs=count) get FailureEvent traverse failure:AFFECTS:asset:ACLineSegment end show 2:n:insulation, 2:n:inServiceYear"
-  [Q4d]="@group(keys=0,decade(1); aggs=exposure(2,1,2013,2023)) get ACLineSegment show insulation, inServiceYear, lengthKm"
-  [Q5]="@join(type=digging; window=30; cols=1,2,3,4,5) @group(keys=0; aggs=count) get FailureEvent $TRAV show 4:n:name, 1:n:failureDay, 2:n:minLat, 2:n:maxLat, 2:n:minLon, 2:n:maxLon"
-  [Q6]="@join(type=weather; window=3; cols=1,2,3) @group(keys=0; aggs=count) get FailureEvent $TRAV show 4:n:name, 1:n:failureDay, 2:n:lat, 2:n:lon"
-)
+# Report queries from experiments/gp/queries.tsv (Q4 = Q4n / Q4d). The client
+# runs them one after another; WARMUP rounds (default 0) are run first and
+# reported as round 0, then REPEATS rounds (default 1).
+QFILE=${QUERIES:-$REPO/experiments/gp/queries.tsv}
+mapfile -t QLINES < <(grep -v '^#' "$QFILE" | grep -F $'\t' | cut -f2-)
+WARMUP=${WARMUP:-0}; REPEATS=${REPEATS:-1}
+ROUNDS=$((WARMUP + REPEATS)); NQ=$((${#QLINES[@]} * ROUNDS))
 TTL=${TTL:-10}
 {
-  sleep 5
-  for q in "${QIDS[@]}"; do echo "${QTEXT[$q]}, $TTL"; sleep $((TTL + 2)); done
+  sleep 2
+  for _ in $(seq 1 "$ROUNDS"); do for q in "${QLINES[@]}"; do echo "$q, $TTL"; done; done
   echo exit
-} | IDSS_CLIENT_RESULTS_DIR="$RUN/res" timeout $((${#QIDS[@]} * (TTL + 2) + 30)) \
-    "$RUN/idss_client" -s "$SEED" -key "$RUN/$REQUESTER.key" -expected "$DATA/manifest.json" 2>&1 |
-  grep -E "Got|Partitions|Time spent|rror" || true
+} | IDSS_CLIENT_RESULTS_DIR="$RUN/res" timeout $((NQ * (TTL + 2) + 30)) \
+    "$RUN/idss_client" -s "$SEED" -key "$RUN/$REQUESTER.key" -expected "$DATA/manifest.json" > "$RUN/client.log" 2>&1 || true
+grep -E "Got|Partitions|Time spent|rror" "$RUN/client.log" | tail -n $((3 * ${#QLINES[@]})) || true
 
-mapfile -t RES < <(ls -tr "$RUN"/res/*.json)
-if [[ ${#RES[@]} -ne ${#QIDS[@]} ]]; then
-  echo "expected ${#QIDS[@]} results, got ${#RES[@]}"; exit 1
-fi
-declare -A FILE
-for i in "${!QIDS[@]}"; do FILE[${QIDS[$i]}]=${RES[$i]}; done
+NRES=$(ls "$RUN"/res/*.json 2>/dev/null | wc -l)
+[[ "$NRES" -eq "$NQ" ]] || echo "WARNING: expected $NQ results, got $NRES (see $RUN/client.log)"
+ALLOW=""; [[ -n "${KILL:-}${SCENARIO:-}" || "${IDSS_MAX_FORWARD}" != "0" ]] && ALLOW="--allow-missing"
+TAGARGS=(--tag "dataset=$(basename "$DATA")" --tag "peers=${#NAMES[@]}" --tag "scenario=${SCENARIO:-default}"
+         --tag "requester=$REQUESTER" --tag "kill=${KILL:-}" --tag "max_forward=$IDSS_MAX_FORWARD" --tag "ttl=$TTL")
+for t in ${TAGS:-}; do TAGARGS+=(--tag "$t"); done   # e.g. TAGS="exp=E1 scale=0.1"
 status=0
-ALLOW=""; [[ -n "${KILL:-}${SCENARIO:-}" ]] && ALLOW="--allow-missing"
-CHECK="python3 $REPO/experiments/gp/check_ground_truth.py $DATA/ground_truth.json"
-for q in Q1 Q3 Q5 Q6; do $CHECK $q "${FILE[$q]}" $ALLOW || status=1; done
-$CHECK Q4 "${FILE[Q4n]}" "${FILE[Q4d]}" $ALLOW || status=1
-for q in "${QIDS[@]}"; do   # partitions that did not answer, with reasons
+python3 "$REPO/experiments/gp/collect_metrics.py" --run "$RUN" --data "$DATA" --queries "$QFILE" \
+  ${OUT_CSV:+--csv "$OUT_CSV"} "${TAGARGS[@]}" $ALLOW || status=1
+for f in "$RUN"/res/*.json; do   # partitions that did not answer (last round only), with reasons
   python3 -c "import json,sys; d=json.load(open(sys.argv[1]))
-for m in d.get('manifest', []):
-    if m['status'] != 'ANSWERED': print(f\"  {sys.argv[2]}: {m['partition']} {m['status']} ({m.get('detail', '')})\")" "${FILE[$q]}" "$q"
-done
+for m in d.get('manifest') or []:
+    if m['status'] != 'ANSWERED': print(f\"  {d['query'][:40]}...: {m['partition']} {m['status']} ({m.get('detail', '')})\")" "$f"
+done | sort | uniq -c | sort -rn | head -n 20
 echo "Run directory (logs, results): $RUN"
+[[ "${KEEP_RUN:-1}" == "1" ]] || rm -rf "$RUN"
 exit $status

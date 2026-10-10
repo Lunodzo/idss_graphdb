@@ -1,0 +1,8 @@
+# Green Power report queries: <id><TAB><query>. Used by run_local.sh, run_matrix.sh and tools/baseline.
+# Q4 is the rate 100 * Q4n / Q4d (failures / km-years, 2013-2023) per insulation and installation decade.
+Q1	@group(keys=0; aggs=count) get FailureEvent show failureYear
+Q3	@group(keys=0,1; aggs=count) get FailureEvent traverse failure:AFFECTS:asset:ACLineSegment traverse segment:CONTAINS:container:AssetContainer traverse asset:OWNS:owner:Organisation end end end show 4:n:name, 1:n:faultCause
+Q4n	@group(keys=0,decade(1); aggs=count) get FailureEvent traverse failure:AFFECTS:asset:ACLineSegment end show 2:n:insulation, 2:n:inServiceYear
+Q4d	@group(keys=0,decade(1); aggs=exposure(2,1,2013,2023)) get ACLineSegment show insulation, inServiceYear, lengthKm
+Q5	@join(type=digging; window=30; cols=1,2,3,4,5) @group(keys=0; aggs=count) get FailureEvent traverse failure:AFFECTS:asset:ACLineSegment traverse segment:CONTAINS:container:AssetContainer traverse asset:OWNS:owner:Organisation end end end show 4:n:name, 1:n:failureDay, 2:n:minLat, 2:n:maxLat, 2:n:minLon, 2:n:maxLon
+Q6	@join(type=weather; window=3; cols=1,2,3) @group(keys=0; aggs=count) get FailureEvent traverse failure:AFFECTS:asset:ACLineSegment traverse segment:CONTAINS:container:AssetContainer traverse asset:OWNS:owner:Organisation end end end show 4:n:name, 1:n:failureDay, 2:n:lat, 2:n:lon

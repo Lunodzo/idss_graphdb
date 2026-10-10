@@ -18,6 +18,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"idss/graphdb/access"
@@ -277,7 +278,9 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		t := time.Now()
 		local, header = LocalGroupedEntry(spec, eqlQuery, decision, denyReason, hidden, partition, self, gm, keep)
+		logStepTiming(msg.Uqid, "grouped_local", t)
 	}()
 	remote, respondingPeers := forwardGrouped(msg, conn, config, gm, kadDHT)
 	wg.Wait()
@@ -404,6 +407,7 @@ func forwardGrouped(msg *common.QueryMessage, parentStream network.Stream, confi
 	var entries []*common.PartitionPartial
 	responding := map[string]struct{}{}
 	slots := make(chan struct{}, maxConcurrentPeerQueries)
+	var traffic TrafficCounter
 
 	var eligible []peer.ID
 	for _, p := range kadDHT.RoutingTable().ListPeers() {
@@ -445,12 +449,14 @@ func forwardGrouped(msg *common.QueryMessage, parentStream network.Stream, confi
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), parentDuration)
 			defer cancel()
-			stream, err := kadDHT.Host().NewStream(ctx, p, protocol.ID(config.ProtocolID))
+			raw, err := kadDHT.Host().NewStream(ctx, p, protocol.ID(config.ProtocolID))
 			if err != nil {
 				fail(p, common.PartitionPartial_UNREACHABLE, err.Error())
 				return
 			}
-			defer stream.Close()
+			defer raw.Close()
+			atomic.AddInt64(&traffic.Streams, 1)
+			stream := &countedStream{Stream: raw, c: &traffic}
 			if err := helpers.WriteDelimitedMessage(stream, msgBytes); err != nil {
 				fail(p, common.PartitionPartial_UNREACHABLE, err.Error())
 				return
@@ -475,6 +481,9 @@ func forwardGrouped(msg *common.QueryMessage, parentStream network.Stream, confi
 			}
 			// A peer that had already claimed this query replies with no
 			// entries: it is not a failure, its data arrives via another parent.
+			if len(resp.PartitionPartials) == 0 && len(resp.RespondingPeerIds) == 0 {
+				atomic.AddInt64(&traffic.Duplicates, 1)
+			}
 			mu.Lock()
 			entries = append(entries, resp.PartitionPartials...)
 			for _, id := range resp.RespondingPeerIds {
@@ -484,5 +493,103 @@ func forwardGrouped(msg *common.QueryMessage, parentStream network.Stream, confi
 		}(p)
 	}
 	wg.Wait()
+	logger.Infof("%s", traffic.LogLine(msg.Uqid))
 	return entries, peerIDList(responding)
+}
+
+// TrafficCounter counts the application-level wire bytes (frames as sent,
+// after optional compression, including the length prefix) on the streams a
+// peer opens to forward one query. Every stream is counted by its opener only,
+// so summing the counters of all peers gives the overlay traffic of a query
+// without double counting. Client-to-entry traffic is measured by the client.
+type TrafficCounter struct {
+	Streams, Duplicates, BytesOut, BytesIn int64
+}
+
+// LogLine is the line parsed by experiments/gp/collect_metrics.py.
+func (t *TrafficCounter) LogLine(uqid string) string {
+	return fmt.Sprintf("gptraffic uqi=%s streams=%d dup=%d bytes_out=%d bytes_in=%d",
+		uqid, atomic.LoadInt64(&t.Streams), atomic.LoadInt64(&t.Duplicates),
+		atomic.LoadInt64(&t.BytesOut), atomic.LoadInt64(&t.BytesIn))
+}
+
+// countedStream wraps a stream and adds the bytes read and written to a
+// TrafficCounter. Embedding keeps SetReadDeadline and the other stream methods.
+type countedStream struct {
+	network.Stream
+	c *TrafficCounter
+}
+
+func (s *countedStream) Read(b []byte) (int, error) {
+	n, err := s.Stream.Read(b)
+	atomic.AddInt64(&s.c.BytesIn, int64(n))
+	return n, err
+}
+
+func (s *countedStream) Write(b []byte) (int, error) {
+	n, err := s.Stream.Write(b)
+	atomic.AddInt64(&s.c.BytesOut, int64(n))
+	return n, err
+}
+
+// RunGroupedOnGraph executes a @group or @join query entirely on one graph, with
+// the same parsing, join matching, partial aggregation and finalisation code as
+// the overlay. It is the central baseline (tools/baseline): all partitions in
+// one EliasDB instance, public events read from the same instance. It returns
+// the result header and rows and, for joins, the number of public events.
+func RunGroupedOnGraph(query string, gm *graph.Manager) ([]string, [][]string, int, error) {
+	groupQuery := query
+	var join *gpjoin.Spec
+	if gpjoin.IsJoin(query) {
+		js, rest, err := gpjoin.Parse(query)
+		if err != nil {
+			return nil, nil, 0, err
+		}
+		join, groupQuery = &js, rest
+	}
+	spec, eqlQuery, err := groupagg.Parse(groupQuery)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	var keep func([][]interface{}) ([][]interface{}, error)
+	nEvents := 0
+	if join != nil {
+		evQuery, err := gpjoin.EventQuery(join.Type)
+		if err != nil {
+			return nil, nil, 0, err
+		}
+		evSpec, evEQL, err := groupagg.Parse(evQuery)
+		if err != nil {
+			return nil, nil, 0, err
+		}
+		entry, _ := LocalGroupedEntry(evSpec, evEQL, access.Allow, "", nil, "baseline", "", gm, nil)
+		if entry.Status != common.PartitionPartial_ANSWERED {
+			return nil, nil, 0, fmt.Errorf("event query: %s", entry.Detail)
+		}
+		merged, err := FoldEntries(evSpec, []*common.PartitionPartial{entry})
+		if err != nil {
+			return nil, nil, 0, err
+		}
+		_, evRows := groupagg.Finalise(evSpec, nil, merged)
+		keys := make([][]string, len(evRows))
+		for i, r := range evRows {
+			keys[i] = r[:len(evSpec.Keys)]
+		}
+		events, err := gpjoin.ParseEvents(join.Type, keys)
+		if err != nil {
+			return nil, nil, 0, err
+		}
+		nEvents = len(events)
+		keep = gpjoin.NewMatcher(*join, events).Filter
+	}
+	entry, header := LocalGroupedEntry(spec, eqlQuery, access.Allow, "", nil, "baseline", "", gm, keep)
+	if entry.Status != common.PartitionPartial_ANSWERED {
+		return nil, nil, nEvents, fmt.Errorf("query: %s", entry.Detail)
+	}
+	merged, err := FoldEntries(spec, []*common.PartitionPartial{entry})
+	if err != nil {
+		return nil, nil, nEvents, err
+	}
+	outHeader, rows := groupagg.Finalise(spec, header, merged)
+	return outHeader, rows, nEvents, nil
 }

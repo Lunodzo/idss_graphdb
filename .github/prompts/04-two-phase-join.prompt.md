@@ -5,6 +5,8 @@ description: "Task 5 – two-phase join: ship public weather/digging events to D
 
 > **DONE (10 Oct 2026) – implemented by Claude; do not run.** See `gpjoin/`, `collectJoinEvents` in `broadcast/idss_grouped.go`, protobuf field 20 and Q5/Q6 in `experiments/gp/run_local.sh`. Kept for reference only.
 
+> **DONE (10 Oct 2026) – implemented by Claude; do not run.** Code in `gpjoin/` (not `spatial/`) and `broadcast/idss_grouped.go`; events travel in field 20 (`join_events`); geometry columns are listed with `cols=` and may not be group keys or aggregates. Kept for reference only.
+
 # Task 5: Two-phase join (public data moves to private data)
 
 Read `.github/copilot-instructions.md` first. Requires Tasks 6, 7 and 16.

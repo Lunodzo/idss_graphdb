@@ -7,6 +7,10 @@ import (
 
 	"idss/graphdb/common"
 	"idss/graphdb/groupagg"
+
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
 func entry(part, peerID string, status common.PartitionPartial_Status, rows ...[]string) *common.PartitionPartial {
@@ -111,3 +115,47 @@ func TestIsEmptyResultError(t *testing.T) {
 type errString string
 
 func (e errString) Error() string { return string(e) }
+
+func TestRunGroupedOnGraphCountsAndJoins(t *testing.T) {
+	gs := graphstorage.NewMemoryGraphStorage("t")
+	gm := graph.NewGraphManager(gs)
+	add := func(kind, key string, attrs map[string]interface{}) {
+		n := data.NewGraphNode()
+		n.SetAttr("kind", kind)
+		n.SetAttr("key", key)
+		for k, v := range attrs {
+			n.SetAttr(k, v)
+		}
+		if err := gm.StoreNode("main", n); err != nil {
+			t.Fatal(err)
+		}
+	}
+	add("FailureEvent", "f1", map[string]interface{}{"failureYear": "2020", "failureDay": "100"})
+	add("FailureEvent", "f2", map[string]interface{}{"failureYear": "2020", "failureDay": "200"})
+	add("FailureEvent", "f3", map[string]interface{}{"failureYear": "2021", "failureDay": "300"})
+
+	header, rows, events, err := RunGroupedOnGraph("@group(keys=0; aggs=count) get FailureEvent show failureYear", gm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]string{}
+	for _, r := range rows {
+		got[r[0]] = r[1]
+	}
+	if len(header) != 2 || events != 0 || got["2020"] != "2" || got["2021"] != "1" {
+		t.Fatalf("header %v rows %v events %d", header, rows, events)
+	}
+	// A join with no public events on the graph keeps no failures.
+	_, rows, events, err = RunGroupedOnGraph("@join(type=weather; window=3; cols=1,2,3) @group(keys=0; aggs=count) get FailureEvent show failureYear, failureDay, failureDay, failureDay", gm)
+	if err != nil || events != 0 || len(rows) != 0 {
+		t.Fatalf("join without events: rows %v events %d", rows, events)
+	}
+}
+
+func TestTrafficCounterLogLine(t *testing.T) {
+	c := TrafficCounter{Streams: 3, Duplicates: 1, BytesOut: 120, BytesIn: 4096}
+	want := "gptraffic uqi=q1 streams=3 dup=1 bytes_out=120 bytes_in=4096"
+	if got := c.LogLine("q1"); got != want {
+		t.Fatalf("got %q want %q", got, want)
+	}
+}

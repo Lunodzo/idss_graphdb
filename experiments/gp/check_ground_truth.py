@@ -10,7 +10,9 @@ Q4: numerator rows "insulation,decade,count" and denominator rows
 "insulation,decade,km-years"; the rate is 100 * count / km-years.
 
 The result is compared with the ground truth restricted to the DSO partitions
-that answered (partition dsoNN holds DSO-NN). Counts must match exactly;
+that answered (partition dsoNN, or regional partitions dsoNN_rK, hold DSO-NN).
+A DSO with any regional partition missing is excluded from the comparison
+entirely, because its answered regions give only part of its counts. Counts must match exactly;
 km-years and rates to a relative tolerance of 1e-9 (floating-point sums depend
 on summation order). Without --allow-missing, any missing partition fails.
 """
@@ -40,10 +42,13 @@ def main():
         return 2
     gt, q = json.load(open(args[0])), args[1]
     rows, manifest, missing = load(args[2])
-    missing_dsos = {f"DSO-{p[3:]}" for p in missing if p.startswith("dso")}
+    missing_dsos = {f"DSO-{p[3:5]}" for p in missing if p.startswith("dso")}
     diffs = []
 
     if q == "Q1":
+        if any("_r" in p for p in missing):
+            print(f"Q1: skipped - regional partitions missing {missing} (no per-region ground truth)")
+            return 0 if allow_missing else 1
         got = {r[0]: int(float(r[1])) for r in rows}
         want = {}
         for key, n in gt["Q1_dso"].items():
@@ -52,11 +57,11 @@ def main():
                 want[year] = want.get(year, 0) + n
         ok = got == want
     elif q == "Q3":
-        got = {f"{r[0]}|{r[1]}": int(float(r[2])) for r in rows}
+        got = {f"{r[0]}|{r[1]}": int(float(r[2])) for r in rows if r[0] not in missing_dsos}
         want = {k: v for k, v in gt["Q3"].items() if k.split("|")[0] not in missing_dsos}
         ok = got == want
     elif q in ("Q5", "Q6"):
-        got = {r[0]: int(float(r[1])) for r in rows}
+        got = {r[0]: int(float(r[1])) for r in rows if r[0] not in missing_dsos}
         want = {k: v for k, v in gt[q].items() if k not in missing_dsos}
         ok = got == want
     elif q == "Q4":

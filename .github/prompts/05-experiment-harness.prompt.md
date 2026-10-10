@@ -3,7 +3,7 @@ mode: agent
 description: "Tasks 8–9 – baseline queries, CSV output, launch scripts, checker and timing harness"
 ---
 
-> **ON HOLD (10 Oct 2026): being revised after the EC_Test merge (protobuf fields now start at 19; reuse `access/`, `responding_peer_ids` and the EC HPC scripts). Do not run this prompt until this notice is removed.**
+> **DONE (10 Oct 2026) – implemented by Claude; do not run.** See `experiments/gp/README.md`: shared `queries.tsv`, central baseline `tools/baseline` (same aggregation code, client-format JSON + CSV), metrics in the client result JSON and `gptraffic`/`timing` peer log lines, `collect_metrics.py`, `run_matrix.sh` (E1–E3), `summarize.py`, and single-node HPC jobs `experiments/hpc/gbar_gp_job.sh` / `sophia_gp_job.sbatch`. Not done: E4 (onboarding effort, measured by hand) and loader speed-up (section 6; memory storage made it unnecessary up to 10 % scale). Kept for reference only.
 
 # Tasks 8–9: Experiment harness
 

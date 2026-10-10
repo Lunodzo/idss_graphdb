@@ -87,6 +87,12 @@ be produced over data that **stay with each DSO**, under **owner-defined sharing
   `KILL="dso04"` stops partitions before querying (peer-loss test; checked against the ground truth
   without the lost DSOs).
 - In the interactive client, the TTL is the number after the **last** comma (`<query>, 10`).
+- **Experiments** (`experiments/gp/README.md`): report queries live in `experiments/gp/queries.tsv`
+  (do not duplicate them); `run_matrix.sh E1|E2|E3` runs the matrix; results go to
+  `experiments/results/gp/` (git-ignored). Peers log `gptraffic uqi=...` (bytes per forwarded
+  stream) and `timing uqi=... step=grouped_local|gp_access`; the client result JSON carries
+  `uqid`, `query`, `elapsedMs`, `wireBytesReceived`. Keep these formats stable: `collect_metrics.py`
+  parses them.
 
 ## Data model (EliasDB import format)
 Nodes: `{"kind", "key", "mRID", ...attributes}`. Edges: `{"key","kind","end1key","end1kind",

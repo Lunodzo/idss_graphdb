@@ -75,6 +75,10 @@ type Result struct {
 }
 
 type QueryResponse struct {
+	Uqid        string          `json:"uqid,omitempty"`
+	Query       string          `json:"query,omitempty"`
+	ElapsedMs   float64         `json:"elapsedMs"`
+	WireBytes   int             `json:"wireBytesReceived"`
 	ResultCount int             `json:"resultCount"`
 	Header      []string        `json:"header,omitempty"`
 	Rows        [][]string      `json:"rows"`
@@ -427,7 +431,8 @@ func main() {
 			}
 
 			// Check if it's a status message or query result
-			queryResponse := QueryResponse{ResultCount: dataNonHeaders, Header: header, Rows: allRows, Manifest: manifest}
+			queryResponse := QueryResponse{Uqid: uqi, Query: query, ElapsedMs: float64(timeTaken.Microseconds()) / 1000,
+				WireBytes: totalWireBytes, ResultCount: dataNonHeaders, Header: header, Rows: allRows, Manifest: manifest}
 			isStatus := len(allRows) == 1 && allRows[0][0] == "Status" // Adjusted for accumulated rows
 
 			if isStatus {
