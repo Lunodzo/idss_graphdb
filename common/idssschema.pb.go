@@ -222,6 +222,7 @@ type QueryMessage struct {
 	JoinEvents         []*Row              `protobuf:"bytes,20,rep,name=join_events,json=joinEvents,proto3" json:"join_events,omitempty"`                         // @join queries: public events (phase 1) shipped to every peer for the local join
 	RequesterPubkey    []byte              `protobuf:"bytes,21,opt,name=requester_pubkey,json=requesterPubkey,proto3" json:"requester_pubkey,omitempty"`          // libp2p public key of the requester (identity.Sign)
 	RequesterSignature []byte              `protobuf:"bytes,22,opt,name=requester_signature,json=requesterSignature,proto3" json:"requester_signature,omitempty"` // signature over uqid, query and requester_id
+	SubtreeMinCpl      int32               `protobuf:"varint,23,opt,name=subtree_min_cpl,json=subtreeMinCpl,proto3" json:"subtree_min_cpl,omitempty"`             // DHT tree propagation (dhtcast): the receiver covers the Kademlia IDs sharing >= this many leading bits with it
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -408,6 +409,13 @@ func (x *QueryMessage) GetRequesterSignature() []byte {
 		return x.RequesterSignature
 	}
 	return nil
+}
+
+func (x *QueryMessage) GetSubtreeMinCpl() int32 {
+	if x != nil {
+		return x.SubtreeMinCpl
+	}
+	return 0
 }
 
 // PartitionPartial carries one data partition's contribution to a grouped
@@ -810,7 +818,7 @@ var File_idssschema_proto protoreflect.FileDescriptor
 
 const file_idssschema_proto_rawDesc = "" +
 	"\n" +
-	"\x10idssschema.proto\x12\x06common\"\x9a\a\n" +
+	"\x10idssschema.proto\x12\x06common\"\xc2\a\n" +
 	"\fQueryMessage\x12'\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x13.common.MessageTypeR\x04type\x12\x14\n" +
 	"\x05query\x18\x02 \x01(\tR\x05query\x12\x12\n" +
@@ -837,7 +845,8 @@ const file_idssschema_proto_rawDesc = "" +
 	"\vjoin_events\x18\x14 \x03(\v2\v.common.RowR\n" +
 	"joinEvents\x12)\n" +
 	"\x10requester_pubkey\x18\x15 \x01(\fR\x0frequesterPubkey\x12/\n" +
-	"\x13requester_signature\x18\x16 \x01(\fR\x12requesterSignature\"\x95\x02\n" +
+	"\x13requester_signature\x18\x16 \x01(\fR\x12requesterSignature\x12&\n" +
+	"\x0fsubtree_min_cpl\x18\x17 \x01(\x05R\rsubtreeMinCpl\"\x95\x02\n" +
 	"\x10PartitionPartial\x12!\n" +
 	"\fpartition_id\x18\x01 \x01(\tR\vpartitionId\x12\x17\n" +
 	"\apeer_id\x18\x02 \x01(\tR\x06peerId\x127\n" +

@@ -9,9 +9,9 @@ Inputs (written by experiments/gp/run_local.sh):
   <run>/res/*.json   client results: uqid, query, elapsedMs, wireBytesReceived,
                      header, rows, manifest
   <run>/logs/*.log   peer logs with the lines
-                       gptraffic uqi=<u> streams=<n> dup=<n> bytes_out=<b> bytes_in=<b>
+                       gptraffic uqi=<u> streams=<n> dup=<n> bytes_out=<b> bytes_in=<b> regions=<n> failover=<n>
                        timing uqi=<u> step=<name> ms=<t>
-                       Join <u> phase 1: <n> <type> events in <duration>
+                       Join <u> phase 1: <n> <type> events in <duration> (via providers|dht-tree)
                      Phase-1 traffic of a join has uqi "<u>-events" and is
                      attributed to query <u>.
 
@@ -34,12 +34,12 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 COLUMNS = ["round", "query", "uqid", "elapsed_ms", "client_bytes", "overlay_bytes", "phase1_bytes",
-           "streams", "dup_replies", "peers_executed", "local_ms_max", "access_ms_mean", "phase1_ms",
-           "events", "groups", "answered", "denied", "timeout", "unreachable", "error", "check"]
+           "streams", "dup_replies", "failovers", "peers_executed", "local_ms_max", "access_ms_mean",
+           "phase1_ms", "phase1_mode", "provider_lookup_ms", "events", "groups", "answered", "denied", "timeout", "unreachable", "error", "path_failures", "check"]
 
-RE_TRAFFIC = re.compile(r"gptraffic uqi=(\S+) streams=(\d+) dup=(\d+) bytes_out=(\d+) bytes_in=(\d+)")
+RE_TRAFFIC = re.compile(r"gptraffic uqi=(\S+) streams=(\d+) dup=(\d+) bytes_out=(\d+) bytes_in=(\d+)(?: regions=(\d+) failover=(\d+))?")
 RE_TIMING = re.compile(r"timing uqi=(\S+) step=(\w+) ms=([\d.]+)")
-RE_PHASE1 = re.compile(r"Join (\S+) phase 1: (\d+) \w+ events in (\S+)")
+RE_PHASE1 = re.compile(r"Join (\S+) phase 1: (\d+) \w+ events in (\S+)(?: \(via ([\w-]+)\))?")
 UNITS = {"ns": 1e-6, "us": 1e-3, "µs": 1e-3, "ms": 1.0, "s": 1e3, "m": 6e4, "h": 3.6e6}
 
 
@@ -62,7 +62,7 @@ def read_queries(path):
 
 
 def parse_logs(run):
-    traffic = collections.defaultdict(lambda: [0, 0, 0, 0])    # streams, dup, out, in (main query)
+    traffic = collections.defaultdict(lambda: [0, 0, 0, 0, 0])  # streams, dup, out, in, failovers (main query)
     p1_bytes = collections.Counter()
     steps = collections.defaultdict(lambda: collections.defaultdict(list))
     phase1 = {}
@@ -71,12 +71,13 @@ def parse_logs(run):
             if "gptraffic" in line:
                 m = RE_TRAFFIC.search(line)
                 if m:
-                    u, vals = m.group(1), [int(x) for x in m.groups()[1:]]
+                    u, vals = m.group(1), [int(x or 0) for x in m.groups()[1:]]
+                    vals = vals[:4] + [vals[5]]   # drop regions, keep failovers
                     if u.endswith("-events"):
                         p1_bytes[u[:-7]] += vals[2] + vals[3]
                     else:
                         t = traffic[u]
-                        for i in range(4):
+                        for i in range(5):
                             t[i] += vals[i]
             elif "timing uqi=" in line:
                 m = RE_TIMING.search(line)
@@ -85,7 +86,7 @@ def parse_logs(run):
             elif "phase 1:" in line:
                 m = RE_PHASE1.search(line)
                 if m:
-                    phase1[m.group(1)] = (int(m.group(2)), go_duration_ms(m.group(3)))
+                    phase1[m.group(1)] = (int(m.group(2)), go_duration_ms(m.group(3)), m.group(4) or "")
     return traffic, p1_bytes, steps, phase1
 
 
@@ -127,19 +128,25 @@ def main():
         rnd = rounds[qid]
         rounds[qid] += 1
         u = r.get("uqid", "")
-        st = collections.Counter(m["status"] for m in (r.get("manifest") or []))
-        t = traffic.get(u, [0, 0, 0, 0])
+        man = r.get("manifest") or []
+        # Data partitions only; "peer:<id>" and "region:<cpl>@<peer>" entries are
+        # propagation failures on the way (counted separately).
+        st = collections.Counter(m["status"] for m in man if not m["partition"].startswith(("peer:", "region:")))
+        path_failures = sum(1 for m in man if m["partition"].startswith(("peer:", "region:")))
+        t = traffic.get(u, [0, 0, 0, 0, 0])
+        lookup = steps.get(u, {}).get("provider_lookup", [])
         local = steps.get(u, {}).get("grouped_local", [])
         access = steps.get(u, {}).get("gp_access", [])
-        ev, p1ms = phase1.get(u, ("", ""))
+        ev, p1ms, p1mode = phase1.get(u, ("", "", ""))
         row = {"round": rnd, "query": qid, "uqid": u, "elapsed_ms": r.get("elapsedMs", ""),
                "client_bytes": r.get("wireBytesReceived", ""), "overlay_bytes": t[2] + t[3] + p1_bytes.get(u, 0),
-               "phase1_bytes": p1_bytes.get(u, 0) if u in phase1 else "", "streams": t[0], "dup_replies": t[1],
+               "phase1_bytes": p1_bytes.get(u, 0) if u in phase1 else "", "streams": t[0], "dup_replies": t[1], "failovers": t[4],
                "peers_executed": len(local), "local_ms_max": max(local) if local else "",
                "access_ms_mean": round(statistics.mean(access), 4) if access else "",
-               "phase1_ms": p1ms, "events": ev, "groups": len(r.get("rows") or []),
+               "phase1_ms": p1ms, "phase1_mode": p1mode,
+               "provider_lookup_ms": lookup[0] if lookup else "", "events": ev, "groups": len(r.get("rows") or []),
                "answered": st["ANSWERED"], "denied": st["DENIED"], "timeout": st["TIMEOUT"],
-               "unreachable": st["UNREACHABLE"], "error": st["ERROR"], "check": ""}
+               "unreachable": st["UNREACHABLE"], "error": st["ERROR"], "path_failures": path_failures, "check": ""}
         rows.append(row)
         by_round[(qid, rnd)] = (row, r["_file"])
 

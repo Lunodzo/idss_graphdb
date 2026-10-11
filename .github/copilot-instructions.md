@@ -19,9 +19,12 @@
 - Protobuf: EC uses `QueryMessage` fields 13–18 (`requester_id`, `requester_role`,
   `customer_registration`, `settlement_request`, `settlement_result`, `responding_peer_ids`).
   **GP fields start at 19.** Never renumber or reuse existing fields.
-- Forwarding: `selectForwardPeers` forwards to a random subset of peers bounded by the time budget.
-  For GP exactness experiments set `IDSS_MAX_FORWARD=0` (flood) or rely on the manifest to report
-  partitions that were not reached.
+- Forwarding: EC queries use `selectForwardPeers` (random subset, `IDSS_MAX_FORWARD`). **GP queries
+  never flood**: they propagate along the Kademlia DHT tree (`dhtcast/`, field 23
+  `subtree_min_cpl`): each peer delegates every region of its part of the ID space to one routing-table
+  contact, so every peer receives a query once (N-1 messages), with failover to the next contact of a
+  region on dial failure or timeout. Results are merged on the way back. Do not reintroduce flooding
+  or random fan-out for GP.
 - `requester_id` is a plain string set by the submitter; it is **not** authenticated. GP adds a
   signature check before any policy decision.
 
@@ -87,10 +90,15 @@ be produced over data that **stay with each DSO**, under **owner-defined sharing
   `KILL="dso04"` stops partitions before querying (peer-loss test; checked against the ground truth
   without the lost DSOs).
 - In the interactive client, the TTL is the number after the **last** comma (`<query>, 10`).
+- **DHT propagation** (`dhtcast/`, `broadcast.forwardGrouped`): Kademlia tree broadcast (Czirkos &
+  Hosszú 2013). Join phase 1 finds the public registers via DHT provider records: every GP peer
+  announces the node kinds it holds under `broadcast.KindKey(kind)` (`server/gp_providers.go`); the
+  originator sends the event query only to the providers (`dhtcast.Leaf`, no forwarding) and falls back
+  to the DHT tree when none is found. Phase-1 failures are merged into the final manifest.
 - **Experiments** (`experiments/gp/README.md`): report queries live in `experiments/gp/queries.tsv`
   (do not duplicate them); `run_matrix.sh E1|E2|E3` runs the matrix; results go to
-  `experiments/results/gp/` (git-ignored). Peers log `gptraffic uqi=...` (bytes per forwarded
-  stream) and `timing uqi=... step=grouped_local|gp_access`; the client result JSON carries
+  `experiments/results/gp/` (git-ignored). Peers log `gptraffic uqi=... regions=.. failover=..` (bytes
+  per forwarded stream) and `timing uqi=... step=grouped_local|gp_access`; the client result JSON carries
   `uqid`, `query`, `elapsedMs`, `wireBytesReceived`. Keep these formats stable: `collect_metrics.py`
   parses them.
 

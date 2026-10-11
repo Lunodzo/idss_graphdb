@@ -399,7 +399,9 @@ func main() {
 	// A go routine to refresh the DHT and periodically find and connect to peers
 	go kaddht.DiscoverAndConnectPeers(ctx, host, config, kadDHT)
 	if config.UseCase == "gp" {
-		// Green Power: no energy-community background routines.
+		// Green Power: no energy-community background routines; announce the
+		// partition's node kinds so that join phase 1 can find public registers.
+		announceDataKinds(ctx, kadDHT, graphManager)
 	} else if config.CommunityID != "" {
 		// Community mode: register with (or act as) this community's manager.
 		if config.IsManager {

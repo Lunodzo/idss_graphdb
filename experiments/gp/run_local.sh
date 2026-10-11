@@ -5,10 +5,12 @@
 # Usage: experiments/gp/run_local.sh <datadir> [settle_seconds_after_load] [policy.yaml]
 #   <datadir>  output of server/generate_cim_data.py (contains peers/ and ground_truth.json)
 #
-# Peers forward to every routing-table peer (IDSS_MAX_FORWARD=0) so that results
-# can be compared exactly; set IDSS_MAX_FORWARD yourself to test bounded fan-out.
+# Queries propagate along the Kademlia DHT tree (dhtcast: each peer receives a
+# query once) and join phase 1 finds the public registers by DHT provider
+# records; the script waits until every peer has announced its data kinds.
 # KILL="dso04 dso05" stops those partitions' peers before querying (peer-loss
-# test); the client then expects every partition in the dataset's manifest.json
+# test); FREEZE="dso03" stops (SIGSTOP) a peer so that it hangs with open
+# connections (failover test). The client expects every partition in the dataset's manifest.json
 # and the checker compares against the ground truth without the lost DSOs.
 # SCENARIO=S1_coordinator_only|S2_mixed applies per-partition policies from
 # experiments/gp/policies/<scenario>/; REQUESTER=coordinator|researcher|anonymous
@@ -23,12 +25,12 @@ REPO=$(cd "$(dirname "$0")/../.." && pwd)
 POLICY=$(readlink -f "${3:-$REPO/server/policy.greenpower.yaml}")
 RUN=$(mktemp -d "${TMPDIR:-/tmp}/idss_gp_run.XXXXXX")
 mkdir -p "$RUN/logs" "$RUN/db" "$RUN/res"
-export IDSS_MAX_FORWARD=${IDSS_MAX_FORWARD:-0}
 
 (cd "$REPO" && go build -o "$RUN/idss_server" ./server && go build -o "$RUN/idss_client" ./client)
 
 PIDS=()
-cleanup() { kill "${PIDS[@]}" 2>/dev/null || true; wait 2>/dev/null || true; }
+FROZEN=()
+cleanup() { kill -CONT "${FROZEN[@]}" 2>/dev/null || true; kill "${PIDS[@]}" 2>/dev/null || true; wait 2>/dev/null || true; }
 trap cleanup EXIT
 
 # Requester identities (stable keys -> peer IDs that policies can list).
@@ -79,6 +81,11 @@ for _ in $(seq 1 1200); do   # up to 10 minutes (large partitions load slowly)
   [[ "$ready" -eq "${#NAMES[@]}" ]] && break; sleep 0.5
 done
 [[ "$ready" -eq "${#NAMES[@]}" ]] || { echo "only $ready/${#NAMES[@]} peers ready"; exit 1; }
+for _ in $(seq 1 240); do   # DHT provider records of every peer's data kinds (join phase 1)
+  announced=$( (grep -l "Announced data kinds" "$RUN"/logs/*.log 2>/dev/null || true) | wc -l)
+  [[ "$announced" -eq "${#NAMES[@]}" ]] && break; sleep 0.5
+done
+echo "Provider records announced by $announced/${#NAMES[@]} peers"
 echo "All peers serving; settling ${SETTLE}s for routing tables"
 sleep "$SETTLE"
 declare -A PID_OF
@@ -86,6 +93,10 @@ for i in "${!NAMES[@]}"; do PID_OF[${NAMES[$i]}]=${PIDS[$i]}; done
 for name in ${KILL:-}; do
   [[ "$name" == "${NAMES[0]}" ]] && { echo "cannot kill the seed/entry peer ${NAMES[0]}"; exit 1; }
   echo "Stopping $name (peer loss)"; kill "${PID_OF[$name]}"
+done
+for name in ${FREEZE:-}; do   # hung peer: process stopped, connections stay open
+  [[ "$name" == "${NAMES[0]}" ]] && { echo "cannot freeze the seed/entry peer ${NAMES[0]}"; exit 1; }
+  echo "Freezing $name (hung peer)"; kill -STOP "${PID_OF[$name]}"; FROZEN+=("${PID_OF[$name]}")
 done
 [[ -n "${KILL:-}" ]] && sleep 2
 
@@ -107,9 +118,9 @@ grep -E "Got|Partitions|Time spent|rror" "$RUN/client.log" | tail -n $((3 * ${#Q
 
 NRES=$(ls "$RUN"/res/*.json 2>/dev/null | wc -l)
 [[ "$NRES" -eq "$NQ" ]] || echo "WARNING: expected $NQ results, got $NRES (see $RUN/client.log)"
-ALLOW=""; [[ -n "${KILL:-}${SCENARIO:-}" || "${IDSS_MAX_FORWARD}" != "0" ]] && ALLOW="--allow-missing"
+ALLOW=""; [[ -n "${KILL:-}${FREEZE:-}${SCENARIO:-}" ]] && ALLOW="--allow-missing"
 TAGARGS=(--tag "dataset=$(basename "$DATA")" --tag "peers=${#NAMES[@]}" --tag "scenario=${SCENARIO:-default}"
-         --tag "requester=$REQUESTER" --tag "kill=${KILL:-}" --tag "max_forward=$IDSS_MAX_FORWARD" --tag "ttl=$TTL")
+         --tag "requester=$REQUESTER" --tag "kill=${KILL:-}" --tag "freeze=${FREEZE:-}" --tag "propagation=dht-tree" --tag "ttl=$TTL")
 for t in ${TAGS:-}; do TAGARGS+=(--tag "$t"); done   # e.g. TAGS="exp=E1 scale=0.1"
 status=0
 python3 "$REPO/experiments/gp/collect_metrics.py" --run "$RUN" --data "$DATA" --queries "$QFILE" \

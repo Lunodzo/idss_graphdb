@@ -49,13 +49,15 @@ def main():
             keep = [r for r in rs if int(r["round"]) > 0] if maxround > 0 else rs
             lat = [float(r["elapsed_ms"]) for r in keep if r["elapsed_ms"]]
             kib = [int(r["overlay_bytes"]) / 1024 for r in keep]
+            msgs = [int(r["streams"]) for r in keep]
             b = base.get((rs[0]["scale"], q))
             med = statistics.median(lat) if lat else float("nan")
             total = sum(int(keep[-1][k]) for k in ("answered", "denied", "timeout", "unreachable", "error"))
             rows.append({
-                "exp": exp, "scale": rs[0]["scale"], "peers": rs[0]["peers"], "max_forward": rs[0]["max_forward"],
+                "exp": exp, "scale": rs[0]["scale"], "peers": rs[0]["peers"], "propagation": rs[0].get("propagation", rs[0].get("max_forward", "")),
                 "query": q, "n": len(lat), "median_ms": round(med, 1), "p95_ms": round(pct(lat, 0.95), 1),
                 "overlay_kib": round(statistics.median(kib), 1) if kib else "",
+                "messages": int(statistics.median(msgs)) if msgs else "",
                 "baseline_ms": round(statistics.median(b), 1) if b else "",
                 "slowdown": round(med / statistics.median(b), 1) if b else "",
                 "answered": f"{keep[-1]['answered']}/{total}",

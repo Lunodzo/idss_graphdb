@@ -153,9 +153,34 @@ func TestRunGroupedOnGraphCountsAndJoins(t *testing.T) {
 }
 
 func TestTrafficCounterLogLine(t *testing.T) {
-	c := TrafficCounter{Streams: 3, Duplicates: 1, BytesOut: 120, BytesIn: 4096}
-	want := "gptraffic uqi=q1 streams=3 dup=1 bytes_out=120 bytes_in=4096"
+	c := TrafficCounter{Streams: 3, Duplicates: 1, BytesOut: 120, BytesIn: 4096, Regions: 2, Failovers: 1}
+	want := "gptraffic uqi=q1 streams=3 dup=1 bytes_out=120 bytes_in=4096 regions=2 failover=1"
 	if got := c.LogLine("q1"); got != want {
 		t.Fatalf("got %q want %q", got, want)
+	}
+}
+
+func TestMergePhase1ReportsMissingEvents(t *testing.T) {
+	phase2 := []*common.PartitionPartial{
+		entry("dso01", "p1", common.PartitionPartial_ANSWERED, []string{"DSO-01", "3"}),
+		entry("public_digging", "p2", common.PartitionPartial_ANSWERED),
+	}
+	phase1 := []*common.PartitionPartial{
+		entry("public_digging", "p2", common.PartitionPartial_TIMEOUT),
+		entry("public_weather", "p3", common.PartitionPartial_ANSWERED),
+		{PartitionId: "events:ActivityRecord", Status: common.PartitionPartial_UNREACHABLE, Detail: "no provider"},
+	}
+	got := MergePhase1(phase2, phase1)
+	status := map[string]common.PartitionPartial_Status{}
+	for _, e := range got {
+		status[e.PartitionId] = e.Status
+	}
+	if len(got) != 3 || status["dso01"] != common.PartitionPartial_ANSWERED ||
+		status["public_digging"] != common.PartitionPartial_TIMEOUT ||
+		status["events:ActivityRecord"] != common.PartitionPartial_UNREACHABLE {
+		t.Fatalf("merged manifest %v", status)
+	}
+	if !strings.HasPrefix(got[1].Detail, "join phase 1: ") {
+		t.Fatalf("detail %q", got[1].Detail)
 	}
 }

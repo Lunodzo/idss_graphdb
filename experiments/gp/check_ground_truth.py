@@ -61,6 +61,11 @@ def main():
         want = {k: v for k, v in gt["Q3"].items() if k.split("|")[0] not in missing_dsos}
         ok = got == want
     elif q in ("Q5", "Q6"):
+        needs = {"Q5": ("public_digging", "events:ActivityRecord"), "Q6": ("public_weather", "events:MeasurementValue")}[q]
+        public = [p for p in missing if p.startswith(needs)]
+        if public:
+            print(f"{q}: {'skipped' if allow_missing else 'NOT CHECKED'} - public register missing {public}")
+            return 0 if allow_missing else 1
         got = {r[0]: int(float(r[1])) for r in rows if r[0] not in missing_dsos}
         want = {k: v for k, v in gt[q].items() if k not in missing_dsos}
         ok = got == want
@@ -69,7 +74,7 @@ def main():
             print("Q4 needs a numerator and a denominator result")
             return 2
         drows, dmanifest, dmissing = load(args[3])
-        missing = sorted(set(missing) | set(dmissing))
+        missing = sorted(p for p in set(missing) | set(dmissing) if p.startswith("dso"))  # Q4 reads DSO data only
         if missing:
             print(f"Q4: {'skipped' if allow_missing else 'NOT CHECKED'} - missing partitions {missing} "
                   f"(rates need every partition; no per-DSO ground truth)")

@@ -9,12 +9,12 @@
 #       (peers = 6 DSOs x REGIONS regional partitions + 2 public partitions)
 #   E2  fidelity: central baseline on every dataset (timing + exact check);
 #       every overlay run is checked as well (column "check")
-#   E3  completeness under peer loss, owner policies and bounded forwarding
+#   E3  completeness under peer loss (failover in the DHT tree) and owner policies
 #
 # Environment (defaults in brackets):
 #   SCALES ["0.01 0.1"]   REGIONS ["1 2 5 10"]   REPEATS [5]   WARMUP [1]   TTL [20]
 #   DATA_ROOT [data/gp]   OUT [experiments/results/gp]   SEED [42]   SETTLE [10]
-#   FORWARDS ["0 3"] (E3 bounded-forwarding settings; 0 = flood)   E3_SCALE [0.01]
+#   E3_SCALE [0.01]
 #   HPC defaults (experiments/hpc/gbar_gp_job.sh): scales 0.01/0.1/1, 10 repeats, 2 warm-ups, TTL 60
 # Results: $OUT/e1.csv, $OUT/e3.csv (overlay), $OUT/baseline.csv (E2), and the
 # console log of each run in $OUT/logs/.
@@ -23,7 +23,6 @@ EXP=${1:?E1|E2|E3|all}
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 SCALES=${SCALES:-"0.01 0.1"}
 REGIONS=${REGIONS:-"1 2 5 10"}
-FORWARDS=${FORWARDS:-"0 3"}
 export REPEATS=${REPEATS:-5} WARMUP=${WARMUP:-1} TTL=${TTL:-20}
 DATA_ROOT=${DATA_ROOT:-$REPO/data/gp}
 OUT=${OUT:-$REPO/experiments/results/gp}
@@ -56,7 +55,7 @@ overlay() {
 
 e1() {
   for s in $SCALES; do for r in $REGIONS; do
-    overlay "$OUT/e1.csv" "E1_s${s}_r${r}" "$s" "$r" IDSS_MAX_FORWARD=0
+    overlay "$OUT/e1.csv" "E1_s${s}_r${r}" "$s" "$r"
   done; done
 }
 
@@ -76,19 +75,18 @@ e2() {
 
 e3() {
   local s=${E3_SCALE:-0.01}
-  overlay "$OUT/e3.csv" E3_all_up "$s" 1 IDSS_MAX_FORWARD=0
-  overlay "$OUT/e3.csv" E3_kill1 "$s" 1 IDSS_MAX_FORWARD=0 KILL=dso04
-  overlay "$OUT/e3.csv" E3_kill2 "$s" 1 IDSS_MAX_FORWARD=0 "KILL=dso04 dso05"
-  overlay "$OUT/e3.csv" E3_kill3 "$s" 1 IDSS_MAX_FORWARD=0 "KILL=dso03 dso04 dso05"
-  overlay "$OUT/e3.csv" E3_S1_coordinator "$s" 1 IDSS_MAX_FORWARD=0 SCENARIO=S1_coordinator_only REQUESTER=coordinator
-  overlay "$OUT/e3.csv" E3_S1_researcher "$s" 1 IDSS_MAX_FORWARD=0 SCENARIO=S1_coordinator_only REQUESTER=researcher
-  overlay "$OUT/e3.csv" E3_S2_researcher "$s" 1 IDSS_MAX_FORWARD=0 SCENARIO=S2_mixed REQUESTER=researcher
-  for f in $FORWARDS; do
-    [[ "$f" == 0 ]] && continue
-    for r in $REGIONS; do
-      overlay "$OUT/e3.csv" "E3_fwd${f}_r${r}" "$s" "$r" IDSS_MAX_FORWARD="$f"
-    done
-  done
+  overlay "$OUT/e3.csv" E3_all_up "$s" 1
+  overlay "$OUT/e3.csv" E3_kill1 "$s" 1 KILL=dso04
+  overlay "$OUT/e3.csv" E3_kill2 "$s" 1 "KILL=dso04 dso05"
+  overlay "$OUT/e3.csv" E3_kill3 "$s" 1 "KILL=dso03 dso04 dso05"
+  overlay "$OUT/e3.csv" E3_S1_coordinator "$s" 1 SCENARIO=S1_coordinator_only REQUESTER=coordinator
+  overlay "$OUT/e3.csv" E3_S1_researcher "$s" 1 SCENARIO=S1_coordinator_only REQUESTER=researcher
+  overlay "$OUT/e3.csv" E3_S2_researcher "$s" 1 SCENARIO=S2_mixed REQUESTER=researcher
+  # Peer loss at a larger overlay (6 DSOs x 5 regions): failover inside DHT regions.
+  overlay "$OUT/e3.csv" E3_kill3_r5 "$s" 5 "KILL=dso02_r3 dso04_r1 dso06_r5"
+  # Hung peers (stopped with open connections): delegates time out, failover retries the region.
+  overlay "$OUT/e3.csv" E3_freeze1 "$s" 1 FREEZE=dso04
+  overlay "$OUT/e3.csv" E3_freeze3_r5 "$s" 5 "FREEZE=dso02_r3 dso04_r1 dso06_r5"
 }
 
 case "$EXP" in

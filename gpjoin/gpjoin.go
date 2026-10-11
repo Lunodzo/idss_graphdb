@@ -138,6 +138,17 @@ func EventQuery(joinType string) (string, error) {
 	return "", fmt.Errorf("unknown join type %q", joinType)
 }
 
+// EventKind returns the node kind of the public register a join type reads.
+func EventKind(joinType string) (string, error) {
+	switch joinType {
+	case "digging":
+		return "ActivityRecord", nil
+	case "weather":
+		return "MeasurementValue", nil
+	}
+	return "", fmt.Errorf("unknown join type %q", joinType)
+}
+
 // Event is a public event: a bounding box and a day interval [Start, End]
 // (weather events have Start == End).
 type Event struct {

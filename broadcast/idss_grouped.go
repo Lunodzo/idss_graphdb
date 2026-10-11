@@ -14,7 +14,9 @@ package broadcast
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -23,18 +25,21 @@ import (
 
 	"idss/graphdb/access"
 	"idss/graphdb/common"
+	"idss/graphdb/dhtcast"
 	"idss/graphdb/flags"
 	"idss/graphdb/gpjoin"
 	"idss/graphdb/groupagg"
 	"idss/graphdb/helpers"
 	"idss/graphdb/identity"
 
+	"github.com/ipfs/go-cid"
 	"github.com/krotik/eliasdb/graph"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
 	"github.com/multiformats/go-multiaddr"
+	"github.com/multiformats/go-multihash"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -249,16 +254,18 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 	// @join phase 1 (originator only): collect the public events, which are
 	// then shipped with the query so every peer joins locally.
 	var keep func([][]interface{}) ([][]interface{}, error)
+	var phase1Entries []*common.PartitionPartial
 	if join != nil {
 		if isOriginator && len(msg.JoinEvents) == 0 {
 			p1 := time.Now()
-			events, err := collectJoinEvents(msg, join.Type, config, gm, kadDHT)
+			events, entries, mode, err := collectJoinEvents(msg, join.Type, config, gm, kadDHT)
 			if err != nil {
 				fail(fmt.Errorf("join phase 1: %v", err))
 				return
 			}
 			msg.JoinEvents = events
-			logger.Infof("Join %s phase 1: %d %s events in %v", msg.Uqid, len(events), join.Type, time.Since(p1))
+			phase1Entries = entries
+			logger.Infof("Join %s phase 1: %d %s events in %v (via %s)", msg.Uqid, len(events), join.Type, time.Since(p1), mode)
 		}
 		rows := make([][]string, len(msg.JoinEvents))
 		for i, r := range msg.JoinEvents {
@@ -305,6 +312,9 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 		fail(err)
 		return
 	}
+	// A public partition that did not deliver its events in phase 1 makes the
+	// join incomplete even though it answered phase 2: report it as missing.
+	entries = MergePhase1(entries, phase1Entries)
 	outHeader, rows := groupagg.Finalise(spec, header, merged)
 	logger.Infof("Grouped query %s finished in %v: %d groups; %s", msg.Uqid, time.Since(start), len(rows), ManifestSummary(entries))
 
@@ -331,22 +341,53 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 	sendGroupedReply(conn, reply)
 }
 
-// collectJoinEvents runs the phase-1 grouped query for a join type (every
-// distinct public event is one group) over the overlay and returns the event
-// rows. Phase 1 uses at most 40 % of the remaining query time.
-func collectJoinEvents(msg *common.QueryMessage, joinType string, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) ([]*common.Row, error) {
+// MergePhase1 adds the join phase-1 entries that did not answer to the final
+// manifest, replacing the phase-2 entry of the same partition (which answered
+// phase 2 with no failures and would otherwise hide the missing events).
+func MergePhase1(entries, phase1 []*common.PartitionPartial) []*common.PartitionPartial {
+	for _, e := range phase1 {
+		if e == nil || e.Status == common.PartitionPartial_ANSWERED {
+			continue
+		}
+		f := &common.PartitionPartial{PartitionId: e.PartitionId, PeerId: e.PeerId, Status: e.Status,
+			Detail: "join phase 1: " + e.Detail}
+		replaced := false
+		for i, x := range entries {
+			if x.PartitionId == e.PartitionId {
+				entries[i], replaced = f, true
+			}
+		}
+		if !replaced {
+			entries = append(entries, f)
+		}
+	}
+	return entries
+}
+
+// collectJoinEvents runs phase 1 of a join: the grouped event query (every
+// distinct public event is one group) is sent directly to the peers that
+// announce the public register's node kind as DHT provider records (see
+// KindKey). Only when no provider is found is the query disseminated along
+// the DHT tree instead. Phase 1 uses at most 40 % of the remaining time. It
+// returns the event rows, the phase-1 manifest entries and the mode used.
+func collectJoinEvents(msg *common.QueryMessage, joinType string, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) ([]*common.Row, []*common.PartitionPartial, string, error) {
 	query, err := gpjoin.EventQuery(joinType)
 	if err != nil {
-		return nil, err
+		return nil, nil, "", err
+	}
+	kind, err := gpjoin.EventKind(joinType)
+	if err != nil {
+		return nil, nil, "", err
 	}
 	spec, eqlQuery, err := groupagg.Parse(query)
 	if err != nil {
-		return nil, err
+		return nil, nil, "", err
 	}
 	budget := time.Duration(float64(remainingQueryTime(msg)) * 0.4)
 	if budget <= 0 {
-		return nil, fmt.Errorf("no time left for phase 1")
+		return nil, nil, "", fmt.Errorf("no time left for phase 1")
 	}
+	start := time.Now()
 	self := kadDHT.Host().ID()
 	p1 := &common.QueryMessage{
 		Type:          common.MessageType_QUERY,
@@ -364,24 +405,78 @@ func collectJoinEvents(msg *common.QueryMessage, joinType string, config flags.C
 	// peer's own key (the client's signature covers the original query only).
 	if priv := kadDHT.Host().Peerstore().PrivKey(self); priv != nil {
 		if err := identity.Sign(p1, priv); err != nil {
-			return nil, fmt.Errorf("signing phase-1 query: %v", err)
+			return nil, nil, "", fmt.Errorf("signing phase-1 query: %v", err)
 		}
 	}
 	StoreQueryInfo(p1, gm, self.String())
-	local, _ := LocalGroupedEntry(spec, eqlQuery, access.Allow, "", nil, PartitionLabel(config, self), self, gm, nil)
-	remote, _ := forwardGrouped(p1, nil, config, gm, kadDHT)
-	entries := UnionEntries([]*common.PartitionPartial{local}, remote)
-	logger.Infof("Join phase 1 partitions: %s", ManifestSummary(entries))
+
+	lookupCtx, cancel := context.WithTimeout(context.Background(), budget/2)
+	providers := FindKindProviders(lookupCtx, kadDHT, kind)
+	cancel()
+	logger.Infof("timing uqi=%s step=provider_lookup ms=%.1f", msg.Uqid, time.Since(start).Seconds()*1000)
+
+	var entries []*common.PartitionPartial
+	mode := "providers"
+	if len(providers) == 0 {
+		// No provider record found: fall back to dissemination along the DHT tree.
+		mode = "dht-tree"
+		local, _ := LocalGroupedEntry(spec, eqlQuery, access.Allow, "", nil, PartitionLabel(config, self), self, gm, nil)
+		remote, _ := forwardGrouped(p1, nil, config, gm, kadDHT)
+		entries = UnionEntries([]*common.PartitionPartial{local}, remote)
+	} else {
+		entries = askProviders(p1, kind, providers, spec, eqlQuery, config, gm, kadDHT)
+	}
+	logger.Infof("Join phase 1 partitions (%s, %d providers of %s): %s", mode, len(providers), kind, ManifestSummary(entries))
 	merged, err := FoldEntries(spec, entries)
 	if err != nil {
-		return nil, err
+		return nil, nil, "", err
 	}
 	_, rows := groupagg.Finalise(spec, nil, merged)
 	out := make([]*common.Row, len(rows))
 	for i, r := range rows {
 		out[i] = &common.Row{Data: r[:len(spec.Keys)]} // key cells = the event; drop the count
 	}
-	return out, nil
+	return out, entries, mode, nil
+}
+
+// askProviders sends the phase-1 query directly to each provider (as a leaf:
+// providers answer without forwarding) and answers locally if this peer is one.
+// A provider that does not answer is reported as "events:<kind>@<peer>".
+func askProviders(p1 *common.QueryMessage, kind string, providers []peer.ID, spec groupagg.Spec, eqlQuery string, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) []*common.PartitionPartial {
+	self := kadDHT.Host().ID()
+	leaf := proto.Clone(p1).(*common.QueryMessage)
+	leaf.SubtreeMinCpl = dhtcast.Leaf
+	b, err := proto.Marshal(leaf)
+	if err != nil {
+		return []*common.PartitionPartial{{PartitionId: "events", Status: common.PartitionPartial_ERROR, Detail: err.Error()}}
+	}
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	var entries []*common.PartitionPartial
+	var traffic TrafficCounter
+	for _, p := range providers {
+		if p == self {
+			local, _ := LocalGroupedEntry(spec, eqlQuery, access.Allow, "", nil, PartitionLabel(config, self), self, gm, nil)
+			entries = append(entries, local)
+			continue
+		}
+		wg.Add(1)
+		go func(p peer.ID) {
+			defer wg.Done()
+			got, status, detail := askPeer(leaf, p, b, config, kadDHT, &traffic)
+			mu.Lock()
+			defer mu.Unlock()
+			if status != common.PartitionPartial_ANSWERED {
+				// The provider's partition label is unknown: name the register.
+				entries = append(entries, &common.PartitionPartial{PartitionId: "events:" + kind + "@" + p.String(), PeerId: p.String(), Status: status, Detail: detail})
+				return
+			}
+			entries = append(entries, got.PartitionPartials...)
+		}(p)
+	}
+	wg.Wait()
+	logger.Infof("%s", traffic.LogLine(p1.Uqid))
+	return UnionEntries(entries)
 }
 
 func sendGroupedReply(conn network.Stream, reply *common.QueryMessage) {
@@ -395,106 +490,156 @@ func sendGroupedReply(conn network.Stream, reply *common.QueryMessage) {
 	}
 }
 
-// forwardGrouped sends the query to eligible peers and collects their partition
-// entries. A child that cannot be reached, does not answer in time or sends a
-// malformed reply is recorded as a "peer:<id>" entry with the matching status.
+// maxRegionAttempts bounds failover: how many contacts of one DHT region are
+// tried before the region is reported as unreachable.
+const maxRegionAttempts = 3
+
+// forwardGrouped propagates the query along the Kademlia tree (package
+// dhtcast) and collects the partition entries of the subtree. This peer covers
+// the IDs sharing at least msg.SubtreeMinCpl leading bits with it; it delegates
+// each non-empty region of that space to one routing-table contact (connected
+// contacts first). Failover: a contact that cannot be reached, or does not
+// reply before its deadline, is replaced by the next contact of the same region
+// (at most maxRegionAttempts). A final timeout or an error reply is recorded as
+// "peer:<id>" TIMEOUT or ERROR; a region with no reachable contact as
+// "region:<cpl>@<peer>" UNREACHABLE. Results are merged on the way back.
 func forwardGrouped(msg *common.QueryMessage, parentStream network.Stream, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT) ([]*common.PartitionPartial, []string) {
 	if msg == nil || msg.Ttl <= 0 {
 		return nil, nil
 	}
+	h := kadDHT.Host()
+	self := h.ID()
+	connected := func(p peer.ID) bool { return h.Network().Connectedness(p) == network.Connected }
+	regions := dhtcast.Plan(self, kadDHT.RoutingTable().ListPeers(), int(msg.SubtreeMinCpl), connected)
+
+	base := proto.Clone(msg).(*common.QueryMessage)
+	if err := UpdateTTL(base, gm); err != nil { // query bookkeeping; deadlines are set per attempt below
+		logger.Errorf("Error updating TTL: %v", err)
+	}
+	base.Type = common.MessageType_QUERY
+	base.Result = nil
+	base.PartitionPartials = nil
+
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	var entries []*common.PartitionPartial
 	responding := map[string]struct{}{}
-	slots := make(chan struct{}, maxConcurrentPeerQueries)
-	var traffic TrafficCounter
-
-	var eligible []peer.ID
-	for _, p := range kadDHT.RoutingTable().ListPeers() {
-		if p == kadDHT.Host().ID() || (parentStream != nil && parentStream.Conn().RemotePeer() == p) {
-			continue
-		}
-		eligible = append(eligible, p)
-	}
-	eligible = selectForwardPeers(eligible, remainingQueryTime(msg))
-
-	parentDuration := remainingQueryTime(msg)
-	forwardMsg := proto.Clone(msg).(*common.QueryMessage)
-	if err := UpdateTTL(forwardMsg, gm); err != nil {
-		logger.Errorf("Error updating TTL: %v", err)
-	}
-	forwardMsg.Type = common.MessageType_QUERY
-	forwardMsg.Result = nil
-	forwardMsg.PartitionPartials = nil
-	msgBytes, err := proto.Marshal(forwardMsg)
-	if err != nil {
-		logger.Errorf("Error marshalling grouped query: %v", err)
-		return nil, nil
-	}
-
-	fail := func(p peer.ID, status common.PartitionPartial_Status, detail string) {
-		mu.Lock()
-		entries = append(entries, &common.PartitionPartial{PartitionId: "peer:" + p.String(), PeerId: p.String(), Status: status, Detail: detail})
-		mu.Unlock()
-	}
-
-	for _, p := range eligible {
+	traffic := TrafficCounter{Regions: int64(len(regions))}
+	for _, r := range regions {
 		wg.Add(1)
-		go func(p peer.ID) {
+		go func(r dhtcast.Region) {
 			defer wg.Done()
-			slots <- struct{}{}
-			defer func() { <-slots }()
-			if parentDuration <= 0 || remainingQueryTime(forwardMsg) <= 0 {
-				return
-			}
-			ctx, cancel := context.WithTimeout(context.Background(), parentDuration)
-			defer cancel()
-			raw, err := kadDHT.Host().NewStream(ctx, p, protocol.ID(config.ProtocolID))
-			if err != nil {
-				fail(p, common.PartitionPartial_UNREACHABLE, err.Error())
-				return
-			}
-			defer raw.Close()
-			atomic.AddInt64(&traffic.Streams, 1)
-			stream := &countedStream{Stream: raw, c: &traffic}
-			if err := helpers.WriteDelimitedMessage(stream, msgBytes); err != nil {
-				fail(p, common.PartitionPartial_UNREACHABLE, err.Error())
-				return
-			}
-			b, err := helpers.ReadDelimitedMessage(stream, ctx)
-			if err != nil {
-				status := common.PartitionPartial_ERROR
-				if ctx.Err() != nil {
-					status = common.PartitionPartial_TIMEOUT
+			var tried []string
+			for i, p := range r.Peers {
+				if i >= maxRegionAttempts || remainingQueryTime(msg) <= 0 {
+					break
 				}
-				fail(p, status, err.Error())
+				if i > 0 {
+					atomic.AddInt64(&traffic.Failovers, 1)
+				}
+				// Each attempt gets ttlReductionFactor of this peer's remaining
+				// time, so a timed-out delegate leaves time for one more contact.
+				child := proto.Clone(base).(*common.QueryMessage)
+				child.SubtreeMinCpl = int32(r.ChildMinCPL())
+				budget := time.Duration(float64(remainingQueryTime(msg)) * ttlReductionFactor)
+				child.Ttl = float32(budget.Seconds())
+				child.Timestamp = time.Now().Add(budget).UTC().Format(time.RFC3339Nano)
+				b, err := proto.Marshal(child)
+				if err != nil {
+					logger.Errorf("Error marshalling grouped query: %v", err)
+					return
+				}
+				resp, status, detail := askPeer(child, p, b, config, kadDHT, &traffic)
+				retry := i+1 < len(r.Peers) && i+1 < maxRegionAttempts && remainingQueryTime(msg) > 0
+				if status == common.PartitionPartial_UNREACHABLE {
+					tried = append(tried, p.String())
+					continue // not delivered: try the next contact of this region
+				}
+				if (status == common.PartitionPartial_TIMEOUT || (status == common.PartitionPartial_ERROR && resp == nil && detail != "malformed reply")) && retry {
+					// Delivered but no reply (hung or slow delegate, or the
+					// connection broke while waiting): try another
+					// contact of the region. Peers the first delegate already
+					// reached have claimed the query and answer the retry with no
+					// entries, so nothing is counted twice; they show up as not
+					// reached in the client's manifest. The delegate itself is
+					// reported where the retry meets it again.
+					tried = append(tried, p.String()+" ("+status.String()+")")
+					continue
+				}
+				mu.Lock()
+				if status == common.PartitionPartial_ANSWERED {
+					// A peer that had already claimed this query replies with no
+					// entries; with tree propagation this should not happen.
+					if len(resp.PartitionPartials) == 0 && len(resp.RespondingPeerIds) == 0 {
+						atomic.AddInt64(&traffic.Duplicates, 1)
+					}
+					entries = append(entries, resp.PartitionPartials...)
+					for _, id := range resp.RespondingPeerIds {
+						responding[id] = struct{}{}
+					}
+				} else {
+					entries = append(entries, &common.PartitionPartial{PartitionId: "peer:" + p.String(), PeerId: p.String(), Status: status, Detail: detail})
+				}
+				mu.Unlock()
 				return
-			}
-			var resp common.QueryMessage
-			if err := proto.Unmarshal(b, &resp); err != nil || resp.Type != common.MessageType_RESULT {
-				fail(p, common.PartitionPartial_ERROR, "malformed reply")
-				return
-			}
-			if resp.Error != "" {
-				fail(p, common.PartitionPartial_ERROR, resp.Error)
-				return
-			}
-			// A peer that had already claimed this query replies with no
-			// entries: it is not a failure, its data arrives via another parent.
-			if len(resp.PartitionPartials) == 0 && len(resp.RespondingPeerIds) == 0 {
-				atomic.AddInt64(&traffic.Duplicates, 1)
 			}
 			mu.Lock()
-			entries = append(entries, resp.PartitionPartials...)
-			for _, id := range resp.RespondingPeerIds {
-				responding[id] = struct{}{}
-			}
+			entries = append(entries, &common.PartitionPartial{
+				PartitionId: fmt.Sprintf("region:%d@%s", r.CPL, self),
+				Status:      common.PartitionPartial_UNREACHABLE,
+				Detail:      fmt.Sprintf("no reachable contact in DHT region cpl=%d (tried %s)", r.CPL, strings.Join(tried, ", ")),
+			})
 			mu.Unlock()
-		}(p)
+		}(r)
 	}
 	wg.Wait()
 	logger.Infof("%s", traffic.LogLine(msg.Uqid))
 	return entries, peerIDList(responding)
+}
+
+// askPeer sends an encoded query to one peer and reads its reply. UNREACHABLE
+// means the query was not delivered (safe to try another peer); TIMEOUT and
+// ERROR mean it was delivered but no usable reply arrived.
+func askPeer(msg *common.QueryMessage, p peer.ID, b []byte, config flags.Config, kadDHT *dht.IpfsDHT, traffic *TrafficCounter) (*common.QueryMessage, common.PartitionPartial_Status, string) {
+	remaining := remainingQueryTime(msg)
+	if remaining <= 0 {
+		return nil, common.PartitionPartial_TIMEOUT, "no time left"
+	}
+	dial := remaining / 4
+	if dial > 3*time.Second {
+		dial = 3 * time.Second
+	}
+	dctx, dcancel := context.WithTimeout(context.Background(), dial)
+	raw, err := kadDHT.Host().NewStream(dctx, p, protocol.ID(config.ProtocolID))
+	dcancel()
+	if err != nil {
+		return nil, common.PartitionPartial_UNREACHABLE, err.Error()
+	}
+	defer raw.Close()
+	atomic.AddInt64(&traffic.Streams, 1)
+	stream := &countedStream{Stream: raw, c: traffic}
+	if err := helpers.WriteDelimitedMessage(stream, b); err != nil {
+		return nil, common.PartitionPartial_UNREACHABLE, err.Error()
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), remainingQueryTime(msg))
+	defer cancel()
+	rb, err := helpers.ReadDelimitedMessage(stream, ctx)
+	if err != nil {
+		// The read deadline is the context deadline; it can fire just before
+		// the context reports it.
+		if ctx.Err() != nil || errors.Is(err, os.ErrDeadlineExceeded) || strings.Contains(err.Error(), "deadline") {
+			return nil, common.PartitionPartial_TIMEOUT, err.Error()
+		}
+		return nil, common.PartitionPartial_ERROR, err.Error()
+	}
+	var resp common.QueryMessage
+	if err := proto.Unmarshal(rb, &resp); err != nil || resp.Type != common.MessageType_RESULT {
+		return nil, common.PartitionPartial_ERROR, "malformed reply"
+	}
+	if resp.Error != "" {
+		return &resp, common.PartitionPartial_ERROR, resp.Error // an error reply: not retried
+	}
+	return &resp, common.PartitionPartial_ANSWERED, ""
 }
 
 // TrafficCounter counts the application-level wire bytes (frames as sent,
@@ -504,13 +649,43 @@ func forwardGrouped(msg *common.QueryMessage, parentStream network.Stream, confi
 // without double counting. Client-to-entry traffic is measured by the client.
 type TrafficCounter struct {
 	Streams, Duplicates, BytesOut, BytesIn int64
+	Regions, Failovers                     int64 // DHT regions delegated; extra contacts tried
 }
 
 // LogLine is the line parsed by experiments/gp/collect_metrics.py.
 func (t *TrafficCounter) LogLine(uqid string) string {
-	return fmt.Sprintf("gptraffic uqi=%s streams=%d dup=%d bytes_out=%d bytes_in=%d",
+	return fmt.Sprintf("gptraffic uqi=%s streams=%d dup=%d bytes_out=%d bytes_in=%d regions=%d failover=%d",
 		uqid, atomic.LoadInt64(&t.Streams), atomic.LoadInt64(&t.Duplicates),
-		atomic.LoadInt64(&t.BytesOut), atomic.LoadInt64(&t.BytesIn))
+		atomic.LoadInt64(&t.BytesOut), atomic.LoadInt64(&t.BytesIn),
+		atomic.LoadInt64(&t.Regions), atomic.LoadInt64(&t.Failovers))
+}
+
+// KindKey is the DHT key under which a peer announces (as a provider record)
+// that its partition holds nodes of a kind, e.g. the public registers
+// ActivityRecord and MeasurementValue used by join phase 1.
+func KindKey(kind string) (cid.Cid, error) {
+	hash, err := multihash.Sum([]byte("/idss/gp/kind/"+kind), multihash.SHA2_256, -1)
+	if err != nil {
+		return cid.Undef, err
+	}
+	return cid.NewCidV1(cid.Raw, hash), nil
+}
+
+// FindKindProviders returns the peers announcing a node kind in the DHT.
+func FindKindProviders(ctx context.Context, kadDHT *dht.IpfsDHT, kind string) []peer.ID {
+	key, err := KindKey(kind)
+	if err != nil {
+		return nil
+	}
+	var out []peer.ID
+	seen := map[peer.ID]bool{}
+	for info := range kadDHT.FindProvidersAsync(ctx, key, 0) {
+		if info.ID != "" && !seen[info.ID] {
+			seen[info.ID] = true
+			out = append(out, info.ID)
+		}
+	}
+	return out
 }
 
 // countedStream wraps a stream and adds the bytes read and written to a

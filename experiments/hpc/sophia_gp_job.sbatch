@@ -22,7 +22,6 @@ export DATA_ROOT=${DATA_ROOT:-$HOME/idss_gp_data}
 export OUT=${OUT:-$PWD/experiments/results/gp/sophia_$SLURM_JOB_ID}
 export SCALES=${SCALES:-"0.01 0.1 1"}
 export REGIONS=${REGIONS:-"1 2 5 10"}
-export FORWARDS=${FORWARDS:-"0 3"}
 export REPEATS=${REPEATS:-10} WARMUP=${WARMUP:-2}
 export TTL=${TTL:-60} SETTLE=${SETTLE:-15}
 export E3_SCALE=${E3_SCALE:-0.1}
