@@ -11,7 +11,9 @@ Inputs (written by experiments/gp/run_local.sh):
   <run>/logs/*.log   peer logs with the lines
                        gptraffic uqi=<u> streams=<n> dup=<n> bytes_out=<b> bytes_in=<b> regions=<n> failover=<n>
                        timing uqi=<u> step=<name> ms=<t>
-                       Join <u> phase 1: <n> <type> events in <duration> (via providers|dht-tree)
+                       Join <u> pull: <n> <type> events from <m> providers in <duration>
+                     (one pull line per DSO peer that had rows to join; events are
+                     summed and the slowest pull is reported as phase1_ms)
                      Phase-1 traffic of a join has uqi "<u>-events" and is
                      attributed to query <u>.
 
@@ -39,7 +41,7 @@ COLUMNS = ["round", "query", "uqid", "elapsed_ms", "client_bytes", "overlay_byte
 
 RE_TRAFFIC = re.compile(r"gptraffic uqi=(\S+) streams=(\d+) dup=(\d+) bytes_out=(\d+) bytes_in=(\d+)(?: regions=(\d+) failover=(\d+))?(?: heartbeats=(\d+))?")
 RE_TIMING = re.compile(r"timing uqi=(\S+) step=(\w+) ms=([\d.]+)")
-RE_PHASE1 = re.compile(r"Join (\S+) phase 1: (\d+) \w+ events in (\S+)(?: \(via ([\w-]+)\))?")
+RE_PULL = re.compile(r"Join (\S+) pull: (\d+) \w+ events from \d+ providers in (\S+)")
 UNITS = {"ns": 1e-6, "us": 1e-3, "µs": 1e-3, "ms": 1.0, "s": 1e3, "m": 6e4, "h": 3.6e6}
 
 
@@ -83,10 +85,11 @@ def parse_logs(run):
                 m = RE_TIMING.search(line)
                 if m:
                     steps[m.group(1)][m.group(2)].append(float(m.group(3)))
-            elif "phase 1:" in line:
-                m = RE_PHASE1.search(line)
+            elif " pull: " in line:
+                m = RE_PULL.search(line)
                 if m:
-                    phase1[m.group(1)] = (int(m.group(2)), go_duration_ms(m.group(3)), m.group(4) or "")
+                    ev, ms, _ = phase1.get(m.group(1), (0, 0.0, ""))
+                    phase1[m.group(1)] = (ev + int(m.group(2)), max(ms, go_duration_ms(m.group(3))), "dso-pull")
     return traffic, p1_bytes, steps, phase1
 
 
@@ -144,7 +147,7 @@ def main():
                "peers_executed": len(local), "local_ms_max": max(local) if local else "",
                "access_ms_mean": round(statistics.mean(access), 4) if access else "",
                "phase1_ms": p1ms, "phase1_mode": p1mode,
-               "provider_lookup_ms": lookup[0] if lookup else "", "events": ev, "groups": len(r.get("rows") or []),
+               "provider_lookup_ms": max(lookup) if lookup else "", "events": ev, "groups": len(r.get("rows") or []),
                "answered": st["ANSWERED"], "denied": st["DENIED"], "timeout": st["TIMEOUT"],
                "unreachable": st["UNREACHABLE"], "error": st["ERROR"], "path_failures": path_failures, "check": ""}
         rows.append(row)

@@ -402,6 +402,14 @@ func main() {
 		// Green Power: no energy-community background routines; announce the
 		// partition's node kinds so that join phase 1 can find public registers.
 		announceDataKinds(ctx, kadDHT, graphManager)
+		// Service area (bounding box of the cable segments) for join event pulls.
+		go func() {
+			if b, ok, err := broadcast.ServiceArea(graphManager); err != nil {
+				logger.Errorf("Computing service area: %v", err)
+			} else if ok {
+				logger.Infof("Service area: lat %.4f..%.4f, lon %.4f..%.4f", b.MinLat, b.MaxLat, b.MinLon, b.MaxLon)
+			}
+		}()
 	} else if config.CommunityID != "" {
 		// Community mode: register with (or act as) this community's manager.
 		if config.IsManager {

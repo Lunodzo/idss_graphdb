@@ -5,6 +5,11 @@ import (
 	"testing"
 
 	"idss/graphdb/groupagg"
+
+	eql2 "github.com/krotik/eliasdb/eql"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
 func TestParse(t *testing.T) {
@@ -138,5 +143,74 @@ func TestEventQuery(t *testing.T) {
 	}
 	if _, err := EventQuery("flood"); err == nil {
 		t.Fatalf("unknown type should fail")
+	}
+}
+
+func TestEventQueryInBoxFiltersInEliasDB(t *testing.T) {
+	gm := graph.NewGraphManager(graphstorage.NewMemoryGraphStorage("box"))
+	add := func(key string, minLat, maxLat, minLon, maxLon float64, start, end int) {
+		n := data.NewGraphNode()
+		for k, v := range map[string]interface{}{"key": key, "kind": "ActivityRecord", "minLat": minLat, "maxLat": maxLat,
+			"minLon": minLon, "maxLon": maxLon, "startDay": start, "endDay": end} {
+			n.SetAttr(k, v)
+		}
+		if err := gm.StoreNode("main", n); err != nil {
+			t.Fatal(err)
+		}
+	}
+	add("in", 55.50, 55.51, 10.10, 10.11, 100, 110)    // inside
+	add("edge", 55.60, 55.70, 10.20, 10.30, 100, 110)  // touches the box corner (closed intervals)
+	add("west", 55.50, 55.51, 9.00, 9.01, 100, 110)    // outside (longitude)
+	add("north", 56.50, 56.51, 10.10, 10.11, 100, 110) // outside (latitude)
+	add("span", 55.00, 56.00, 10.00, 10.05, 100, 110)  // larger than the box, overlapping it
+	q, err := EventQueryInBox("digging", Box{MinLat: 55.4, MaxLat: 55.6, MinLon: 10.05, MaxLon: 10.2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, eql, err := groupagg.Parse(q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, err := eql2.RunQuery("t", "main", eql, gm)
+	if err != nil {
+		t.Fatalf("%s: %v", eql, err)
+	}
+	if got := len(res.Rows()); got != 3 {
+		t.Fatalf("%s: %d rows, want 3 (in, edge, span): %v", eql, got, res.Rows())
+	}
+}
+
+func TestBoxExtend(t *testing.T) {
+	var b Box
+	b.Extend(55, 55.1, 10, 10.1, true)
+	b.Extend(54.9, 55.05, 10.05, 10.3, false)
+	if b != (Box{54.9, 55.1, 10, 10.3}) {
+		t.Fatalf("box %+v", b)
+	}
+}
+
+func TestParseEventBoxQueryRoundTrip(t *testing.T) {
+	for _, jt := range []string{"digging", "weather"} {
+		b := Box{MinLat: 54.6124, MaxLat: 57.6789, MinLon: 8.3232, MaxLon: 8.576}
+		q, err := EventQueryInBox(jt, b)
+		if err != nil {
+			t.Fatal(err)
+		}
+		gotType, gotBox, ok := ParseEventBoxQuery(q)
+		if !ok || gotType != jt || gotBox != b {
+			t.Fatalf("%s: got %q %+v %v", jt, gotType, gotBox, ok)
+		}
+	}
+	for _, q := range []string{
+		"@group(keys=0; aggs=count) get FailureEvent show failureYear",
+		"@group(keys=0,1,2,3,4,5; aggs=count) get ActivityRecord where maxLat >= x and minLat <= 1 and maxLon >= 1 and minLon <= 1 show minLat, maxLat, minLon, maxLon, startDay, endDay",
+		"@group(keys=0; aggs=count) get ActivityRecord where maxLat >= 1 and minLat <= 1 and maxLon >= 1 and minLon <= 1 show reason",
+	} {
+		if _, _, ok := ParseEventBoxQuery(q); ok {
+			t.Fatalf("must not match: %s", q)
+		}
+	}
+	if !(Box{0, 1, 0, 1}).Overlaps(1, 2, 1, 2) || (Box{0, 1, 0, 1}).Overlaps(1.1, 2, 0, 1) {
+		t.Fatal("overlap")
 	}
 }

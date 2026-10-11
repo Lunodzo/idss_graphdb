@@ -1,7 +1,8 @@
 // Package gpjoin implements the Green Power two-phase join between DSO failure
 // and asset data and public event registers (digging activities, extreme
-// weather). Public events are shipped to the DSO peers, which evaluate the join
-// locally; cable geometry never leaves its owner.
+// weather). Each DSO peer pulls the public events inside its own service area
+// (EventQueryInBox) and evaluates the join locally; cable geometry never
+// leaves its owner.
 //
 // A join query has the form
 //
@@ -28,6 +29,7 @@ package gpjoin
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -136,6 +138,71 @@ func EventQuery(joinType string) (string, error) {
 		return "@group(keys=0,1,2,3,4; aggs=count) get MeasurementValue show minLat, maxLat, minLon, maxLon, day", nil
 	}
 	return "", fmt.Errorf("unknown join type %q", joinType)
+}
+
+// Box is a latitude/longitude bounding box (closed intervals).
+type Box struct {
+	MinLat, MaxLat, MinLon, MaxLon float64
+}
+
+// Extend grows the box to include the point or box given by the coordinates.
+func (b *Box) Extend(minLat, maxLat, minLon, maxLon float64, empty bool) {
+	if empty {
+		*b = Box{minLat, maxLat, minLon, maxLon}
+		return
+	}
+	b.MinLat, b.MaxLat = math.Min(b.MinLat, minLat), math.Max(b.MaxLat, maxLat)
+	b.MinLon, b.MaxLon = math.Min(b.MinLon, minLon), math.Max(b.MaxLon, maxLon)
+}
+
+// EventQueryInBox is EventQuery restricted to the events whose box overlaps b
+// (closed intervals). With b covering every segment of a DSO (its service
+// area), the result contains every event that can satisfy either join
+// predicate for that DSO: an event overlapping a segment box, or containing a
+// segment midpoint, overlaps b. The exact predicate is still applied locally.
+func EventQueryInBox(joinType string, b Box) (string, error) {
+	q, err := EventQuery(joinType)
+	if err != nil {
+		return "", err
+	}
+	f := func(v float64) string { return strconv.FormatFloat(v, 'f', -1, 64) }
+	where := fmt.Sprintf(" where maxLat >= %s and minLat <= %s and maxLon >= %s and minLon <= %s show ",
+		f(b.MinLat), f(b.MaxLat), f(b.MinLon), f(b.MaxLon))
+	return strings.Replace(q, " show ", where, 1), nil
+}
+
+var boxQueryRe = regexp.MustCompile(`^(@group\([^)]*\) get \w+) where maxLat >= (\S+) and minLat <= (\S+) and maxLon >= (\S+) and minLon <= (\S+)( show .*)$`)
+
+// ParseEventBoxQuery recognises a query built by EventQueryInBox and returns
+// its join type and box, so that a register can answer it from a cached event
+// list instead of scanning its graph once per pulling peer.
+func ParseEventBoxQuery(q string) (string, Box, bool) {
+	m := boxQueryRe.FindStringSubmatch(strings.TrimSpace(q))
+	if m == nil {
+		return "", Box{}, false
+	}
+	for _, jt := range []string{"digging", "weather"} {
+		full, _ := EventQuery(jt)
+		if full != m[1]+m[6] {
+			continue
+		}
+		v := make([]float64, 4)
+		for i := range v {
+			f, err := strconv.ParseFloat(m[i+2], 64)
+			if err != nil {
+				return "", Box{}, false
+			}
+			v[i] = f
+		}
+		return jt, Box{MinLat: v[0], MaxLat: v[1], MinLon: v[2], MaxLon: v[3]}, true
+	}
+	return "", Box{}, false
+}
+
+// Overlaps reports whether an event box overlaps b (closed intervals), the
+// same condition as the where clause of EventQueryInBox.
+func (b Box) Overlaps(minLat, maxLat, minLon, maxLon float64) bool {
+	return maxLat >= b.MinLat && minLat <= b.MaxLat && maxLon >= b.MinLon && minLon <= b.MaxLon
 }
 
 // EventKind returns the node kind of the public register a join type reads.

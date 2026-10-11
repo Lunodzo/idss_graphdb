@@ -91,10 +91,15 @@ be produced over data that **stay with each DSO**, under **owner-defined sharing
   without the lost DSOs).
 - In the interactive client, the TTL is the number after the **last** comma (`<query>, 10`).
 - **DHT propagation** (`dhtcast/`, `broadcast.forwardGrouped`): Kademlia tree broadcast (Czirkos &
-  Hosszú 2013). Join phase 1 finds the public registers via DHT provider records: every GP peer
-  announces the node kinds it holds under `broadcast.KindKey(kind)` (`server/gp_providers.go`); the
-  originator sends the event query only to the providers (`dhtcast.Leaf`, no forwarding) and falls back
-  to the DHT tree when none is found. Phase-1 failures are merged into the final manifest.
+  Hosszú 2013). Every GP peer announces the node kinds it holds as DHT provider records under
+  `broadcast.KindKey(kind)` (`server/gp_providers.go`).
+- **Joins (Q5, Q6): each DSO pulls its own events** (`broadcast.pullJoinEvents`). The join query
+  travels the tree without events. A peer with rows to join computes its service area (bounding box
+  of its segments, `broadcast.ServiceArea`, at start-up), finds the register's providers by DHT
+  lookup (cached 1 min) and sends them `gpjoin.EventQueryInBox` directly (`dhtcast.Leaf`, signed with
+  its own key, one UQI per peer and attempt). Registers answer from a cached event list
+  (`boxedEventEntry`). A pull that fails marks that partition ERROR ("join events unavailable"),
+  never a silent partial join. Only the DSO's service area (public) is revealed; no geometry leaves it.
 - **Query states and long-running queries** (`broadcast/idss_query_state.go`): every GP peer records
   QUEUED → LOCALLY_EXECUTED → COMPLETED → SENT_BACK (FAILED on error) in a small `QueryStatus` node per
   UQI, as in the G-IDSS design (not in the `Query` node: re-indexing it slowed queries). While a query

@@ -5,7 +5,9 @@ import (
 	"strings"
 	"testing"
 
+	"idss/graphdb/access"
 	"idss/graphdb/common"
+	"idss/graphdb/gpjoin"
 	"idss/graphdb/groupagg"
 
 	"github.com/krotik/eliasdb/graph"
@@ -160,27 +162,58 @@ func TestTrafficCounterLogLine(t *testing.T) {
 	}
 }
 
-func TestMergePhase1ReportsMissingEvents(t *testing.T) {
-	phase2 := []*common.PartitionPartial{
-		entry("dso01", "p1", common.PartitionPartial_ANSWERED, []string{"DSO-01", "3"}),
-		entry("public_digging", "p2", common.PartitionPartial_ANSWERED),
+func TestServiceAreaCoversSegmentsAndMidpoints(t *testing.T) {
+	gs := graphstorage.NewMemoryGraphStorage("sa")
+	gm := graph.NewGraphManager(gs)
+	if _, ok, err := ServiceArea(gm); err != nil || ok {
+		t.Fatalf("no segments: ok=%v err=%v", ok, err)
 	}
-	phase1 := []*common.PartitionPartial{
-		entry("public_digging", "p2", common.PartitionPartial_TIMEOUT),
-		entry("public_weather", "p3", common.PartitionPartial_ANSWERED),
-		{PartitionId: "events:ActivityRecord", Status: common.PartitionPartial_UNREACHABLE, Detail: "no provider"},
+	serviceAreas.Delete(gm)
+	for i, v := range [][6]float64{{55.0, 55.1, 10.0, 10.1, 55.05, 10.05}, {56.0, 56.2, 9.5, 9.6, 56.1, 9.55}} {
+		n := data.NewGraphNode()
+		n.SetAttr("kind", "ACLineSegment")
+		n.SetAttr("key", string(rune('a'+i)))
+		for j, k := range []string{"minLat", "maxLat", "minLon", "maxLon", "lat", "lon"} {
+			n.SetAttr(k, v[j])
+		}
+		if err := gm.StoreNode("main", n); err != nil {
+			t.Fatal(err)
+		}
 	}
-	got := MergePhase1(phase2, phase1)
-	status := map[string]common.PartitionPartial_Status{}
-	for _, e := range got {
-		status[e.PartitionId] = e.Status
+	b, ok, err := ServiceArea(gm)
+	if err != nil || !ok || b.MinLat != 55.0 || b.MaxLat != 56.2 || b.MinLon != 9.5 || b.MaxLon != 10.1 {
+		t.Fatalf("box %+v ok=%v err=%v", b, ok, err)
 	}
-	if len(got) != 3 || status["dso01"] != common.PartitionPartial_ANSWERED ||
-		status["public_digging"] != common.PartitionPartial_TIMEOUT ||
-		status["events:ActivityRecord"] != common.PartitionPartial_UNREACHABLE {
-		t.Fatalf("merged manifest %v", status)
+}
+
+func TestBoxedEventEntryEqualsGraphQuery(t *testing.T) {
+	gm := graph.NewGraphManager(graphstorage.NewMemoryGraphStorage("ev"))
+	for i, v := range [][6]float64{
+		{55.50, 55.51, 10.10, 10.11, 100, 110}, {55.60, 55.70, 10.20, 10.30, 120, 125},
+		{55.50, 55.51, 9.00, 9.01, 100, 110}, {56.50, 56.51, 10.10, 10.11, 90, 95}, {55.0, 56.0, 10.0, 10.05, 1, 2},
+	} {
+		n := data.NewGraphNode()
+		n.SetAttr("kind", "ActivityRecord")
+		n.SetAttr("key", string(rune('a'+i)))
+		for j, k := range []string{"minLat", "maxLat", "minLon", "maxLon", "startDay", "endDay"} {
+			n.SetAttr(k, v[j])
+		}
+		if err := gm.StoreNode("main", n); err != nil {
+			t.Fatal(err)
+		}
 	}
-	if !strings.HasPrefix(got[1].Detail, "join phase 1: ") {
-		t.Fatalf("detail %q", got[1].Detail)
+	box := gpjoin.Box{MinLat: 55.4, MaxLat: 55.6, MinLon: 10.05, MaxLon: 10.2}
+	q, _ := gpjoin.EventQueryInBox("digging", box)
+	spec, eqlQuery, err := groupagg.Parse(q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want, _ := LocalGroupedEntry(spec, eqlQuery, access.Allow, "", nil, "p", "", gm, nil)
+	got, _ := boxedEventEntry(spec, "digging", box, access.Allow, "", nil, "p", "", gm)
+	if got.Status != common.PartitionPartial_ANSWERED || len(got.Partials) != 3 || !reflect.DeepEqual(got.Partials, want.Partials) {
+		t.Fatalf("cached answer %v, graph answer %v", got.Partials, want.Partials)
+	}
+	if denied, _ := boxedEventEntry(spec, "digging", box, access.Deny, "no", nil, "p", "", gm); denied.Status != common.PartitionPartial_DENIED {
+		t.Fatal("deny must be honoured")
 	}
 }

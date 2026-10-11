@@ -14,7 +14,8 @@
 ## Experiments
 - **E1** latency and overlay traffic vs peers (6 DSOs × `REGIONS` + 2 public partitions: 8, 14, 32, 62)
   and data scale (`SCALES`, fraction of ~65,000 km). Queries propagate along the Kademlia DHT tree
-  (`dhtcast/`): one message per peer; join phase 1 asks only the providers of the public register.
+  (`dhtcast/`): one message per peer. For joins, each DSO peer pulls only the public events inside its
+  own service area from the register's providers (found by DHT provider records).
 - **E2** central baseline (`tools/baseline`, all partitions in one EliasDB, same aggregation code)
   per scale; every overlay run is also checked against the ground truth (`check` column).
 - **E3** completeness: 0–3 DSO peers lost (`KILL`, also at 32 peers), hung peers that keep their
@@ -24,12 +25,13 @@
 ## Metrics (one CSV row per query execution)
 - `elapsed_ms`, `client_bytes`: measured by the client (submit to final result).
 - `overlay_bytes`: wire bytes on all peer-to-peer streams of the query, each stream counted by the
-  peer that opened it (`gptraffic` log lines), including join phase 1 (`phase1_bytes`).
+  peer that opened it (`gptraffic` log lines), including the join event pulls (`phase1_bytes`).
 - `streams`, `dup_replies`, `failovers`: forwarded streams (N-1 with all peers up), replies from a
   peer that had already claimed the query (0 with tree propagation), extra region contacts tried.
 - `peers_executed`, `local_ms_max`: local executions and the slowest one; `access_ms_mean`: signature
-  check + policy evaluation per peer; `phase1_ms`, `phase1_mode` (providers | dht-tree),
-  `provider_lookup_ms`, `events`: join phase 1.
+  check + policy evaluation per peer; `phase1_ms`, `phase1_mode`,
+  `provider_lookup_ms`, `events`: join event pulls (slowest pull; events summed over DSO peers;
+  `phase1_mode` = dso-pull).
 - `answered`…`error`: manifest over data partitions; `path_failures`: `peer:`/`region:` entries;
   `check`: MATCH / SKIPPED (rates with a partition missing) / MISMATCH.
 
