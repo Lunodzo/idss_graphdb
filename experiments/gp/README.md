@@ -34,3 +34,9 @@
   `check`: MATCH / SKIPPED (rates with a partition missing) / MISMATCH.
 
 Quick local check (≈2 min): `SCALES=0.01 REGIONS="1 5" REPEATS=2 experiments/gp/run_matrix.sh E1`.
+
+## Long-running queries (manual)
+In the client: `submit <query>, 3600` prints the UQI and returns; `result <uqid>` (same entry peer, same
+requester key) returns `Status <state>` while the query runs and the full result with its manifest
+once it has completed. Peers send progress heartbeats every 2 s; a delegate silent for
+`IDSS_GP_IDLE_TIMEOUT` (default 10 s) is failed over even when the TTL is long.

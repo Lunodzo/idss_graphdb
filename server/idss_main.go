@@ -605,6 +605,13 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 		}
 	}
 
+	// Green Power: fetch the stored result of an earlier (long-running) query.
+	// Answered locally by the peer that initiated it; never forwarded.
+	if config.UseCase == "gp" && broadcast.IsResultRequest(msg.Query) {
+		broadcast.HandleResultRequest(conn, msg, gm, identity.Verify(msg))
+		return
+	}
+
 	dupStart := time.Now()
 	duplicateQuery, err := broadcast.CheckDuplicateQuery(msg.Uqid, gm) // with gm, we check queries in the graph database for this peer
 	logger.Infof("timing uqi=%s step=duplicate_check ms=%.1f", msg.Uqid, time.Since(dupStart).Seconds()*1000)

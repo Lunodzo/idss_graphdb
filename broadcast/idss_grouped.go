@@ -221,10 +221,36 @@ func ManifestSummary(entries []*common.PartitionPartial) string {
 // HandleGroupedQuery executes a @group query on this peer, forwards it, and
 // either returns the union of partition entries to the parent or, at the
 // originator, the finalised result plus the manifest to the client.
+//
+// The query state is recorded as in G-IDSS (QUEUED, LOCALLY_EXECUTED,
+// COMPLETED, then SENT_BACK at intermediate peers; FAILED on error), progress
+// heartbeats are sent upstream while the query runs, and the originator
+// stores the result so that the requester can fetch it later ("@result <uqid>").
 func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config flags.Config, gm *graph.Manager, kadDHT *dht.IpfsDHT, decision access.Decision, denyReason string, hidden func(string) bool) {
 	start := time.Now()
 	self := kadDHT.Host().ID()
-	fail := func(err error) { helpers.SendErrorMessage(conn, conn.Conn().RemotePeer(), err.Error()) }
+	rs := newReplyStream(conn, msg, gm)
+	rs.startHeartbeat()
+	defer rs.stopHeartbeat()
+	myAddr := kadDHT.Host().Addrs()[0].Encapsulate(multiaddr.StringCast("/p2p/" + self.String())).String()
+	isOriginator := msg.Originator == myAddr
+	var stored StoredResult
+	if isOriginator {
+		stored = StoredResult{Uqid: msg.Uqid, Query: msg.Query, Requester: msg.RequesterId,
+			State: common.QueryState_QUEUED.String(), Submitted: time.Now().UTC().Format(time.RFC3339)}
+		if err := SaveStoredResult(gm, stored); err != nil {
+			logger.Errorf("Storing query record %s: %v", msg.Uqid, err)
+		}
+	}
+	fail := func(err error) {
+		if isOriginator {
+			stored.State, stored.Error = common.QueryState_FAILED.String(), err.Error()
+			if serr := SaveStoredResult(gm, stored); serr != nil {
+				logger.Errorf("Storing failed query %s: %v", msg.Uqid, serr)
+			}
+		}
+		rs.fail(err)
+	}
 
 	groupQuery := msg.Query
 	var join *gpjoin.Spec
@@ -248,8 +274,6 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 		}
 	}
 	partition := PartitionLabel(config, self)
-	myAddr := kadDHT.Host().Addrs()[0].Encapsulate(multiaddr.StringCast("/p2p/" + self.String())).String()
-	isOriginator := msg.Originator == myAddr
 
 	// @join phase 1 (originator only): collect the public events, which are
 	// then shipped with the query so every peer joins locally.
@@ -288,6 +312,7 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 		t := time.Now()
 		local, header = LocalGroupedEntry(spec, eqlQuery, decision, denyReason, hidden, partition, self, gm, keep)
 		logStepTiming(msg.Uqid, "grouped_local", t)
+		rs.setState(common.QueryState_LOCALLY_EXECUTED)
 	}()
 	remote, respondingPeers := forwardGrouped(msg, conn, config, gm, kadDHT)
 	wg.Wait()
@@ -303,7 +328,11 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 			RespondingPeerIds: respondingPeers,
 			PartitionPartials: entries,
 		}
-		sendGroupedReply(conn, reply)
+		// Reply first, then record the states: the graph writes stay off the
+		// critical path of the query (one per tree level otherwise).
+		rs.final(reply)
+		rs.setState(common.QueryState_COMPLETED)
+		rs.setState(common.QueryState_SENT_BACK)
 		return
 	}
 
@@ -338,7 +367,15 @@ func HandleGroupedQuery(conn network.Stream, msg *common.QueryMessage, config fl
 		RespondingPeerIds: respondingPeers,
 		PartitionPartials: manifest,
 	}
-	sendGroupedReply(conn, reply)
+	// Reply, then store the result: a client that disconnected (long query)
+	// fetches it later with "@result <uqid>".
+	rs.final(reply)
+	stored.State, stored.Completed = common.QueryState_COMPLETED.String(), time.Now().UTC().Format(time.RFC3339)
+	stored.Header, stored.Rows, stored.Manifest = outHeader, rows, manifestEntries(manifest)
+	if err := SaveStoredResult(gm, stored); err != nil {
+		logger.Errorf("Storing result of %s: %v", msg.Uqid, err)
+	}
+	rs.setState(common.QueryState_COMPLETED)
 }
 
 // MergePhase1 adds the join phase-1 entries that did not answer to the final
@@ -479,17 +516,6 @@ func askProviders(p1 *common.QueryMessage, kind string, providers []peer.ID, spe
 	return UnionEntries(entries)
 }
 
-func sendGroupedReply(conn network.Stream, reply *common.QueryMessage) {
-	b, err := proto.Marshal(reply)
-	if err != nil {
-		logger.Errorf("Error marshalling grouped reply: %v", err)
-		return
-	}
-	if err := helpers.WriteDelimitedMessage(conn, b); err != nil {
-		logger.Errorf("Error sending grouped reply: %v", err)
-	}
-}
-
 // maxRegionAttempts bounds failover: how many contacts of one DHT region are
 // tried before the region is reported as unreachable.
 const maxRegionAttempts = 3
@@ -618,23 +644,54 @@ func askPeer(msg *common.QueryMessage, p peer.ID, b []byte, config flags.Config,
 	defer raw.Close()
 	atomic.AddInt64(&traffic.Streams, 1)
 	stream := &countedStream{Stream: raw, c: traffic}
+	// A hung peer may never accept the data: bound the write as well.
+	wd := idleTimeout()
+	if r := remainingQueryTime(msg); r < wd {
+		wd = r
+	}
+	_ = raw.SetWriteDeadline(time.Now().Add(wd))
 	if err := helpers.WriteDelimitedMessage(stream, b); err != nil {
 		return nil, common.PartitionPartial_UNREACHABLE, err.Error()
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), remainingQueryTime(msg))
-	defer cancel()
-	rb, err := helpers.ReadDelimitedMessage(stream, ctx)
-	if err != nil {
-		// The read deadline is the context deadline; it can fire just before
-		// the context reports it.
-		if ctx.Err() != nil || errors.Is(err, os.ErrDeadlineExceeded) || strings.Contains(err.Error(), "deadline") {
-			return nil, common.PartitionPartial_TIMEOUT, err.Error()
-		}
-		return nil, common.PartitionPartial_ERROR, err.Error()
-	}
+	_ = raw.SetWriteDeadline(time.Time{})
+	// Read frames until the final reply. Heartbeats (progress) reset the idle
+	// timer: a working subtree may take until the query deadline, a silent one
+	// is treated as hung after idleTimeout so that the region can fail over.
+	idle := idleTimeout()
 	var resp common.QueryMessage
-	if err := proto.Unmarshal(rb, &resp); err != nil || resp.Type != common.MessageType_RESULT {
-		return nil, common.PartitionPartial_ERROR, "malformed reply"
+	for {
+		wait := remainingQueryTime(msg)
+		if wait <= 0 {
+			return nil, common.PartitionPartial_TIMEOUT, "query deadline reached"
+		}
+		silent := false
+		if wait > idle {
+			wait, silent = idle, true
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), wait)
+		rb, err := helpers.ReadDelimitedMessage(stream, ctx)
+		ctxErr := ctx.Err()
+		cancel()
+		if err != nil {
+			// The read deadline is the context deadline; it can fire just before
+			// the context reports it.
+			if ctxErr != nil || errors.Is(err, os.ErrDeadlineExceeded) || strings.Contains(err.Error(), "deadline") {
+				if silent {
+					return nil, common.PartitionPartial_TIMEOUT, fmt.Sprintf("no progress for %v", idle)
+				}
+				return nil, common.PartitionPartial_TIMEOUT, err.Error()
+			}
+			return nil, common.PartitionPartial_ERROR, err.Error()
+		}
+		resp.Reset()
+		if err := proto.Unmarshal(rb, &resp); err != nil || resp.Type != common.MessageType_RESULT {
+			return nil, common.PartitionPartial_ERROR, "malformed reply"
+		}
+		if IsHeartbeat(&resp) {
+			atomic.AddInt64(&traffic.Heartbeats, 1)
+			continue
+		}
+		break
 	}
 	if resp.Error != "" {
 		return &resp, common.PartitionPartial_ERROR, resp.Error // an error reply: not retried
@@ -650,14 +707,15 @@ func askPeer(msg *common.QueryMessage, p peer.ID, b []byte, config flags.Config,
 type TrafficCounter struct {
 	Streams, Duplicates, BytesOut, BytesIn int64
 	Regions, Failovers                     int64 // DHT regions delegated; extra contacts tried
+	Heartbeats                             int64 // progress frames received from delegates
 }
 
 // LogLine is the line parsed by experiments/gp/collect_metrics.py.
 func (t *TrafficCounter) LogLine(uqid string) string {
-	return fmt.Sprintf("gptraffic uqi=%s streams=%d dup=%d bytes_out=%d bytes_in=%d regions=%d failover=%d",
+	return fmt.Sprintf("gptraffic uqi=%s streams=%d dup=%d bytes_out=%d bytes_in=%d regions=%d failover=%d heartbeats=%d",
 		uqid, atomic.LoadInt64(&t.Streams), atomic.LoadInt64(&t.Duplicates),
 		atomic.LoadInt64(&t.BytesOut), atomic.LoadInt64(&t.BytesIn),
-		atomic.LoadInt64(&t.Regions), atomic.LoadInt64(&t.Failovers))
+		atomic.LoadInt64(&t.Regions), atomic.LoadInt64(&t.Failovers), atomic.LoadInt64(&t.Heartbeats))
 }
 
 // KindKey is the DHT key under which a peer announces (as a provider record)
@@ -671,21 +729,41 @@ func KindKey(kind string) (cid.Cid, error) {
 	return cid.NewCidV1(cid.Raw, hash), nil
 }
 
+// providerGrace is how long a provider lookup keeps listening after the last
+// new provider arrived. A full lookup can stall on an unresponsive DHT peer
+// (its RPC timeout), while provider records usually come from the first peers
+// asked; the lookup ends at its context deadline at the latest.
+const providerGrace = time.Second
+
 // FindKindProviders returns the peers announcing a node kind in the DHT.
 func FindKindProviders(ctx context.Context, kadDHT *dht.IpfsDHT, kind string) []peer.ID {
 	key, err := KindKey(kind)
 	if err != nil {
 		return nil
 	}
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	var out []peer.ID
 	seen := map[peer.ID]bool{}
-	for info := range kadDHT.FindProvidersAsync(ctx, key, 0) {
-		if info.ID != "" && !seen[info.ID] {
-			seen[info.ID] = true
-			out = append(out, info.ID)
+	ch := kadDHT.FindProvidersAsync(ctx, key, 0)
+	var grace <-chan time.Time
+	for {
+		select {
+		case info, ok := <-ch:
+			if !ok {
+				return out
+			}
+			if info.ID != "" && !seen[info.ID] {
+				seen[info.ID] = true
+				out = append(out, info.ID)
+				grace = time.After(providerGrace)
+			}
+		case <-grace:
+			return out
+		case <-ctx.Done():
+			return out
 		}
 	}
-	return out
 }
 
 // countedStream wraps a stream and adds the bytes read and written to a

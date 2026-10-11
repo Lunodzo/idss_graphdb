@@ -153,8 +153,8 @@ func TestRunGroupedOnGraphCountsAndJoins(t *testing.T) {
 }
 
 func TestTrafficCounterLogLine(t *testing.T) {
-	c := TrafficCounter{Streams: 3, Duplicates: 1, BytesOut: 120, BytesIn: 4096, Regions: 2, Failovers: 1}
-	want := "gptraffic uqi=q1 streams=3 dup=1 bytes_out=120 bytes_in=4096 regions=2 failover=1"
+	c := TrafficCounter{Streams: 3, Duplicates: 1, BytesOut: 120, BytesIn: 4096, Regions: 2, Failovers: 1, Heartbeats: 4}
+	want := "gptraffic uqi=q1 streams=3 dup=1 bytes_out=120 bytes_in=4096 regions=2 failover=1 heartbeats=4"
 	if got := c.LogLine("q1"); got != want {
 		t.Fatalf("got %q want %q", got, want)
 	}

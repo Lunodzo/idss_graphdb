@@ -37,7 +37,7 @@ COLUMNS = ["round", "query", "uqid", "elapsed_ms", "client_bytes", "overlay_byte
            "streams", "dup_replies", "failovers", "peers_executed", "local_ms_max", "access_ms_mean",
            "phase1_ms", "phase1_mode", "provider_lookup_ms", "events", "groups", "answered", "denied", "timeout", "unreachable", "error", "path_failures", "check"]
 
-RE_TRAFFIC = re.compile(r"gptraffic uqi=(\S+) streams=(\d+) dup=(\d+) bytes_out=(\d+) bytes_in=(\d+)(?: regions=(\d+) failover=(\d+))?")
+RE_TRAFFIC = re.compile(r"gptraffic uqi=(\S+) streams=(\d+) dup=(\d+) bytes_out=(\d+) bytes_in=(\d+)(?: regions=(\d+) failover=(\d+))?(?: heartbeats=(\d+))?")
 RE_TIMING = re.compile(r"timing uqi=(\S+) step=(\w+) ms=([\d.]+)")
 RE_PHASE1 = re.compile(r"Join (\S+) phase 1: (\d+) \w+ events in (\S+)(?: \(via ([\w-]+)\))?")
 UNITS = {"ns": 1e-6, "us": 1e-3, "µs": 1e-3, "ms": 1.0, "s": 1e3, "m": 6e4, "h": 3.6e6}
@@ -72,7 +72,7 @@ def parse_logs(run):
                 m = RE_TRAFFIC.search(line)
                 if m:
                     u, vals = m.group(1), [int(x or 0) for x in m.groups()[1:]]
-                    vals = vals[:4] + [vals[5]]   # drop regions, keep failovers
+                    vals = vals[:4] + [vals[5]]   # drop regions (and heartbeats), keep failovers
                     if u.endswith("-events"):
                         p1_bytes[u[:-7]] += vals[2] + vals[3]
                     else:

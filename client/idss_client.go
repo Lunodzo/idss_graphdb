@@ -288,6 +288,7 @@ func main() {
 	for {
 		fmt.Println("\n\nEnter your query and TTL or 'exit' to quit: \nUse comma to separate query and TTL")
 		fmt.Println("Append '-l' or '-local' for local execution, or use 'add', 'update', 'delete' for modifications.")
+		fmt.Println("Long-running queries: 'submit <query>, <ttl>' returns at once; 'result <uqid>' fetches the result or its state.")
 		fmt.Print("-> ")
 		input, err := reader.ReadString('\n')
 		if err != nil {
@@ -298,6 +299,16 @@ func main() {
 		if input == "exit" {
 			log.Warning("Client exiting...")
 			break
+		}
+		// Long-running queries: "submit <query>, <ttl>" sends the query without
+		// waiting (the initiator peer stores the result); "result <uqid>" fetches
+		// it, or its current state, from the same peer later.
+		detach := false
+		if strings.HasPrefix(input, "submit ") {
+			detach, input = true, strings.TrimSpace(strings.TrimPrefix(input, "submit "))
+		}
+		if f := strings.Fields(input); len(f) == 2 && f[0] == "result" {
+			input = "@result " + f[1] + ", 10"
 		}
 
 		// Split the input into query and TTL
@@ -354,6 +365,11 @@ func main() {
 
 		log.Infoln("Query sent to server.")
 		log.Infoln("UQI: ", uqi)
+		if detach {
+			log.Infof("Detached. Fetch the result later from the same peer with: result %s", uqi)
+			stream.Close()
+			continue
+		}
 
 		// Read and accumulate responses in loop to handle chunks
 		var allRows [][]string
@@ -362,6 +378,8 @@ func main() {
 		var respondingPeerCount int
 		var totalWireBytes int
 		var manifest []ManifestEntry
+		var lastProgress string
+		resultUqid, resultQuery := uqi, query
 
 		for {
 			responseBytes, wireSize, err := readDelimitedMessage(stream)
@@ -385,6 +403,16 @@ func main() {
 			if part.Error != "" {
 				errorMsg = part.Error // Capture error for FAILED state
 				break
+			}
+			if part.Type == common.MessageType_RESULT && part.RecordCount == -1 { // progress heartbeat
+				if st := part.GetState().GetState().String(); st != lastProgress {
+					lastProgress = st
+					log.Infof("Progress: %s (%s)", st, time.Since(startTime).Round(time.Millisecond))
+				}
+				continue
+			}
+			if part.Uqid != "" && part.Query != "" { // a fetched stored result names the original query
+				resultUqid, resultQuery = part.Uqid, part.Query
 			}
 			for _, e := range part.PartitionPartials {
 				manifest = append(manifest, ManifestEntry{Partition: e.PartitionId, Peer: e.PeerId, Status: e.Status.String(), Detail: e.Detail})
@@ -431,7 +459,7 @@ func main() {
 			}
 
 			// Check if it's a status message or query result
-			queryResponse := QueryResponse{Uqid: uqi, Query: query, ElapsedMs: float64(timeTaken.Microseconds()) / 1000,
+			queryResponse := QueryResponse{Uqid: resultUqid, Query: resultQuery, ElapsedMs: float64(timeTaken.Microseconds()) / 1000,
 				WireBytes: totalWireBytes, ResultCount: dataNonHeaders, Header: header, Rows: allRows, Manifest: manifest}
 			isStatus := len(allRows) == 1 && allRows[0][0] == "Status" // Adjusted for accumulated rows
 
@@ -457,7 +485,7 @@ func main() {
 					continue
 				}
 
-				filename := filepath.Join(resultsDir, fmt.Sprintf("%s.json", uqi))
+				filename := filepath.Join(resultsDir, fmt.Sprintf("%s.json", resultUqid))
 				err = os.WriteFile(filename, jsonResponse, 0644)
 				if err != nil {
 					log.Error("Error writing JSON response to file:", err)

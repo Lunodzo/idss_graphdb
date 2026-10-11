@@ -95,6 +95,16 @@ be produced over data that **stay with each DSO**, under **owner-defined sharing
   announces the node kinds it holds under `broadcast.KindKey(kind)` (`server/gp_providers.go`); the
   originator sends the event query only to the providers (`dhtcast.Leaf`, no forwarding) and falls back
   to the DHT tree when none is found. Phase-1 failures are merged into the final manifest.
+- **Query states and long-running queries** (`broadcast/idss_query_state.go`): every GP peer records
+  QUEUED → LOCALLY_EXECUTED → COMPLETED → SENT_BACK (FAILED on error) in a small `QueryStatus` node per
+  UQI, as in the G-IDSS design (not in the `Query` node: re-indexing it slowed queries). While a query
+  runs, peers send progress heartbeats upstream (RESULT, `RecordCount = -1`, current state) every 2 s;
+  a parent fails over a delegate silent for `IDSS_GP_IDLE_TIMEOUT` (default 10 s), but waits for a
+  working subtree until the query deadline. The initiator stores the result (`GroupedResult` node);
+  the client's `submit <query>, <ttl>` returns at once and `result <uqid>` (`@result <uqid>`, answered
+  locally, requester-only) fetches the result or the current state. Note: the shared
+  `UpdateQueryState` (EC path) omits the node kind, so its updates are silently dropped; do not use it
+  for GP and do not change it without checking the EC experiments.
 - **Experiments** (`experiments/gp/README.md`): report queries live in `experiments/gp/queries.tsv`
   (do not duplicate them); `run_matrix.sh E1|E2|E3` runs the matrix; results go to
   `experiments/results/gp/` (git-ignored). Peers log `gptraffic uqi=... regions=.. failover=..` (bytes
