@@ -13,10 +13,12 @@
 #BSUB -o idss_gp_%J.out
 #BSUB -e idss_gp_%J.err
 
+module load python3/3.11.9
+# After the module: python3 pulls in the gcc module, whose gccgo "go" (Go 1.18)
+# would otherwise shadow the Go SDK and reject go.mod's version line.
 export PATH=$HOME/go-sdk/go/bin:$PATH
 export GOTOOLCHAIN=local
-module load python3/3.11.9
-go version
+which go; go version
 cd ~/idss_graphdb
 
 export TMPDIR=${__LSF_JOB_TMPDIR__:-/tmp/$USER-idss-gp-$LSB_JOBID}   # run directories (peer logs, results)

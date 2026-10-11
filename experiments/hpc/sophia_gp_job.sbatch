@@ -11,9 +11,10 @@
 #SBATCH --output=idss_gp_%j.out
 #SBATCH --error=idss_gp_%j.err
 
-ml Go Python   # check exact module names with: ml avail Go; ml avail Python
+ml Python      # Python first: its gcc dependency ships an old gccgo "go"
+ml Go          # loaded last so its go comes first in PATH (check names: ml avail Go; ml avail Python)
 export GOTOOLCHAIN=local
-go version
+which go; go version
 cd "${SLURM_SUBMIT_DIR:-$HOME/idss_graphdb}"
 
 export TMPDIR=${TMPDIR_GP:-/tmp/$USER-idss-gp-$SLURM_JOB_ID}
