@@ -37,10 +37,10 @@ ml purge
 PEERS_PER_NODE=${PEERS_PER_NODE:-100}
 REPEATS=${REPEATS:-3}
 E_CUSTOMERS=${E_CUSTOMERS:-10}
-# With few peers per node, total peer count is small, so give each peer more
-# history to keep query result volumes realistic (default stays 1 day at
-# high peer density; the "latency" one-peer-per-node regime needs more).
-E_DAYS=${E_DAYS:-1}
+# Data horizon per peer: one billing month by default. Readings are stored
+# as one MeterReading block per meter, reading type and day (see
+# server/generate_data.py), so a month costs about 21 MB per peer.
+E_DAYS=${E_DAYS:-30}
 E_INTERVAL_MINUTES=${E_INTERVAL_MINUTES:-15}
 POLICY_FILE=${POLICY_FILE:-policy.permissive.yaml}
 EXPERIMENTS=${EXPERIMENTS:-"e1 e2 e3 e4 e5"}

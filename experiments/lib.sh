@@ -33,6 +33,11 @@ harness_new_run_dir() {
         HARNESS_RUN_DIR="${results_root}/${HARNESS_RUN_ID}"
     done
     mkdir -p "${HARNESS_RUN_DIR}"
+    # Record how readings are stored (see server/generate_data.py and
+    # broadcast/idss_db_init.go) and any injected link delay.
+    printf 'reading_layout=%s\nindex_readings=%s\nlink_delay_ms=%s\n' \
+        "${IDSS_READING_LAYOUT:-block}" "${IDSS_INDEX_READINGS:-0}" "${IDSS_LINK_DELAY_MS:-0}" \
+        > "${HARNESS_RUN_DIR}/data_layout.txt"
 }
 
 # harness_start_cluster <peer_count> <log_dir> <launch_log_file> [extra start_peers.sh args...]

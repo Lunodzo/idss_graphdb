@@ -31,7 +31,7 @@ fi
 
 PEER_COUNT=$1
 REPEATS=${2:-1}
-E5_CUSTOMERS=${E5_CUSTOMERS:-5}
+E5_CUSTOMERS=${E5_CUSTOMERS:-10}
 E5_DAYS=${E5_DAYS:-30}
 E5_INTERVAL_MINUTES=${E5_INTERVAL_MINUTES:-15}
 # Diagnostic switches (1 = skip that part of the scenario in every repeat).

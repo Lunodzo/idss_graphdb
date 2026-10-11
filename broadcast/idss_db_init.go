@@ -134,7 +134,7 @@ func LoadGraphData(dataFilePath string, dbPath string, graphDB graphstorage.Stor
                 for k, v := range nodeData {
                     graphNode.SetAttr(k, v)
                 }
-                trans.StoreNode("main", graphNode)
+                trans.StoreNode("main", withoutReadingIndex(graphNode))
                 nodeCount++
                 if nodeCount%batchSize == 0 {
                     if err := trans.Commit(); err != nil {
@@ -232,4 +232,28 @@ func QueryManager_init(GRAPH_MANAGER *graph.Manager) {
         return
     }
     logger.Info("Committed Query Manager node store transaction")
+}
+// MeterReading nodes are kept out of EliasDB's full-text word index. EliasDB
+// indexes every word of every attribute value, and its append-only store
+// rewrites a word's whole posting list on each insert: for time-series nodes
+// (numeric values, timestamps, and low-cardinality words such as the reading
+// type shared by thousands of nodes) that index dominates storage and grows
+// faster than the data. EQL evaluates where clauses by scanning nodes and
+// never consults the index, so queries are unaffected; all attributes are
+// still stored. IDSS_INDEX_READINGS=1 restores full indexing, as in the
+// original layout.
+type readingNode struct {
+    data.Node
+}
+
+// IndexMap returns an empty map, so the node is stored but not word-indexed.
+func (n readingNode) IndexMap() map[string]string {
+    return map[string]string{}
+}
+
+func withoutReadingIndex(node data.Node) data.Node {
+    if node.Kind() != "MeterReading" || os.Getenv("IDSS_INDEX_READINGS") == "1" {
+        return node
+    }
+    return readingNode{node}
 }

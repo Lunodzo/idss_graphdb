@@ -185,7 +185,7 @@ func HandleAggregateQuery(conn network.Stream, msg *common.QueryMessage, config 
 
 	// Execute local aggregate. Average accumulates as a running sum just like sum
 	// and is only turned into a mean once, at the originator.
-	localValue, hasLocal, err := RunAggregatedQuery(agg, nodeKind, gm, kadDHT)
+	localValue, hasLocal, err := RunAggregatedQuery(agg, nodeKind, aggregateSelection(msg.Query), gm, kadDHT)
 	if err != nil {
 		// No local rows matched (or a schema issue occurred); keep broadcasting so
 		// downstream peers holding matching data are not cut off from the query.
@@ -263,12 +263,17 @@ func HandleAggregateQuery(conn network.Stream, msg *common.QueryMessage, config 
 }
 
 // Function to send the partial aggregate result to the parent peer
-func RunAggregatedQuery(agg common.AggregateInfo, nodeKind string, gm *graph.Manager, kadDHT *dht.IpfsDHT) (float64, bool, error) {
+func RunAggregatedQuery(agg common.AggregateInfo, nodeKind string, selection string, gm *graph.Manager, kadDHT *dht.IpfsDHT) (float64, bool, error) {
 	// Construct the base query.
 	var baseQuery string
 	if !strings.Contains(agg.Traversal, ":") {
-		// When there is no colon, assume the attribute is directly on the node.
+		// When there is no colon, the attribute is directly on the node: aggregate
+		// over the nodes the query selects, including its where clause (e.g. one
+		// reading type), not over every node of the kind.
 		baseQuery = fmt.Sprintf("get %s", nodeKind)
+		if selection != "" {
+			baseQuery = selection
+		}
 	} else {
 		// Otherwise, include a traverse clause.
 		if strings.TrimSpace(agg.Filter) == "" {
@@ -307,6 +312,20 @@ func RunAggregatedQuery(agg common.AggregateInfo, nodeKind string, gm *graph.Man
 	default:
 		return 0, false, fmt.Errorf("unsupported aggregate function")
 	}
+}
+
+// aggregateSelection returns the selection part of an aggregate query, i.e. the
+// "get <kind> [where ...]" text before "show", or "" if there is none.
+func aggregateSelection(query string) string {
+	position := strings.Index(strings.ToLower(query), " show ")
+	if position < 0 {
+		return ""
+	}
+	selection := strings.TrimSpace(query[:position])
+	if !strings.HasPrefix(strings.ToLower(selection), "get ") {
+		return ""
+	}
+	return selection
 }
 
 func UpdateQuerySenderAddress(s1 *common.QueryMessage, s2 string, gm *graph.Manager) error {
@@ -1061,7 +1080,9 @@ func RunIDSSQueryWithDecision(command string, peer peer.ID, gm *graph.Manager, d
 // LocalSettlementTotals returns aggregate-only settlement values for a period.
 func LocalSettlementTotals(gm *graph.Manager, hostID peer.ID, from time.Time, to time.Time) (float64, float64, error) {
 	period := fmt.Sprintf(` where timeStamp >= "%s" and timeStamp <= "%s"`, from.Format(time.RFC3339), to.Format(time.RFC3339))
-	meterRows, meterHeader, err := RunIDSSQuery("get MeterReading"+period, hostID, gm)
+	// Settle active energy only; other reading types (reactive power,
+	// generation, battery state of charge) are not billed quantities.
+	meterRows, meterHeader, err := RunIDSSQuery("get MeterReading"+period+` and readingType = "activePower"`, hostID, gm)
 	if err != nil {
 		return 0, 0, fmt.Errorf("querying meter readings: %v", err)
 	}

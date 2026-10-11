@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import random
 import sys
 from datetime import datetime, timedelta, timezone
@@ -23,6 +24,11 @@ def parse_arguments():
     parser.add_argument("--generation-fraction", type=float, default=0.5, help="Fraction of customers with PV units")
     parser.add_argument("--battery-fraction", type=float, default=0.2, help="Fraction of customers with battery units")
     parser.add_argument("--seed", default="default", help="Peer-specific seed used for deterministic data")
+    parser.add_argument("--reading-layout", choices=("block", "interval"),
+                        default=os.environ.get("IDSS_READING_LAYOUT", "block"),
+                        help="block: one MeterReading node per meter, reading type and day, holding that day's "
+                             "IntervalBlock of interval values (default); interval: one node per interval reading "
+                             "(original layout, kept for reproducing earlier runs)")
     return parser.parse_args()
 
 
@@ -115,6 +121,44 @@ def main():
             edges.append(edge(f"owns-battery-{peer_prefix}-{index}", "owns", customer_key, "Customer", "owner", battery_key, "BatteryUnit", "asset"))
 
         state_of_charge = random_source.uniform(0.3, 0.7) * (capacity if has_battery else 1)
+        if args.reading_layout == "block":
+            # One MeterReading per (meter, reading type, day): the day's IntervalBlock of
+            # interval values is stored as a compact attribute, with its total ("value")
+            # and peak precomputed, so aggregation and settlement read one node per day
+            # instead of one node per interval.
+            for day in range(args.days):
+                day_start = interval_timestamp(start, day * intervals_per_day, args.interval_minutes)
+                hours = [(i % intervals_per_day) * args.interval_minutes / 60 for i in range(intervals_per_day)]
+                series = {"load": [consumption_profile(h, random_source) for h in hours]}
+                series["reactive"] = [round(consumption_profile(h, random_source) * random_source.uniform(0.15, 0.35), 3) for h in hours]
+                if generating_unit_key:
+                    series["generation"] = [pv_profile(h, rated_capacity, random_source) for h in hours]
+                if battery_key:
+                    soc = []
+                    for _ in hours:
+                        state_of_charge = min(capacity, max(0.0, state_of_charge + random_source.uniform(-0.4, 0.4)))
+                        soc.append(round(state_of_charge, 3))
+                    series["soc"] = soc
+                targets = {"load": ("activePower", usage_point_key, "UsagePoint"),
+                           "reactive": ("reactivePower", device_key, "EndDevice"),
+                           "generation": ("generation", generating_unit_key, "GeneratingUnit"),
+                           "soc": ("stateOfCharge", battery_key, "BatteryUnit")}
+                for name, values in series.items():
+                    reading_type, owner_key, owner_kind = targets[name]
+                    block_key = f"reading-{peer_prefix}-{index:03d}-d{day:04d}-{name}"
+                    # value: the day's energy (kWh, or kvarh for reactive power) for
+                    # power readings; the daily mean for battery state of charge.
+                    if reading_type == "stateOfCharge":
+                        block_value = round(sum(values) / len(values), 3)
+                    else:
+                        block_value = round(sum(values) * args.interval_minutes / 60, 3)
+                    nodes.append(node("MeterReading", block_key, timeStamp=day_start, readingType=reading_type,
+                                      intervalMinutes=args.interval_minutes, intervalCount=len(values),
+                                      value=block_value, peak=max(values),
+                                      values=",".join(f"{v:g}" for v in values)))
+                    edges.append(edge(f"records-{name}-{peer_prefix}-{index}-d{day}", "records", owner_key, owner_kind, "point", block_key, "MeterReading", "reading"))
+            continue
+
         for interval_index in range(args.days * intervals_per_day):
             timestamp = interval_timestamp(start, interval_index, args.interval_minutes)
             hour = (interval_index % intervals_per_day) * args.interval_minutes / 60
