@@ -69,7 +69,7 @@ export PRESERVE_EXISTING_LOGS=1
 echo "[node ${NODE_RANK}] staging bundle from ${BUNDLE_DIR} to ${WORKDIR}"
 cp "${BUNDLE_DIR}/idss_server" "${BUNDLE_DIR}/generate_data.py" \
    "${BUNDLE_DIR}/policy.default.yaml" "${BUNDLE_DIR}/policy.permissive.yaml" \
-   "${BUNDLE_DIR}/start_peers.sh" "${WORKDIR}/"
+   "${BUNDLE_DIR}/policy.consent.yaml" "${BUNDLE_DIR}/start_peers.sh" "${WORKDIR}/"
 chmod +x "${WORKDIR}/idss_server" "${WORKDIR}/start_peers.sh"
 cd "${WORKDIR}"
 

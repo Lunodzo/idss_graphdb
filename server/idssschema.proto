@@ -41,6 +41,7 @@ message QueryMessage {
     SettlementRequest settlement_request = 16; // The settlement request details
     SettlementResult settlement_result = 17; // The result of the settlement request
     repeated string responding_peer_ids = 18; // List of peer IDs that have responded to the query
+    string purpose = 19; // Declared purpose of the request (e.g. settlement), evaluated by each peer's policy
 }
 
 message CustomerRegistration {
@@ -64,6 +65,10 @@ message SettlementResult {
     double trade_volume_sum = 3; // The sum of trade volumes
     string community_id = 4; // Community of the responding peer (scoped settlement only)
     string refusal = 5; // Non-empty when the peer refused the request, with the reason
+    string from = 6; // Settled period start (RFC 3339), bound by the signature
+    string to = 7; // Settled period end (RFC 3339), bound by the signature
+    bytes blocks_digest = 8; // SHA-256 over the member's settled reading blocks (canonical order)
+    bytes signature = 9; // Member's libp2p-key signature over the fields above
 }
 
 message QueryState {

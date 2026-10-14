@@ -8,8 +8,8 @@
 #   COORD_DIR     shared coordination directory used by launch_node_peers.sh
 #   TOTAL_PEERS   total peer count across the whole cluster (NODES * PEERS_PER_NODE)
 # Optional:
-#   REPEATS, E3_CUSTOMERS, E3_DAYS, E3_INTERVAL_MINUTES, EXPERIMENTS
-#   (space-separated subset of "e1 e2 e3 e4 e5 e6", default: e1-e5;
+#   REPEATS (E1_REPEATS, E2_REPEATS override it per experiment), E3_CUSTOMERS, E3_DAYS, E3_INTERVAL_MINUTES, EXPERIMENTS
+#   (space-separated subset of "e1 e2 e3 e4 e5 e6 e7", default: e1-e5;
 #   e6 needs COMMUNITIES=K > 0, which also changes how the cluster is launched)
 
 set -uo pipefail
@@ -67,10 +67,10 @@ for exp in ${EXPERIMENTS}; do
             # attach to the external cluster exactly once, appending a single
             # large-scale data point to experiments/results/e1-all-results.csv
             # (small-scale sweep points continue to come from local runs).
-            START_PEERS="${TOTAL_PEERS}" ./run_e1_scale.sh "${TOTAL_PEERS}" "${REPEATS}" || FAILED+=("e1")
+            START_PEERS="${TOTAL_PEERS}" ./run_e1_scale.sh "${TOTAL_PEERS}" "${E1_REPEATS:-${REPEATS}}" || FAILED+=("e1")
             ;;
         e2)
-            ./run_e2_ttl.sh "${TOTAL_PEERS}" "${REPEATS}" || FAILED+=("e2")
+            ./run_e2_ttl.sh "${TOTAL_PEERS}" "${E2_REPEATS:-${REPEATS}}" || FAILED+=("e2")
             ;;
         e3)
             ./run_e3_aggregation.sh "${TOTAL_PEERS}" "${E3_CUSTOMERS}" "${E3_DAYS}" "${E3_INTERVAL_MINUTES}" "${REPEATS}" || FAILED+=("e3")
@@ -80,6 +80,10 @@ for exp in ${EXPERIMENTS}; do
             ;;
         e5)
             ./run_e5_scenario.sh "${TOTAL_PEERS}" "${REPEATS}" || FAILED+=("e5")
+            ;;
+        e7)
+            # Churn: peers read IDSS_CHURN_FILE (exported by the batch script).
+            ./run_e7_churn.sh "${TOTAL_PEERS}" "${REPEATS}" || FAILED+=("e7")
             ;;
         e6)
             # Needs a cluster launched with COMMUNITIES=K > 0.

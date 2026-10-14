@@ -16,12 +16,10 @@ import (
 	"encoding/binary"
 	"io"
 	_ "net/http/pprof" // Import for profiling
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -390,11 +388,18 @@ func SendMergedResultWithPeers(conn network.Stream, remotePeer peer.ID, dataRows
 		if isFinal {
 			recordCount = int32(len(dataRows))
 		}
+		// The responding-peer list travels with the final chunk only: a parent
+		// whose deadline cuts a transfer short keeps the rows it received but
+		// must not credit the sender's whole subtree as having responded.
+		var chunkPeers []string
+		if isFinal {
+			chunkPeers = respondingPeerIDs
+		}
 		resultMsg := &common.QueryMessage{
 			Type:              common.MessageType_RESULT,
 			Result:            CovertResultToProtobufRows(dataRows[offset:end], chunkHeaders),
 			RecordCount:       recordCount,
-			RespondingPeerIds: respondingPeerIDs,
+			RespondingPeerIds: chunkPeers,
 		}
 		msgBytes, err := proto.Marshal(resultMsg)
 		if err != nil {
@@ -495,30 +500,13 @@ func ReadDelimitedMessage(r io.Reader, ctx context.Context) ([]byte, error) {
 	return decodeFrame(buf)
 }
 
-// linkDelay is an optional emulated one-way network delay applied before every
-// IDSS protocol message (IDSS_LINK_DELAY_MS, default 0). It approximates
-// wide-area latency between peers on testbeds whose real network is a
-// low-latency cluster interconnect. DHT maintenance traffic is not delayed.
-var (
-	linkDelayOnce sync.Once
-	linkDelay     time.Duration
-)
-
-func emulatedLinkDelay() time.Duration {
-	linkDelayOnce.Do(func() {
-		if ms, err := strconv.ParseFloat(os.Getenv("IDSS_LINK_DELAY_MS"), 64); err == nil && ms > 0 {
-			linkDelay = time.Duration(ms * float64(time.Millisecond))
-		}
-	})
-	return linkDelay
-}
-
 // Function to write a delimited message to the stream
 func WriteDelimitedMessage(w io.Writer, data []byte) error {
-	if delay := emulatedLinkDelay(); delay > 0 {
+	data = encodeFrame(data)
+	// Optional wide-area link emulation (see wan.go); off by default.
+	if delay := emulatedLinkDelay(w, len(data)); delay > 0 {
 		time.Sleep(delay)
 	}
-	data = encodeFrame(data)
 	sizeBuf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutUvarint(sizeBuf, uint64(len(data)))
 

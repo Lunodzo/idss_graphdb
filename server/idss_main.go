@@ -322,6 +322,11 @@ func main() {
 
 	dbPath := fmt.Sprintf("%s/%s", common.DBRoot(), host.ID().String()) // Peer specific database path
 	logger.Info("Database path: ", dbPath)
+	// EliasDB creates only the last path element; make sure the root exists
+	// (a launcher that removed it between two clusters made peers exit).
+	if err := os.MkdirAll(common.DBRoot(), 0o755); err != nil {
+		logger.Fatalf("Error creating database root %s: %v", common.DBRoot(), err)
+	}
 
 	graphDB, err := graphstorage.NewDiskGraphStorage(dbPath, false) // Create a new disk graph storage
 	if err != nil {
@@ -376,6 +381,20 @@ func main() {
 
 	// Handle streams
 	host.SetStreamHandler(protocol.ID(config.ProtocolID), func(stream network.Stream) {
+		// Emulated churn (IDSS_CHURN_FILE): an "offline" peer either never
+		// answers (senders wait for their deadline, as with an unreachable
+		// host) or refuses the stream at once.
+		if offline, mode := helpers.ChurnOffline(host.ID().String(), config.IsManager); offline {
+			if mode == "reset" {
+				stream.Reset()
+				return
+			}
+			go func() {
+				_, _ = io.Copy(io.Discard, stream)
+				stream.Reset()
+			}()
+			return
+		}
 		atomic.AddInt64(&activeConnections, 1)
 		defer atomic.AddInt64(&activeConnections, -1) // decrement when the handler exits
 		go handleRequest(stream, stream.Conn().RemotePeer().String(), ctx, config, graphManager, kadDHT, host, accessPolicy)
@@ -577,9 +596,13 @@ func handleQuery(conn network.Stream, msg *common.QueryMessage, remotePeerID str
 	queryLower := strings.ToLower(queryTrimmed)
 	if !isDataModification(queryLower) && msg.RequesterId != kadDHT.Host().ID().String() {
 		kinds := helpers.ExtractQueryKinds(msg.Query)
-		decision = accessPolicy.Evaluate(kinds, msg.RequesterRole)
+		decision = accessPolicy.EvaluateRequest(access.Request{Kinds: kinds, Role: msg.RequesterRole, Purpose: msg.Purpose})
 		common.PolicyDecisionTotal.WithLabelValues(decision.String()).Inc()
 		logger.Infof("Access decision for requester %s (%s), kinds %v: %s", msg.RequesterId, msg.RequesterRole, kinds, decision)
+		policyVersion, policyHash := accessPolicy.Identity()
+		helpers.Audit(helpers.AuditEntry{Peer: kadDHT.Host().ID().String(), Action: "query", UQID: msg.Uqid,
+			Requester: msg.RequesterId, Role: msg.RequesterRole, Purpose: msg.Purpose, Kinds: kinds,
+			Decision: decision.String(), PolicyVersion: policyVersion, PolicyHash: policyHash})
 	}
 	logger.Infof("This is a new query on this peer")
 	logger.Infof("\nReceiver %s \nUQI: %s\nTTL: %f \nFrom: %s\nRequester: %s (%s)", kadDHT.Host().ID(), msg.Uqid, msg.Ttl, remotePeerID, msg.RequesterId, msg.RequesterRole) // for debugging

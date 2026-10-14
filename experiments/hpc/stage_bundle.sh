@@ -26,6 +26,7 @@ echo "Building idss_server in ${SERVER_DIR}..."
 cp "${SERVER_DIR}/generate_data.py" "${BUNDLE_DIR}/"
 cp "${SERVER_DIR}/policy.default.yaml" "${BUNDLE_DIR}/"
 cp "${SERVER_DIR}/policy.permissive.yaml" "${BUNDLE_DIR}/"
+cp "${SERVER_DIR}/policy.consent.yaml" "${BUNDLE_DIR}/"
 cp "${SERVER_DIR}/start_peers.sh" "${BUNDLE_DIR}/"
 chmod +x "${BUNDLE_DIR}/start_peers.sh" "${BUNDLE_DIR}/idss_server"
 

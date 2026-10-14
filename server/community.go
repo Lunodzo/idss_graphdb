@@ -36,7 +36,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -408,6 +410,19 @@ func storeMembership(gm *graph.Manager, communityID string, hostPeer string, reg
 	return gm.StoreEdge("main", edge)
 }
 
+// settlementKinds are the node kinds a settlement answer is computed from.
+var settlementKinds = []string{"MeterReading", "Trade"}
+
+// auditSettlement records a member's settlement decision in its audit log.
+func auditSettlement(h host.Host, manager string, accessPolicy *access.Policy, decision string) {
+	version, hash := "", ""
+	if accessPolicy != nil {
+		version, hash = accessPolicy.Identity()
+	}
+	helpers.Audit(helpers.AuditEntry{Peer: h.ID().String(), Action: "settlement", Requester: manager, Role: "manager",
+		Purpose: "settlement", Kinds: settlementKinds, Decision: decision, PolicyVersion: version, PolicyHash: hash})
+}
+
 // handleScopedSettlementRequest answers a settlement request on a peer that
 // belongs to a community, or refuses it with a reason.
 func handleScopedSettlementRequest(conn network.Stream, msg *common.QueryMessage, remotePeerID string, config flags.Config, gm *graph.Manager, h host.Host, accessPolicy *access.Policy) {
@@ -440,10 +455,12 @@ func handleScopedSettlementRequest(conn network.Stream, msg *common.QueryMessage
 	case remotePeerID != manager.String():
 		refuse(fmt.Sprintf("requester is not the registered manager of %s", config.CommunityID))
 		return
-	case accessPolicy != nil && accessPolicy.Evaluate([]string{"MeterReading", "Trade"}, "manager") == access.Deny:
+	case accessPolicy != nil && accessPolicy.EvaluateRequest(access.Request{Kinds: settlementKinds, Role: "manager", Purpose: "settlement"}) == access.Deny:
+		auditSettlement(h, remotePeerID, accessPolicy, "deny")
 		refuse("access policy denies settlement data to the manager role")
 		return
 	}
+	auditSettlement(h, remotePeerID, accessPolicy, "aggregate")
 
 	from, err := time.Parse(time.RFC3339, request.From)
 	if err != nil {
@@ -455,14 +472,28 @@ func handleScopedSettlementRequest(conn network.Stream, msg *common.QueryMessage
 		refuse("invalid period end")
 		return
 	}
-	meterSum, tradeSum, err := broadcast.LocalSettlementTotals(gm, h.ID(), from, to)
+	meterSum, tradeSum, digest, err := broadcast.LocalSettlementEvidence(gm, h.ID(), from, to)
 	if err != nil {
 		logger.Errorf("Error computing settlement totals: %v", err)
 		refuse("local totals unavailable")
 		return
 	}
+	result := &common.SettlementResult{PeerId: h.ID().String(), MeterReadingSum: meterSum, TradeVolumeSum: tradeSum,
+		CommunityId: config.CommunityID, From: request.From, To: request.To, BlocksDigest: digest}
+	signStart := time.Now()
+	if err := broadcast.SignSettlement(h, result); err != nil {
+		logger.Errorf("Error signing settlement totals: %v", err)
+	}
+	logger.Infof("Settlement sign duration_ms=%.3f", time.Since(signStart).Seconds()*1000)
+	// Integrity probe (experiments only): IDSS_TAMPER_SETTLEMENT=<fraction>
+	// makes that share of members alter their totals after signing, as a
+	// forged or corrupted report would; the manager must reject them.
+	if f, err := strconv.ParseFloat(os.Getenv("IDSS_TAMPER_SETTLEMENT"), 64); err == nil && helpers.SelectedByFraction(h.ID().String(), "tamper", f) {
+		result.MeterReadingSum *= 0.9
+		logger.Infof("Settlement TAMPER probe: reporting %.3f instead of the signed %.3f", result.MeterReadingSum, meterSum)
+	}
 	logger.Infof("Settlement request ANSWERED for %s (manager %s)", config.CommunityID, remotePeerID)
-	reply(&common.SettlementResult{PeerId: h.ID().String(), MeterReadingSum: meterSum, TradeVolumeSum: tradeSum, CommunityId: config.CommunityID})
+	reply(result)
 }
 
 // handleCommunitySettlementCommand runs "settle" (registered members) or the
@@ -472,10 +503,22 @@ func handleCommunitySettlementCommand(conn network.Stream, msg *common.QueryMess
 		helpers.SendErrorMessage(conn, peer.ID(remotePeerID), "settle is available only to a manager client connected to a manager peer")
 		return
 	}
-	parts := strings.Fields(msg.Query)
+	// An optional trailing "parallel=<n>" sets how many members are asked
+	// concurrently (default: IDSS_SETTLE_PARALLEL, else 1 = sequential).
+	parallel := 0
+	var parts []string
+	for _, field := range strings.Fields(msg.Query) {
+		if value, ok := strings.CutPrefix(strings.ToLower(field), "parallel="); ok {
+			if n, err := strconv.Atoi(value); err == nil && n > 0 {
+				parallel = n
+			}
+			continue
+		}
+		parts = append(parts, field)
+	}
 	command := strings.ToLower(parts[0])
 	if (command == "settle" && len(parts) != 3) || (command == "settle-unscoped" && len(parts) != 3 && len(parts) != 4) {
-		helpers.SendErrorMessage(conn, peer.ID(remotePeerID), "invalid command: expected settle <from> <to> or settle-unscoped <from> <to> [community]")
+		helpers.SendErrorMessage(conn, peer.ID(remotePeerID), "invalid command: expected settle <from> <to> [parallel=<n>] or settle-unscoped <from> <to> [community] [parallel=<n>]")
 		return
 	}
 	from, err := time.Parse(time.RFC3339, parts[1])
@@ -501,7 +544,7 @@ func handleCommunitySettlementCommand(conn network.Stream, msg *common.QueryMess
 		}
 	}
 	stats, err := broadcast.CompileCommunitySettlement(gm, kadDHT, protocol.ID(config.ProtocolID),
-		config.CommunityID, requestCommunity, scope, targets, from, to)
+		config.CommunityID, requestCommunity, scope, targets, from, to, parallel)
 	if err != nil {
 		helpers.SendErrorMessage(conn, peer.ID(remotePeerID), err.Error())
 		return

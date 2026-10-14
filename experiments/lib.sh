@@ -6,6 +6,12 @@ HARNESS_ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 HARNESS_SERVER_DIR="${HARNESS_ROOT_DIR}/server"
 HARNESS_CLIENT_DIR="${HARNESS_ROOT_DIR}/client"
 
+# Reproducible data horizon: every peer's readings start on this day (00:00
+# UTC) and settlement periods are taken from it. Exported so locally started
+# peers (and through them server/generate_data.py) inherit it; multi-node
+# launchers export the same default.
+export IDSS_DATA_START=${IDSS_DATA_START:-2026-09-01T00:00:00Z}
+
 harness_monotonic_seconds() {
     python3 -c 'import time; print(f"{time.monotonic():.9f}")'
 }
@@ -38,6 +44,11 @@ harness_new_run_dir() {
     printf 'reading_layout=%s\nindex_readings=%s\nlink_delay_ms=%s\n' \
         "${IDSS_READING_LAYOUT:-block}" "${IDSS_INDEX_READINGS:-0}" "${IDSS_LINK_DELAY_MS:-0}" \
         > "${HARNESS_RUN_DIR}/data_layout.txt"
+    # Emulation and probe settings in force for this run (see helpers/wan.go).
+    printf 'data_start=%s\nlink_delay_min_ms=%s\nlink_delay_max_ms=%s\nlink_loss=%s\nlink_rto_ms=%s\nlink_rate_mbps=%s\nchurn_file=%s\nsettle_parallel=%s\ntamper_settlement=%s\n' \
+        "${IDSS_DATA_START}" "${IDSS_LINK_DELAY_MIN_MS:-0}" "${IDSS_LINK_DELAY_MAX_MS:-0}" "${IDSS_LINK_LOSS:-0}" \
+        "${IDSS_LINK_RTO_MS:-200}" "${IDSS_LINK_RATE_MBPS:-0}" "${IDSS_CHURN_FILE:-}" "${IDSS_SETTLE_PARALLEL:-1}" \
+        "${IDSS_TAMPER_SETTLEMENT:-0}" >> "${HARNESS_RUN_DIR}/data_layout.txt"
 }
 
 # harness_start_cluster <peer_count> <log_dir> <launch_log_file> [extra start_peers.sh args...]
@@ -148,6 +159,7 @@ harness_build_client() {
 }
 
 # harness_run_query <results_dir> <client_output_log> <peer_address> <role> <query> <ttl> [timeout_seconds]
+# HARNESS_CLIENT_PURPOSE, if set, is sent as the request's declared purpose.
 # Sets HARNESS_ELAPSED, HARNESS_RESPONDERS, HARNESS_ROWS, HARNESS_WIRE_BYTES, HARNESS_STATUS_LINE.
 harness_run_query() {
     local results_dir=$1
@@ -167,7 +179,8 @@ harness_run_query() {
     started=$(harness_monotonic_seconds)
     pushd "${HARNESS_CLIENT_DIR}" >/dev/null
     if ! printf '%s, %s\nexit\n' "${query}" "${ttl}" | IDSS_CLIENT_RESULTS_DIR="${results_dir}" \
-        timeout --kill-after=10 "${timeout_seconds}s" ./idss_client -role "${role}" -p "${PROTOCOL_ID:-/lan/kad/1.0.0}" -s "${peer_address}" >"${client_output}" 2>&1; then
+        timeout --kill-after=10 "${timeout_seconds}s" ./idss_client -role "${role}" -p "${PROTOCOL_ID:-/lan/kad/1.0.0}" -s "${peer_address}" \
+        ${HARNESS_CLIENT_PURPOSE:+-purpose "${HARNESS_CLIENT_PURPOSE}"} >"${client_output}" 2>&1; then
         popd >/dev/null
         echo "Client query failed: role=${role} query=${query} ttl=${ttl}" >&2
         cat "${client_output}" >&2

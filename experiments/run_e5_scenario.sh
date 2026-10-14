@@ -134,7 +134,8 @@ trap cleanup EXIT
 
 for repeat in $(seq 1 "${REPEATS}"); do
     repeat_log_dir="${LOG_DIR}/repeat-${repeat}"
-    base_from=$(python3 -c "from datetime import datetime, timedelta, timezone; print((datetime.now(timezone.utc)-timedelta(minutes=10)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
+    # Settlement periods start on the first day of the data horizon.
+    base_from=${IDSS_DATA_START}
 
     if ! harness_start_cluster "${PEER_COUNT}" "${repeat_log_dir}" "${RUN_DIR}/launch-${repeat}.log" \
         --customers "${E5_CUSTOMERS}" --days "${E5_DAYS}" --interval-minutes "${E5_INTERVAL_MINUTES}"; then
@@ -157,6 +158,8 @@ for repeat in $(seq 1 "${REPEATS}"); do
     trade_seller_key="trade-e5-${run_tag}-seller"
     trade_buyer_key="trade-e5-${run_tag}-buyer"
     now_ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    # Trades are dated inside the first settled day so settlement includes them.
+    trade_ts=$(add_days_utc "${base_from}" 0.5)
 
     if [[ "${E5_SKIP_WRITES}" != "1" ]]; then
     # Step 1-2: bids and offers are written locally (add is always local-only).
@@ -184,12 +187,12 @@ for repeat in $(seq 1 "${REPEATS}"); do
     # Step 4: matched, and recorded as a Trade at both counterparts (local writes).
     client_output="${RUN_DIR}/client-output/${repeat}-trade-seller.log"
     harness_run_query "${CLIENT_RESULTS_DIR}" "${client_output}" "${seller_address}" member \
-        "add Trade ${trade_seller_key} volume=3.5 price=0.22 timeStamp=${now_ts} counterparty=${buyer_customer} settlementRef=SET-E5-${run_tag}" 1
+        "add Trade ${trade_seller_key} volume=3.5 price=0.22 timeStamp=${trade_ts} counterparty=${buyer_customer} settlementRef=SET-E5-${run_tag}" 1
     record_row "${repeat}" "add_trade_seller" "" member "${HARNESS_STATUS_LINE:-${HARNESS_ROWS} rows}" ""
 
     client_output="${RUN_DIR}/client-output/${repeat}-trade-buyer.log"
     harness_run_query "${CLIENT_RESULTS_DIR}" "${client_output}" "${buyer_address}" member \
-        "add Trade ${trade_buyer_key} volume=3.5 price=0.22 timeStamp=${now_ts} counterparty=${seller_customer} settlementRef=SET-E5-${run_tag}" 1
+        "add Trade ${trade_buyer_key} volume=3.5 price=0.22 timeStamp=${trade_ts} counterparty=${seller_customer} settlementRef=SET-E5-${run_tag}" 1
     record_row "${repeat}" "add_trade_buyer" "" member "${HARNESS_STATUS_LINE:-${HARNESS_ROWS} rows}" ""
 
     client_output="${RUN_DIR}/client-output/${repeat}-update-offer.log"

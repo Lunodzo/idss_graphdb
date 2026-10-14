@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=idss-hpc
-#SBATCH --partition=rome
-#SBATCH --nodes=50
+#SBATCH --partition=workq
+#SBATCH --nodes=20
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=32
 #SBATCH --time=04:00:00
@@ -69,6 +69,13 @@ echo "Job ${SLURM_JOB_ID}: ${NODES} nodes x ${PEERS_PER_NODE} peers = ${TOTAL_PE
 echo "Coordination directory: ${COORD_DIR}"
 
 "${SCRIPT_DIR}/stage_bundle.sh" "${BUNDLE_DIR}"
+
+# Reproducible data horizon (see experiments/lib.sh) and the churn file every
+# peer polls (E7); both must be in the environment before the peers start.
+export IDSS_DATA_START=${IDSS_DATA_START:-2026-09-01T00:00:00Z}
+export IDSS_CHURN_FILE=${IDSS_CHURN_FILE:-${COORD_DIR}/churn.txt}
+echo "0 none silent" > "${IDSS_CHURN_FILE}"
+echo "Emulation: delay=${IDSS_LINK_DELAY_MS:-0} range=[${IDSS_LINK_DELAY_MIN_MS:-0},${IDSS_LINK_DELAY_MAX_MS:-0}] ms loss=${IDSS_LINK_LOSS:-0} rate=${IDSS_LINK_RATE_MBPS:-0} Mbit/s; settle_parallel=${IDSS_SETTLE_PARALLEL:-1} tamper=${IDSS_TAMPER_SETTLEMENT:-0}"
 
 export BUNDLE_DIR COORD_DIR PEERS_PER_NODE PROTOCOL_ID POLICY_FILE
 export E_CUSTOMERS E_DAYS E_INTERVAL_MINUTES

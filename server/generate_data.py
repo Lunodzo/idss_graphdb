@@ -84,7 +84,14 @@ def main():
     nodes = []
     edges = []
     customers = []
-    start = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+    # IDSS_DATA_START fixes the first day of the horizon (ISO 8601, e.g.
+    # 2026-09-01T00:00:00Z) so every peer's data and every settlement period
+    # are reproducible; without it the horizon starts now (legacy behaviour).
+    start_text = os.environ.get("IDSS_DATA_START", "").strip()
+    if start_text:
+        start = datetime.fromisoformat(start_text.replace("Z", "+00:00")).astimezone(timezone.utc)
+    else:
+        start = datetime.now(timezone.utc).replace(second=0, microsecond=0)
     intervals_per_day = 1440 // args.interval_minutes
 
     manager_key = f"customer-{peer_prefix}-manager"

@@ -162,6 +162,7 @@ type QueryMessage struct {
 	SettlementRequest    *SettlementRequest     `protobuf:"bytes,16,opt,name=settlement_request,json=settlementRequest,proto3" json:"settlement_request,omitempty"`          // The settlement request details
 	SettlementResult     *SettlementResult      `protobuf:"bytes,17,opt,name=settlement_result,json=settlementResult,proto3" json:"settlement_result,omitempty"`             // The result of the settlement request
 	RespondingPeerIds    []string               `protobuf:"bytes,18,rep,name=responding_peer_ids,json=respondingPeerIds,proto3" json:"responding_peer_ids,omitempty"`        // List of peer IDs that have responded to the query
+	Purpose              string                 `protobuf:"bytes,19,opt,name=purpose,proto3" json:"purpose,omitempty"`                                                       // Declared purpose of the request (e.g. settlement), evaluated by each peer's policy
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -322,6 +323,13 @@ func (x *QueryMessage) GetRespondingPeerIds() []string {
 	return nil
 }
 
+func (x *QueryMessage) GetPurpose() string {
+	if x != nil {
+		return x.Purpose
+	}
+	return ""
+}
+
 type CustomerRegistration struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Mrid             string                 `protobuf:"bytes,1,opt,name=mrid,proto3" json:"mrid,omitempty"`                                                 // The market participant ID
@@ -473,6 +481,10 @@ type SettlementResult struct {
 	TradeVolumeSum  float64                `protobuf:"fixed64,3,opt,name=trade_volume_sum,json=tradeVolumeSum,proto3" json:"trade_volume_sum,omitempty"`    // The sum of trade volumes
 	CommunityId     string                 `protobuf:"bytes,4,opt,name=community_id,json=communityId,proto3" json:"community_id,omitempty"`                 // Community of the responding peer (scoped settlement only)
 	Refusal         string                 `protobuf:"bytes,5,opt,name=refusal,proto3" json:"refusal,omitempty"`                                            // Non-empty when the peer refused the request, with the reason
+	From            string                 `protobuf:"bytes,6,opt,name=from,proto3" json:"from,omitempty"`                                                  // Settled period start (RFC 3339), bound by the signature
+	To              string                 `protobuf:"bytes,7,opt,name=to,proto3" json:"to,omitempty"`                                                      // Settled period end (RFC 3339), bound by the signature
+	BlocksDigest    []byte                 `protobuf:"bytes,8,opt,name=blocks_digest,json=blocksDigest,proto3" json:"blocks_digest,omitempty"`              // SHA-256 over the member's settled reading blocks (canonical order)
+	Signature       []byte                 `protobuf:"bytes,9,opt,name=signature,proto3" json:"signature,omitempty"`                                        // Member's libp2p-key signature over the fields above
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -540,6 +552,34 @@ func (x *SettlementResult) GetRefusal() string {
 		return x.Refusal
 	}
 	return ""
+}
+
+func (x *SettlementResult) GetFrom() string {
+	if x != nil {
+		return x.From
+	}
+	return ""
+}
+
+func (x *SettlementResult) GetTo() string {
+	if x != nil {
+		return x.To
+	}
+	return ""
+}
+
+func (x *SettlementResult) GetBlocksDigest() []byte {
+	if x != nil {
+		return x.BlocksDigest
+	}
+	return nil
+}
+
+func (x *SettlementResult) GetSignature() []byte {
+	if x != nil {
+		return x.Signature
+	}
+	return nil
 }
 
 type QueryState struct {
@@ -643,7 +683,7 @@ var File_idssschema_proto protoreflect.FileDescriptor
 
 const file_idssschema_proto_rawDesc = "" +
 	"\n" +
-	"\x10idssschema.proto\x12\x06common\"\xc7\x05\n" +
+	"\x10idssschema.proto\x12\x06common\"\xe1\x05\n" +
 	"\fQueryMessage\x12'\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x13.common.MessageTypeR\x04type\x12\x14\n" +
 	"\x05query\x18\x02 \x01(\tR\x05query\x12\x12\n" +
@@ -665,7 +705,8 @@ const file_idssschema_proto_rawDesc = "" +
 	"\x15customer_registration\x18\x0f \x01(\v2\x1c.common.CustomerRegistrationR\x14customerRegistration\x12H\n" +
 	"\x12settlement_request\x18\x10 \x01(\v2\x19.common.SettlementRequestR\x11settlementRequest\x12E\n" +
 	"\x11settlement_result\x18\x11 \x01(\v2\x18.common.SettlementResultR\x10settlementResult\x12.\n" +
-	"\x13responding_peer_ids\x18\x12 \x03(\tR\x11respondingPeerIds\"\xcb\x01\n" +
+	"\x13responding_peer_ids\x18\x12 \x03(\tR\x11respondingPeerIds\x12\x18\n" +
+	"\apurpose\x18\x13 \x01(\tR\apurpose\"\xcb\x01\n" +
 	"\x14CustomerRegistration\x12\x12\n" +
 	"\x04mrid\x18\x01 \x01(\tR\x04mrid\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
@@ -676,13 +717,17 @@ const file_idssschema_proto_rawDesc = "" +
 	"\x11SettlementRequest\x12\x12\n" +
 	"\x04from\x18\x01 \x01(\tR\x04from\x12\x0e\n" +
 	"\x02to\x18\x02 \x01(\tR\x02to\x12!\n" +
-	"\fcommunity_id\x18\x03 \x01(\tR\vcommunityId\"\xbe\x01\n" +
+	"\fcommunity_id\x18\x03 \x01(\tR\vcommunityId\"\xa5\x02\n" +
 	"\x10SettlementResult\x12\x17\n" +
 	"\apeer_id\x18\x01 \x01(\tR\x06peerId\x12*\n" +
 	"\x11meter_reading_sum\x18\x02 \x01(\x01R\x0fmeterReadingSum\x12(\n" +
 	"\x10trade_volume_sum\x18\x03 \x01(\x01R\x0etradeVolumeSum\x12!\n" +
 	"\fcommunity_id\x18\x04 \x01(\tR\vcommunityId\x12\x18\n" +
-	"\arefusal\x18\x05 \x01(\tR\arefusal\"\xb6\x01\n" +
+	"\arefusal\x18\x05 \x01(\tR\arefusal\x12\x12\n" +
+	"\x04from\x18\x06 \x01(\tR\x04from\x12\x0e\n" +
+	"\x02to\x18\a \x01(\tR\x02to\x12#\n" +
+	"\rblocks_digest\x18\b \x01(\fR\fblocksDigest\x12\x1c\n" +
+	"\tsignature\x18\t \x01(\fR\tsignature\"\xb6\x01\n" +
 	"\n" +
 	"QueryState\x12.\n" +
 	"\x05state\x18\x01 \x01(\x0e2\x18.common.QueryState.StateR\x05state\x12#\n" +

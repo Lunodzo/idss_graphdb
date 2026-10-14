@@ -83,6 +83,7 @@ func main() {
 	serverAddrFlag := flag.String("s", "", "Server multiaddress")
 	IDSSProtocol := flag.String("p", "/lan/kad/1.0.0", "IDSS protocol") // By default use the local network protocol
 	requesterRole := flag.String("role", "member", "Requester role: member, manager, or observer")
+	purpose := flag.String("purpose", "", "Declared purpose of the requests (e.g. settlement, grid-planning), evaluated by each peer's policy")
 	flag.Parse()
 
 	if *serverAddrFlag == "" {
@@ -208,6 +209,7 @@ func main() {
 			Sender:        host.ID().String(),
 			RequesterId:   host.ID().String(),
 			RequesterRole: *requesterRole,
+			Purpose:       *purpose,
 		}
 
 		// Open stream

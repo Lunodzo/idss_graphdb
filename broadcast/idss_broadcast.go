@@ -248,17 +248,12 @@ func HandleAggregateQuery(conn network.Stream, msg *common.QueryMessage, config 
 
 	logger.Infof("Computed %s aggregate: %f", agg.Function, finalValue) // Debugging logs
 
-	// Replace the placeholder in the original query.
-	placeholder := fmt.Sprintf("@%s(%s)", agg.Function, agg.Traversal)
-	finalQuery := strings.Replace(msg.Query, placeholder, fmt.Sprintf("%f", finalValue), 1)
-	logger.Infof("Final query: %s", finalQuery)
-
-	// Execute the final query on the originator.
-	finalRows, finalHeader, err := RunIDSSQuery(finalQuery, kadDHT.Host().ID(), gm)
-	if err != nil {
-		logger.Errorf("Error executing final query: %v", err)
-		return
-	}
+	// Return the aggregate itself: one header and one value. The query is not
+	// re-run with the total substituted, because that echoed one identical row
+	// per local matching node (all deduplicated by the client) and scanned the
+	// local data a second time.
+	finalHeader := []string{fmt.Sprintf("%s(%s)", agg.Function, agg.Traversal)}
+	finalRows := [][]interface{}{{finalValue}}
 	helpers.SendMergedResultWithPeers(conn, conn.Conn().RemotePeer(), finalRows, finalHeader, respondingPeerIDs, kadDHT)
 }
 
@@ -289,7 +284,7 @@ func RunAggregatedQuery(agg common.AggregateInfo, nodeKind string, selection str
 		return 0, false, err
 	}
 
-	logger.Info("Got rows: ", rows) //debugging
+	logger.Debugf("Aggregate base query returned %d rows", len(rows))
 
 	// Compute the aggregate value.
 	sum, _, min, max, err := helpers.ComputeAggregate(rows, header, agg.Attribute)
@@ -1079,7 +1074,7 @@ func RunIDSSQueryWithDecision(command string, peer peer.ID, gm *graph.Manager, d
 
 // LocalSettlementTotals returns aggregate-only settlement values for a period.
 func LocalSettlementTotals(gm *graph.Manager, hostID peer.ID, from time.Time, to time.Time) (float64, float64, error) {
-	period := fmt.Sprintf(` where timeStamp >= "%s" and timeStamp <= "%s"`, from.Format(time.RFC3339), to.Format(time.RFC3339))
+	period := fmt.Sprintf(` where timeStamp >= "%s" and timeStamp < "%s"`, from.Format(time.RFC3339), to.Format(time.RFC3339))
 	// Settle active energy only; other reading types (reactive power,
 	// generation, battery state of charge) are not billed quantities.
 	meterRows, meterHeader, err := RunIDSSQuery("get MeterReading"+period+` and readingType = "activePower"`, hostID, gm)

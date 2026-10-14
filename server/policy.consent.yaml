@@ -1,0 +1,40 @@
+# Consent-aware policy used in E4 (purpose limitation, time-bounded consent).
+# Rules with "purposes" apply only to requests declaring one of them; rules
+# outside their validity window do not apply, so the request falls through to
+# the wildcard or default decision.
+version: consent-2026-10
+default: deny
+rules:
+  - kind: Customer
+    roles: [member, manager, observer]
+    decision: allow
+  - kind: Offer
+    roles: [member, manager]
+    decision: allow
+  - kind: Bid
+    roles: [member, manager]
+    decision: allow
+  - kind: Trade
+    roles: [manager]
+    decision: allow
+    purposes: [settlement]
+  - kind: Trade
+    roles: [member, observer]
+    decision: aggregate
+  - kind: MeterReading
+    roles: [manager]
+    decision: aggregate
+    purposes: [settlement]
+    valid_until: 2027-12-31
+  - kind: MeterReading
+    roles: [manager]
+    decision: allow
+    purposes: [research]
+    valid_until: 2026-01-01   # consent given for a past study; expired
+  - kind: MeterReading
+    roles: [observer]
+    decision: aggregate
+    purposes: [grid-planning]
+  - kind: MeterReading
+    roles: [member]
+    decision: deny

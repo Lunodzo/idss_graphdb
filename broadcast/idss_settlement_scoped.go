@@ -15,7 +15,12 @@ package broadcast
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
+	"os"
+	"strconv"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"idss/graphdb/common"
@@ -38,12 +43,14 @@ type SettlementStats struct {
 	Responded   int    // peers that returned totals, excluding the manager itself
 	Refused     int    // peers that answered with a refusal
 	Unreachable int    // peers that could not be reached or did not answer
+	Rejected    int    // answers whose signature or period did not verify
+	Parallel    int    // concurrent requests used for collection
 }
 
 // Summary is a one-line, log- and client-friendly rendering of the stats.
 func (s SettlementStats) Summary() string {
-	return fmt.Sprintf("community=%s scope=%s targets=%d responded=%d refused=%d unreachable=%d",
-		s.CommunityID, s.Scope, s.Targets, s.Responded, s.Refused, s.Unreachable)
+	return fmt.Sprintf("community=%s scope=%s targets=%d responded=%d refused=%d unreachable=%d rejected=%d parallel=%d",
+		s.CommunityID, s.Scope, s.Targets, s.Responded, s.Refused, s.Unreachable, s.Rejected, s.Parallel)
 }
 
 // CompileCommunitySettlement collects aggregate-only totals for [from, to]
@@ -55,7 +62,7 @@ func (s SettlementStats) Summary() string {
 // CompileSettlement so the experiment harness can parse both.
 func CompileCommunitySettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, protocolID protocol.ID,
 	communityID string, requestCommunity string, scope string, targets []peer.ID,
-	from time.Time, to time.Time) (SettlementStats, error) {
+	from time.Time, to time.Time, parallel int) (SettlementStats, error) {
 
 	stats := SettlementStats{CommunityID: communityID, Scope: scope, Targets: len(targets)}
 	totalStart := time.Now()
@@ -79,37 +86,68 @@ func CompileCommunitySettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, protocol
 	if err != nil {
 		return stats, fmt.Errorf("encoding settlement request: %v", err)
 	}
+	// Members are asked with at most `parallel` requests in flight
+	// (the command's parallel=<n>, else IDSS_SETTLE_PARALLEL, else 1 = sequential). Each member evaluates
+	// its own policy, so parallel collection does not serialise policy checks.
+	if parallel <= 0 {
+		parallel = settlementParallelism()
+	}
+	stats.Parallel = parallel
+	fromText, toText := from.Format(time.RFC3339), to.Format(time.RFC3339)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	slots := make(chan struct{}, parallel)
+	var verifyNanos int64
 	for _, remotePeer := range targets {
 		if remotePeer == host.ID() {
 			continue
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		// Registered members are normally still connected from registration;
-		// otherwise resolve their current addresses through the DHT.
-		if len(host.Peerstore().Addrs(remotePeer)) == 0 {
-			if info, findErr := kadDHT.FindPeer(ctx, remotePeer); findErr == nil {
-				host.Peerstore().AddAddrs(info.ID, info.Addrs, peerstore.TempAddrTTL)
+		wg.Add(1)
+		slots <- struct{}{}
+		go func(remotePeer peer.ID) {
+			defer wg.Done()
+			defer func() { <-slots }()
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			// Registered members are normally still connected from registration;
+			// otherwise resolve their current addresses through the DHT.
+			if len(host.Peerstore().Addrs(remotePeer)) == 0 {
+				if info, findErr := kadDHT.FindPeer(ctx, remotePeer); findErr == nil {
+					host.Peerstore().AddAddrs(info.ID, info.Addrs, peerstore.TempAddrTTL)
+				}
 			}
-		}
-		response, askErr := askSettlement(ctx, kadDHT, protocolID, remotePeer, payload)
-		cancel()
-		switch {
-		case askErr != nil:
-			stats.Unreachable++
-			logger.Debugf("Settlement request to %s failed: %v", remotePeer, askErr)
-		case response.Refusal != "":
-			stats.Refused++
-			logger.Infof("Settlement refused by %s: %s", remotePeer, response.Refusal)
-		case response.CommunityId != communityID:
-			// A peer outside this community that still answered (e.g. a
-			// legacy peer without a community): never count its totals.
-			stats.Refused++
-			logger.Infof("Settlement result from %s ignored: community %q is not %q", remotePeer, response.CommunityId, communityID)
-		default:
-			stats.Responded++
-			results = append(results, response)
-		}
+			response, askErr := askSettlement(ctx, kadDHT, protocolID, remotePeer, payload)
+			var verifyErr error
+			if askErr == nil && response.Refusal == "" && response.CommunityId == communityID {
+				verifyStart := time.Now()
+				verifyErr = VerifySettlement(host, remotePeer, response, fromText, toText)
+				atomic.AddInt64(&verifyNanos, int64(time.Since(verifyStart)))
+			}
+			mu.Lock()
+			defer mu.Unlock()
+			switch {
+			case askErr != nil:
+				stats.Unreachable++
+				logger.Debugf("Settlement request to %s failed: %v", remotePeer, askErr)
+			case response.Refusal != "":
+				stats.Refused++
+				logger.Infof("Settlement refused by %s: %s", remotePeer, response.Refusal)
+			case response.CommunityId != communityID:
+				// A peer outside this community that still answered (e.g. a
+				// legacy peer without a community): never count its totals.
+				stats.Refused++
+				logger.Infof("Settlement result from %s ignored: community %q is not %q", remotePeer, response.CommunityId, communityID)
+			case verifyErr != nil:
+				stats.Rejected++
+				logger.Infof("Settlement result from %s REJECTED: %v", remotePeer, verifyErr)
+			default:
+				stats.Responded++
+				results = append(results, response)
+			}
+		}(remotePeer)
 	}
+	wg.Wait()
+	logger.Infof("Settlement phase=verify total_ms=%.3f", float64(verifyNanos)/1e6)
 	logger.Infof("Settlement phase=broadcast_collect duration_ms=%.3f responding_peers=%d %s",
 		time.Since(broadcastStart).Seconds()*1000, len(results), stats.Summary())
 
@@ -124,6 +162,10 @@ func CompileCommunitySettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, protocol
 		summary.SetAttr("to", to.Format(time.RFC3339))
 		summary.SetAttr("meterReadingSum", result.MeterReadingSum)
 		summary.SetAttr("tradeVolumeSum", result.TradeVolumeSum)
+		if len(result.Signature) > 0 {
+			summary.SetAttr("blocksDigest", hex.EncodeToString(result.BlocksDigest))
+			summary.SetAttr("signature", hex.EncodeToString(result.Signature))
+		}
 		if err := gm.StoreNode("main", summary); err != nil {
 			return stats, fmt.Errorf("storing settlement summary: %v", err)
 		}
@@ -132,6 +174,14 @@ func CompileCommunitySettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, protocol
 	logger.Infof("Settlement phase=total duration_ms=%.3f", time.Since(totalStart).Seconds()*1000)
 	logger.Infof("Compiled %d settlement summaries (%s)", len(results), stats.Summary())
 	return stats, nil
+}
+
+// settlementParallelism reads IDSS_SETTLE_PARALLEL (default 1, sequential).
+func settlementParallelism() int {
+	if v, err := strconv.Atoi(os.Getenv("IDSS_SETTLE_PARALLEL")); err == nil && v > 1 {
+		return v
+	}
+	return 1
 }
 
 // askSettlement sends one settlement request and waits for the single reply.

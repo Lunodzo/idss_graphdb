@@ -34,7 +34,11 @@ REPEATS=${3:-1}
 E6_CUSTOMERS=${E6_CUSTOMERS:-${E5_CUSTOMERS:-10}}
 E6_DAYS=${E6_DAYS:-${E5_DAYS:-30}}
 E6_INTERVAL_MINUTES=${E6_INTERVAL_MINUTES:-15}
-SETTLE_TTL_SECONDS=${SETTLE_TTL_SECONDS:-20}
+SETTLE_TTL_SECONDS=${SETTLE_TTL_SECONDS:-120}
+# Settled period (days from the start of the data horizon) and the number of
+# members asked concurrently in the parallel settlement step.
+E6_PERIOD_DAYS=${E6_PERIOD_DAYS:-30}
+E6_PARALLEL=${E6_PARALLEL:-16}
 REGISTRATION_TIMEOUT_SECONDS=${REGISTRATION_TIMEOUT_SECONDS:-300}
 
 if ! [[ "${PEER_COUNT}" =~ ^[0-9]+$ && "${COMMUNITY_COUNT}" =~ ^[0-9]+$ ]] || (( COMMUNITY_COUNT < 2 || PEER_COUNT < 2 * COMMUNITY_COUNT )); then
@@ -62,7 +66,7 @@ LOG_DIR="${RUN_DIR}/peer-logs"
 CLIENT_RESULTS_DIR="${RUN_DIR}/client-live"
 
 mkdir -p "${LOG_DIR}" "${CLIENT_RESULTS_DIR}" "${RUN_DIR}/client-output"
-CSV_HEADER="run_id,repeat,community,step,scope,expected_members,registered_members,targets,responded,refused,unreachable,elapsed_seconds,phase_local_totals_ms,phase_broadcast_collect_ms,phase_write_summaries_ms,phase_total_ms"
+CSV_HEADER="run_id,repeat,community,step,scope,expected_members,registered_members,targets,responded,refused,unreachable,elapsed_seconds,phase_local_totals_ms,phase_broadcast_collect_ms,phase_write_summaries_ms,phase_total_ms,rejected,parallel"
 if [[ ! -f "${ALL_CSV_FILE}" ]]; then
     echo "${CSV_HEADER}" > "${ALL_CSV_FILE}"
 fi
@@ -78,6 +82,8 @@ customers=${E6_CUSTOMERS}
 days=${E6_DAYS}
 interval_minutes=${E6_INTERVAL_MINUTES}
 settle_ttl_seconds=${SETTLE_TTL_SECONDS}
+period_days=${E6_PERIOD_DAYS}
+parallel=${E6_PARALLEL}
 external_cluster=${HARNESS_EXTERNAL_PEER_ADDRESS:+yes}
 EOF
 
@@ -152,7 +158,7 @@ run_settle() {
     client_output="${RUN_DIR}/client-output/${repeat}-ec${c}-${step}.log"
     harness_run_query "${CLIENT_RESULTS_DIR}" "${client_output}" "${manager_address}" manager \
         "${query}" "${SETTLE_TTL_SECONDS}"
-    record_row "${repeat},ec-${c},${step},$(settle_field "${manager_log}" "${start_line}" scope),${expected},${registered},$(settle_field "${manager_log}" "${start_line}" targets),$(settle_field "${manager_log}" "${start_line}" responded),$(settle_field "${manager_log}" "${start_line}" refused),$(settle_field "${manager_log}" "${start_line}" unreachable),${HARNESS_ELAPSED},$(extract_phase_ms "${manager_log}" "${start_line}" local_totals),$(extract_phase_ms "${manager_log}" "${start_line}" broadcast_collect),$(extract_phase_ms "${manager_log}" "${start_line}" write_summaries),$(extract_phase_ms "${manager_log}" "${start_line}" total)"
+    record_row "${repeat},ec-${c},${step},$(settle_field "${manager_log}" "${start_line}" scope),${expected},${registered},$(settle_field "${manager_log}" "${start_line}" targets),$(settle_field "${manager_log}" "${start_line}" responded),$(settle_field "${manager_log}" "${start_line}" refused),$(settle_field "${manager_log}" "${start_line}" unreachable),${HARNESS_ELAPSED},$(extract_phase_ms "${manager_log}" "${start_line}" local_totals),$(extract_phase_ms "${manager_log}" "${start_line}" broadcast_collect),$(extract_phase_ms "${manager_log}" "${start_line}" write_summaries),$(extract_phase_ms "${manager_log}" "${start_line}" total),$(settle_field "${manager_log}" "${start_line}" rejected),$(settle_field "${manager_log}" "${start_line}" parallel)"
 }
 
 cleanup() {
@@ -162,8 +168,9 @@ trap cleanup EXIT
 
 for repeat in $(seq 1 "${REPEATS}"); do
     repeat_log_dir="${LOG_DIR}/repeat-${repeat}"
-    base_from=$(python3 -c "from datetime import datetime, timedelta, timezone; print((datetime.now(timezone.utc)-timedelta(minutes=10)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
-    period_to=$(python3 -c "from datetime import datetime, timedelta; import sys; print((datetime.strptime(sys.argv[1], '%Y-%m-%dT%H:%M:%SZ')+timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%SZ'))" "${base_from}")
+    # Settlement periods start on the first day of the data horizon.
+    base_from=${IDSS_DATA_START}
+    period_to=$(python3 -c "from datetime import datetime, timedelta; import sys; print((datetime.strptime(sys.argv[1], '%Y-%m-%dT%H:%M:%SZ')+timedelta(days=int(sys.argv[2]))).strftime('%Y-%m-%dT%H:%M:%SZ'))" "${base_from}" "${E6_PERIOD_DAYS}")
 
     if ! harness_start_cluster "${PEER_COUNT}" "${repeat_log_dir}" "${RUN_DIR}/launch-${repeat}.log" \
         --customers "${E6_CUSTOMERS}" --days "${E6_DAYS}" --interval-minutes "${E6_INTERVAL_MINUTES}"; then
@@ -192,12 +199,16 @@ for repeat in $(seq 1 "${REPEATS}"); do
     for c in $(seq 1 "${COMMUNITY_COUNT}"); do
         REGISTERED[$c]=$(registered_member_peers "${repeat_log_dir}/${MANAGER_IDS[$c]}.log")
         HARNESS_ELAPSED=$(registration_seconds "${repeat_log_dir}/${MANAGER_IDS[$c]}.log")
-        record_row "${repeat},ec-${c},registration,,${EXPECTED[$c]},${REGISTERED[$c]},,,,,${HARNESS_ELAPSED},,,,"
+        record_row "${repeat},ec-${c},registration,,${EXPECTED[$c]},${REGISTERED[$c]},,,,,${HARNESS_ELAPSED},,,,,,"
     done
 
-    # Step 2: every manager settles its own community (registered members).
+    # Step 2: every manager settles its own community (registered members),
+    # first sequentially, then with E6_PARALLEL requests in flight.
     for c in $(seq 1 "${COMMUNITY_COUNT}"); do
-        run_settle "${repeat}" "${c}" settle_scoped "${MANAGER_IDS[$c]}" "settle ${base_from} ${period_to}" "${EXPECTED[$c]}" "${REGISTERED[$c]}"
+        run_settle "${repeat}" "${c}" settle_scoped "${MANAGER_IDS[$c]}" "settle ${base_from} ${period_to} parallel=1" "${EXPECTED[$c]}" "${REGISTERED[$c]}"
+        if (( E6_PARALLEL > 1 )); then
+            run_settle "${repeat}" "${c}" settle_parallel "${MANAGER_IDS[$c]}" "settle ${base_from} ${period_to} parallel=${E6_PARALLEL}" "${EXPECTED[$c]}" "${REGISTERED[$c]}"
+        fi
     done
 
     # Steps 3-4: jurisdiction and impersonation probes from the ec-1 manager.

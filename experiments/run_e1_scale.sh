@@ -80,6 +80,9 @@ QUERIES=(
     "q3_meter_readings_raw|get MeterReading where readingType = \"activePower\""
     "q4_active_power_sum|get MeterReading where readingType = \"activePower\" show @sum(value)"
     "q5_customer_traversal|get Customer traverse owner:owns:asset:UsagePoint traverse point:records:reading:MeterReading"
+    # Q6: multi-hop traversal with a filter at each end, aggregated in-network:
+    # daily active energy of all prosumers (Customer -> UsagePoint -> MeterReading).
+    "q6_prosumer_energy_sum|get Customer where role = \"prosumer\" traverse owner:owns:asset:UsagePoint traverse point:records:reading:MeterReading where readingType = \"activePower\" end end show @sum(value)"
 )
 
 # Cleanup function to stop the cluster on exit

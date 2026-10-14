@@ -374,6 +374,15 @@ if (( ${#PEER_IDS[@]} != NUM_PEERS )); then
   exit 1
 fi
 
+# A single-peer cluster (e.g. the centralised baseline, E8) has nobody to
+# discover; it is ready as soon as its data is loaded and it listens.
+if (( PEER_INDEX_OFFSET + NUM_PEERS == 1 )); then
+  DISCOVERY_TIMEOUT_SECONDS=0
+  ROUTING_CONVERGENCE_TIMEOUT_SECONDS=0
+  check_all_peers_discovered() { return 0; }
+  check_routing_tables_converged() { return 0; }
+fi
+
 # Wait for discovery
 for ((i=1; i<=DISCOVERY_TIMEOUT_SECONDS; i++)); do
   if check_all_peers_discovered; then
