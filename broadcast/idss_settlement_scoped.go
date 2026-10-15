@@ -152,6 +152,9 @@ func CompileCommunitySettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, protocol
 		time.Since(broadcastStart).Seconds()*1000, len(results), stats.Summary())
 
 	writeStart := time.Now()
+	// One transaction for all summaries: writing them one by one cost about
+	// 14 ms each in EliasDB and dominated settlement for large communities.
+	trans := graph.NewGraphTrans(gm)
 	for _, result := range results {
 		summary := data.NewGraphNode()
 		summary.SetAttr("key", fmt.Sprintf("settlement-%s-%s-%d-%d", communityID, result.PeerId, from.Unix(), to.Unix()))
@@ -166,9 +169,12 @@ func CompileCommunitySettlement(gm *graph.Manager, kadDHT *dht.IpfsDHT, protocol
 			summary.SetAttr("blocksDigest", hex.EncodeToString(result.BlocksDigest))
 			summary.SetAttr("signature", hex.EncodeToString(result.Signature))
 		}
-		if err := gm.StoreNode("main", summary); err != nil {
+		if err := trans.StoreNode("main", summary); err != nil {
 			return stats, fmt.Errorf("storing settlement summary: %v", err)
 		}
+	}
+	if err := trans.Commit(); err != nil {
+		return stats, fmt.Errorf("committing settlement summaries: %v", err)
 	}
 	logger.Infof("Settlement phase=write_summaries duration_ms=%.3f", time.Since(writeStart).Seconds()*1000)
 	logger.Infof("Settlement phase=total duration_ms=%.3f", time.Since(totalStart).Seconds()*1000)

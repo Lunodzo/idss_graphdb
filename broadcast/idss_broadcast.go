@@ -51,7 +51,13 @@ var logger = log.Logger("IDSS")
 
 //var header []string
 
-const maxConcurrentPeerQueries = 30
+// maxConcurrentPeerQueries bounds the streams a peer keeps open to its
+// children for one query. It must not be smaller than the fan-out that
+// selectForwardPeers can choose (up to 120 for short budgets): with fewer
+// slots than children, a child that never answers (an unreachable household)
+// holds its slot until the deadline and the children queued behind it are
+// contacted too late, losing their whole subtrees (E7, silent churn).
+const maxConcurrentPeerQueries = 128
 const maxForwardPeers = 30
 const ttlReductionFactor = 0.75
 

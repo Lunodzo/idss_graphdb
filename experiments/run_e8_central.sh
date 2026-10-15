@@ -26,8 +26,12 @@ E8_TTL=${E8_TTL:-20}
 CUSTOMERS=$((EQUIV * E8_CUSTOMERS_PER_PEER))
 # Generating and loading a whole community into one store takes minutes.
 export LAUNCH_TIMEOUT_SECONDS=${LAUNCH_TIMEOUT_SECONDS:-7200}
-# A central server gets the whole machine (peers run with GOMAXPROCS=1 each).
-export PEER_GOMAXPROCS=${PEER_GOMAXPROCS:-$(nproc)}
+# start_peers.sh stops waiting for the data load after START_TIMEOUT_SECONDS
+# and would let queries run against a half-loaded store.
+export START_TIMEOUT_SECONDS=${START_TIMEOUT_SECONDS:-7200}
+# A central server gets the whole allocation (peers run with GOMAXPROCS=1
+# each). nproc can report 1 under LSF CPU binding, so prefer the scheduler's count.
+export PEER_GOMAXPROCS=${E8_GOMAXPROCS:-${LSB_DJOB_NUMPROC:-${SLURM_CPUS_ON_NODE:-$(nproc --all)}}}
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=experiments/lib.sh
@@ -68,6 +72,15 @@ if ! harness_start_cluster 1 "${LOG_DIR}" "${RUN_DIR}/launch.log" \
 fi
 PEER_ID=${HARNESS_PEER_ADDRESS##*/p2p/}
 PEER_LOG="${LOG_DIR}/${PEER_ID}.log"
+# Never query a store that is still loading.
+for _ in $(seq 1 "${START_TIMEOUT_SECONDS}"); do
+    grep -q "Data loaded into the graph database" "${PEER_LOG}" 2>/dev/null && break
+    sleep 1
+done
+if ! grep -q "Data loaded into the graph database" "${PEER_LOG}" 2>/dev/null; then
+    echo "Central store did not finish loading within ${START_TIMEOUT_SECONDS} s" >&2
+    exit 1
+fi
 
 # Load time (generation finished -> data loaded) and store size.
 load_seconds=$(python3 - "${PEER_LOG}" <<'PY'
