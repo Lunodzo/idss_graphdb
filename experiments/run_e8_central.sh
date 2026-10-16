@@ -10,7 +10,8 @@
 # here: a central server is a single point of failure by construction.
 #
 # Usage: ./experiments/run_e8_central.sh <equivalent_peers> [repeats]
-#   E8_CUSTOMERS_PER_PEER (default 10), E8_DAYS (default 30), E8_TTL (default 20)
+#   E8_CUSTOMERS_PER_PEER (default 10), E8_DAYS (default 30), E8_TTL (default 300; a single store scans the whole
+#   community, so the 20 s budget used for peers is too short)
 
 set -euo pipefail
 
@@ -22,7 +23,7 @@ EQUIV=$1
 REPEATS=${2:-3}
 E8_CUSTOMERS_PER_PEER=${E8_CUSTOMERS_PER_PEER:-10}
 E8_DAYS=${E8_DAYS:-30}
-E8_TTL=${E8_TTL:-20}
+E8_TTL=${E8_TTL:-300}
 CUSTOMERS=$((EQUIV * E8_CUSTOMERS_PER_PEER))
 # Generating and loading a whole community into one store takes minutes.
 export LAUNCH_TIMEOUT_SECONDS=${LAUNCH_TIMEOUT_SECONDS:-7200}
