@@ -24,3 +24,4 @@ experiments/web-runtime/idss-client
 /web
 experiments/results_pre*/
 experiments/local_suite_*.log
+experiments/paper/out/
