@@ -20,7 +20,10 @@
 #        integrity probe with 20 % of members altering signed totals
 #   E7   N=50 churn (0/10/20/30 % offline, silent and reset)
 #   E8   centralised baseline equivalent to N=10 and N=50
-# Set SKIP_<EXP>=1 (e.g. SKIP_E8=1) to leave a step out.
+# To leave steps out, list them in hpc/gbar_only.txt before submitting, e.g.
+#   echo "e8" > gbar_only.txt && bsub < gbar_revision_job.sh
+# (G-bar's bsub does not pass SKIP_<EXP>=1 from the submitting shell). The
+# file is read once at job start and then removed.
 
 module load python3/3.11.9
 export PATH=$HOME/go-sdk/go/bin:$PATH
@@ -33,6 +36,13 @@ export FORCE_CLIENT_BUILD=1
 export IDSS_DATA_START=${IDSS_DATA_START:-2026-09-01T00:00:00Z}
 export E5_DAYS=30 E5_CUSTOMERS=10 E6_DAYS=30 E6_CUSTOMERS=10 E4_DAYS=30
 cd ~/idss_graphdb/experiments
+if [[ -s hpc/gbar_only.txt ]]; then
+  only=" $(tr '\n' ' ' < hpc/gbar_only.txt) "; rm -f hpc/gbar_only.txt
+  for e in E1 E2 E3 E4 E5 E6 E7 E8; do
+    [[ "${only,,}" == *" ${e,,} "* ]] || export SKIP_${e}=1
+  done
+  echo "steps from gbar_only.txt:${only}"
+fi
 export DB_PATH_ROOT=${__LSF_JOB_TMPDIR__:-/tmp/$USER-idss-$LSB_JOBID}
 mkdir -p "$DB_PATH_ROOT"
 echo "code: $(git -C .. log -1 --oneline)"; which go; go version
