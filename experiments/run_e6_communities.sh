@@ -158,6 +158,14 @@ run_settle() {
     client_output="${RUN_DIR}/client-output/${repeat}-ec${c}-${step}.log"
     harness_run_query "${CLIENT_RESULTS_DIR}" "${client_output}" "${manager_address}" manager \
         "${query}" "${SETTLE_TTL_SECONDS}"
+    # The client can return before the manager has written every summary
+    # (sequential settlements of ~800 members); wait for the manager's own
+    # "phase=total" line so the row describes this settlement, not the next.
+    local waited=0
+    while (( waited < SETTLE_TTL_SECONDS )) && \
+        ! tail -n "+$(( start_line + 1 ))" "${manager_log}" 2>/dev/null | grep -qF "Settlement phase=total "; do
+        sleep 1; waited=$(( waited + 1 ))
+    done
     record_row "${repeat},ec-${c},${step},$(settle_field "${manager_log}" "${start_line}" scope),${expected},${registered},$(settle_field "${manager_log}" "${start_line}" targets),$(settle_field "${manager_log}" "${start_line}" responded),$(settle_field "${manager_log}" "${start_line}" refused),$(settle_field "${manager_log}" "${start_line}" unreachable),${HARNESS_ELAPSED},$(extract_phase_ms "${manager_log}" "${start_line}" local_totals),$(extract_phase_ms "${manager_log}" "${start_line}" broadcast_collect),$(extract_phase_ms "${manager_log}" "${start_line}" write_summaries),$(extract_phase_ms "${manager_log}" "${start_line}" total),$(settle_field "${manager_log}" "${start_line}" rejected),$(settle_field "${manager_log}" "${start_line}" parallel)"
 }
 

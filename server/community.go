@@ -120,7 +120,16 @@ func (r *communityRegistry) memberPeers() []peer.ID {
 var (
 	membership = &memberState{}
 	registry   = &communityRegistry{members: make(map[peer.ID]map[string]struct{})}
+	// managerHost is the libp2p host of a community manager (nil on members).
+	managerHost host.Host
 )
+
+// communityConnTag marks connections between a manager and its registered
+// members as protected. libp2p's connection manager otherwise trims a peer's
+// connections above its high-water mark (192 by default) once they are older
+// than its grace period, which cut replies in flight during settlements that
+// lasted longer than a minute with hundreds of members.
+const communityConnTag = "idss-community"
 
 // communityKey derives the DHT key under which a community's manager is announced.
 func communityKey(communityID string) (cid.Cid, error) {
@@ -139,6 +148,7 @@ func communityNodeKey(communityID string) string {
 // announces the manager in the DHT, retrying until the announcement succeeds
 // and refreshing it periodically.
 func startCommunityManager(ctx context.Context, h host.Host, kadDHT *dht.IpfsDHT, config flags.Config, gm *graph.Manager) {
+	managerHost = h
 	community := data.NewGraphNode()
 	community.SetAttr("key", communityNodeKey(config.CommunityID))
 	community.SetAttr("kind", "EnergyCommunity")
@@ -332,6 +342,7 @@ func registerWithManager(ctx context.Context, h host.Host, config flags.Config, 
 		}
 		accepted++
 		if accepted == 1 {
+			h.ConnManager().Protect(manager.ID, communityConnTag)
 			// The manager has admitted this peer to its registry: answer its
 			// settlement requests from now on, even while the remaining
 			// customers are still being registered (or retried).
@@ -367,6 +378,9 @@ func handleCommunityRegistration(conn network.Stream, msg *common.QueryMessage, 
 			break
 		}
 		isNew, memberPeers, customers := registry.add(memberID, registration.Mrid)
+		if managerHost != nil {
+			managerHost.ConnManager().Protect(memberID, communityConnTag)
+		}
 		if isNew {
 			logger.Infof("Community %s registry: member peer %s joined (%d member peers, %d customers)",
 				config.CommunityID, remotePeerID, memberPeers, customers)
