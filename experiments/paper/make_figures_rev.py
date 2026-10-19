@@ -309,7 +309,10 @@ def fig_e3(e3):
 # ------------------------------------------------------------------ E6 settlement
 def e6_rows(runs):
     out = []
-    for _, r in runs[runs.exp == "e6"].iterrows():
+    sel = runs[runs.exp == "e6"].assign(N=lambda d: d.id.map(peers_of)).sort_values("id")
+    # one run per configuration: the latest (the 18 Oct reruns supersede 15 Oct)
+    sel = sel.drop_duplicates(["testbed", "N", "loss", "tamper"], keep="last")
+    for _, r in sel.iterrows():
         d = load(r)
         d["run"], d["testbed"], d["loss"], d["tamper"] = r.id, r.testbed, r.loss, r.tamper
         d["N"] = peers_of(r.id)
@@ -352,7 +355,8 @@ def fig_settlement(e6, tamper):
     ax.minorticks_off()
     ax.set_xlabel("Members per community (Testbed B)")
     ax.set_ylabel("Time per settlement, median (s)")
-    ax.legend(loc="upper left", fontsize=6.3)
+    ax.set_ylim(0.08, 3000)
+    ax.legend(loc="upper left", fontsize=6.3, ncol=2, columnspacing=1.0)
     panel(ax, "(a)")
     ax = axes[1]
     cats = ["Registered\nmembers", "Routing-table\nprobe", "Impersonation\nprobe", "Altered\nreports"]
@@ -368,7 +372,7 @@ def fig_settlement(e6, tamper):
         ax.text(b.get_x() + b.get_width() / 2, (v if v == v else 0) + 0.02, f"{v*100:.0f}%\n{lab}",
                 ha="center", va="bottom", fontsize=6.2, color=INK)
     ax.set_xticks(range(4))
-    ax.set_xticklabels(cats)
+    ax.set_xticklabels(cats, fontsize=6.4)
     ax.set_ylim(0, 1.3)
     ax.set_yticks([0, 0.25, 0.5, 0.75, 1])
     ax.set_ylabel("Share of targeted peers / reports")
