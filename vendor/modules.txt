@@ -124,8 +124,8 @@ github.com/jackpal/go-nat-pmp
 # github.com/jbenet/go-temp-err-catcher v0.1.0
 ## explicit; go 1.13
 github.com/jbenet/go-temp-err-catcher
-# github.com/klauspost/compress v1.18.0
-## explicit; go 1.22
+# github.com/klauspost/compress v1.18.7
+## explicit; go 1.24
 github.com/klauspost/compress
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
