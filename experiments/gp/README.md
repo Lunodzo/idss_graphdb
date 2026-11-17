@@ -7,6 +7,7 @@
 | `run_matrix.sh E1\|E2\|E3\|all` | experiment matrix; generates and caches datasets |
 | `collect_metrics.py` | per-query CSV rows from client results and peer logs (called by `run_local.sh`) |
 | `check_ground_truth.py` | exactness check against the generator's `ground_truth.json` |
+| `run_onboard.sh <data> [register] [query]` | E4: add a public register to a running overlay; time to first exact report, no change to running peers |
 | `summarize.py <out>` | median / p95 latency, traffic, slowdown vs baseline, completeness, verdicts |
 | `policies/` | owner-policy scenarios S1, S2 |
 | `../hpc/gbar_gp_job.sh`, `../hpc/sophia_gp_job.sbatch` | the full matrix on one HPC node |
@@ -21,6 +22,10 @@
 - **E3** completeness: 0–3 DSO peers lost (`KILL`, also at 32 peers), hung peers that keep their
   connections open (`FREEZE`, SIGSTOP: delegates time out and the region fails over), policy
   scenarios S1/S2 as coordinator or researcher.
+
+- **E4** onboarding: `run_onboard.sh` starts every peer except one register, checks that the
+  dependent report fails explicitly, starts the register with only its partition file, a policy file
+  and a seed address, and reports the time to the first exact report (existing peers keep running).
 
 ## Metrics (one CSV row per query execution)
 - `elapsed_ms`, `client_bytes`: measured by the client (submit to final result).
