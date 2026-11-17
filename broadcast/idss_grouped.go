@@ -670,7 +670,19 @@ func forwardGrouped(msg *common.QueryMessage, parentStream network.Stream, confi
 	h := kadDHT.Host()
 	self := h.ID()
 	connected := func(p peer.ID) bool { return h.Network().Connectedness(p) == network.Connected }
-	regions := dhtcast.Plan(self, kadDHT.RoutingTable().ListPeers(), int(msg.SubtreeMinCpl), connected)
+	skip := make(map[peer.ID]bool, len(msg.SkipPeers))
+	for _, id := range msg.SkipPeers {
+		if p, err := peer.Decode(id); err == nil {
+			skip[p] = true
+		}
+	}
+	var contacts []peer.ID
+	for _, p := range kadDHT.RoutingTable().ListPeers() {
+		if !skip[p] { // timed out earlier on this query: do not wait for it again
+			contacts = append(contacts, p)
+		}
+	}
+	regions := dhtcast.Plan(self, contacts, int(msg.SubtreeMinCpl), connected)
 
 	base := proto.Clone(msg).(*common.QueryMessage)
 	if err := UpdateTTL(base, gm); err != nil { // query bookkeeping; deadlines are set per attempt below
@@ -689,7 +701,7 @@ func forwardGrouped(msg *common.QueryMessage, parentStream network.Stream, confi
 		wg.Add(1)
 		go func(r dhtcast.Region) {
 			defer wg.Done()
-			var tried []string
+			var tried, timedOut []string
 			for i, p := range r.Peers {
 				if i >= maxRegionAttempts || remainingQueryTime(msg) <= 0 {
 					break
@@ -701,6 +713,7 @@ func forwardGrouped(msg *common.QueryMessage, parentStream network.Stream, confi
 				// time, so a timed-out delegate leaves time for one more contact.
 				child := proto.Clone(base).(*common.QueryMessage)
 				child.SubtreeMinCpl = int32(r.ChildMinCPL())
+				child.SkipPeers = append(append([]string(nil), msg.SkipPeers...), timedOut...)
 				budget := time.Duration(float64(remainingQueryTime(msg)) * ttlReductionFactor)
 				child.Ttl = float32(budget.Seconds())
 				child.Timestamp = time.Now().Add(budget).UTC().Format(time.RFC3339Nano)
@@ -721,9 +734,14 @@ func forwardGrouped(msg *common.QueryMessage, parentStream network.Stream, confi
 					// contact of the region. Peers the first delegate already
 					// reached have claimed the query and answer the retry with no
 					// entries, so nothing is counted twice; they show up as not
-					// reached in the client's manifest. The delegate itself is
-					// reported where the retry meets it again.
+					// reached in the client's manifest. The delegate is reported
+					// here and listed in the retry's skip_peers, so the
+					// replacement does not forward to it and wait for it again.
 					tried = append(tried, p.String()+" ("+status.String()+")")
+					timedOut = append(timedOut, p.String())
+					mu.Lock()
+					entries = append(entries, &common.PartitionPartial{PartitionId: "peer:" + p.String(), PeerId: p.String(), Status: status, Detail: detail})
+					mu.Unlock()
 					continue
 				}
 				mu.Lock()
